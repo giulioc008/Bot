@@ -1,3 +1,3 @@
 # Bot
 
-Bot, created by @giulioCoaInCamelCase.
+Bot, created by [Giulio Coa](https://t.me/giulioCoaInCamelCase).

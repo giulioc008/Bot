@@ -61,7 +61,6 @@ def answerInlineButton(up: Update, context: CallbackContext):
         log(context.bot,
             "@" + up.callback_query.from_user.username + " has pressed an Inline button at " + constants.now() + ".")
         keyboard = list()
-        # noinspection PyUnusedLocal
         text = ""
         if up.callback_query.data.lower() == "text":
             keyboard.append([InlineKeyboardButton("Text", callback_data="Text"), ...])

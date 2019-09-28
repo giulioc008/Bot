@@ -6,7 +6,7 @@ class Constants:
 
     def __init__(self):
         self.__botToken = "TOKEN"
-        self.__botUsername = "Bot"
+        self.__botUsername = "USERNAME DEL BOT"
         self.__botLog = -1001234567890
         self.__botCreators = list()
 

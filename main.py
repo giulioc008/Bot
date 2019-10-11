@@ -437,5 +437,10 @@ if __name__ == "__main__":
                        automaticRemovalStatus))
     log(logging="Handlers dispatched\nStart polling ...")
     updater.start_polling()
+    """
+        log(logging="Handlers dispatched\nStart Webhook ...")
+        updater.start_webhook(listen="0.0.0.0", port=int(os.environ.get("PORT")), url_path=constants.token())
+        updater.bot.setWebhook("https://{0}.herokuapp.com/{1}".format("The name of your app on Heroku", constants.token()))
+    """
     log(logging="Started serving @" + constants.username() + " ...")
     updater.idle()

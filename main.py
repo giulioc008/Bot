@@ -1,8 +1,8 @@
 import json
 
 import pandas
-from telegram import Bot, Chat, ChatAction, InlineKeyboardButton, InlineKeyboardMarkup, \
-    InlineQueryResultArticle, InputTextMessageContent, KeyboardButton, Message, ParseMode, ReplyKeyboardMarkup, Update
+from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, \
+    InputTextMessageContent, KeyboardButton, Message, ParseMode, ReplyKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler, InlineQueryHandler, \
     MessageHandler, Updater
 from telegram.ext.filters import Filters, MergedFilter
@@ -22,7 +22,6 @@ def addAdmin(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         """
             Check if the argument is already an admin
         """
@@ -57,7 +56,6 @@ def answerInlineButton(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=up.callback_query.from_user.id, action=ChatAction.TYPING)
         log(context.bot,
             "@" + up.callback_query.from_user.username + " has pressed an Inline button at " + constants.now() + ".")
         keyboard = list()
@@ -92,7 +90,6 @@ def command1(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         log(context.bot, "I launched /command1 at " + constants.now() + " because of @" +
             message.from_user.username + ".")
         """
@@ -110,7 +107,6 @@ def command2(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         log(context.bot,
             "@" + message.from_user.username + " have launched /command2 command at " + constants.now() + ".")
         """
@@ -180,7 +176,6 @@ def command3(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         log(context.bot, "I launched /command3 at " + constants.now() + " because of @" +
             message.from_user.username + ".")
         keyboard = ReplyKeyboardMarkup([KeyboardButton("Text"), ...])
@@ -201,7 +196,6 @@ def help(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         message.reply_markdown("In this section you will find all the help you need to use the bot.\n"
                                "/command1 -> command1\n" +
 
@@ -221,7 +215,6 @@ def inline(up: Update, context: CallbackContext):
 
     message = up.message
     inlineQuery = up.inline_query
-    context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
     if isAdmin(inlineQuery.from_user.username) is True:
         results = list()
         queryId = ""
@@ -309,7 +302,6 @@ def removeAdmin(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         if len(context.args) != 1:
             message.reply_markdown("The syntax is: `/removeadmin [nickname]`.")
             log(context.bot,
@@ -344,7 +336,6 @@ def report(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         if constants.isCreator(message.from_user.id) is True:
             message.reply_markdown("command1 - command1\n" +
 
@@ -358,15 +349,16 @@ def report(up: Update, context: CallbackContext):
 
 def split(up: Update, context: CallbackContext):
     message = up.message
-    if message.text == " ... ":
-        pass
-    elif message.text == " ... ":
-        pass
+    if message.text is not None:
+        if message.text == " ... ":
+            pass
+        elif message.text == " ... ":
+            pass
 
-        ...
+            ...
 
-    else:
-        pass
+        else:
+            pass
 
 
 def start(up: Update, context: CallbackContext):
@@ -377,7 +369,6 @@ def start(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         message.reply_markdown("Welcome @" + message.from_user.username + ".\nThis ...")
         log(context.bot, "I started at " + constants.now() + " because of @" + message.from_user.username + ".")
     else:
@@ -389,7 +380,6 @@ def unknown(up: Update, context: CallbackContext):
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
-        context.bot.sendChatAction(chat_id=message.chat_id, action=ChatAction.TYPING)
         message.reply_markdown("The insert command is wrong.\nInsert a new command.")
         log(context.bot, "Unknown command at " + constants.now() + " because of @" + message.from_user.username + ".")
     else:
@@ -439,8 +429,8 @@ if __name__ == "__main__":
     updater.start_polling()
     """
         log(logging="Handlers dispatched\nStart Webhook ...")
-        updater.start_webhook(listen="0.0.0.0", port=int(os.environ.get("PORT")), url_path=constants.token())
-        updater.bot.setWebhook("https://{0}.herokuapp.com/{1}".format("The name of your app on Heroku", constants.token()))
+        updater.start_webhook(listen="0.0.0.0", port=int(os.environ.get("PORT", "8443")), url_path=constants.token())
+        updater.bot.setWebhook("https://{0}.herokuapp.com/{1}".format(constants.username().lower(), constants.token()))
     """
     log(logging="Started serving @" + constants.username() + " ...")
     updater.idle()

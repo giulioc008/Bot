@@ -1,0 +1,4 @@
+emoji
+pandas
+python-telegram-bot
+requests

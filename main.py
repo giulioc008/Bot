@@ -3,6 +3,7 @@ import json
 import pandas
 from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, \
     InputTextMessageContent, KeyboardButton, Message, ParseMode, ReplyKeyboardMarkup, Update
+from telegram.constants import MAX_MESSAGE_LENGTH
 from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler, InlineQueryHandler, \
     MessageHandler, Updater
 from telegram.ext.filters import Filters, MergedFilter
@@ -266,10 +267,16 @@ def log(bot: Bot = None, logging: str = ""):
     if bot is not None:
         if initialLog is not None:
             # noinspection PyTypeChecker
-            for msg in initialLog:
-                bot.sendMessage(chat_id=constants.log(), text=msg, parse_mode=ParseMode.MARKDOWN)
+            for message in initialLog:
+                for k in range(0, len(message), MAX_MESSAGE_LENGTH):
+                    bot.sendMessage(chat_id=constants.log(),
+                                    text=message[k * MAX_MESSAGE_LENGTH:(k + 1) * MAX_MESSAGE_LENGTH],
+                                    parse_mode=ParseMode.MARKDOWN)
             initialLog = None
-        bot.sendMessage(chat_id=constants.log(), text=logging, parse_mode=ParseMode.MARKDOWN)
+        for k in range(0, len(logging), MAX_MESSAGE_LENGTH):
+            bot.sendMessage(chat_id=constants.log(),
+                            text=logging[k * MAX_MESSAGE_LENGTH:(k + 1) * MAX_MESSAGE_LENGTH],
+                            parse_mode=ParseMode.MARKDOWN)
     else:
         initialLog.append(logging)
 

@@ -397,7 +397,7 @@ if __name__ == "__main__":
     log(logging="Initializing the Admins ...")
     constants.loadCreators()
     with open("admins.json", "r") as users:
-        admins = pandas.DataFrame(data=json.load(users), columns=["nickname", "id"])
+        admins = pandas.DataFrame(data=json.load(users.read()), columns=["nickname", "id"])
     log(logging="Admins initializated\nInitializing the Updater ...")
     updater = Updater(token=constants.token(), use_context=True)
     log(logging="Updater initializated\nDispatching the handlers ...")

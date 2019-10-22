@@ -41,7 +41,7 @@ class Constants:
 
     def loadCreators(self):
         with open("creators.json", "r") as users:
-            self.__botCreators = json.loads(users)
+            self.__botCreators = json.loads(users.read())
 
     def log(self) -> int:
         return self.__botLog

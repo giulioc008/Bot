@@ -43,7 +43,7 @@ def addAdmin(up: Update, context: CallbackContext):
             Add the admin
         """
         admins = admins.append({"nickname": context.args[0]}, ignore_index=True)
-        with open("admins.json", "w") as element:
+        with open("/home/giuliocoa/Documents/gitHub/Bot/admins.json", "w") as element:
             element.write(admins.to_json(orient="records", index=False))
         message.reply_markdown("Admin added.")
         log(context.bot, "I added an admin at @" + message.from_user.username + "\'s request at " +
@@ -326,7 +326,7 @@ def removeAdmin(up: Update, context: CallbackContext):
                 admins.drop([i])
                 break
         admins.reset_index(drop=True)
-        with open("admins.json", "w") as element:
+        with open("/home/giuliocoa/Documents/gitHub/Bot/admins.json", "w") as element:
             element.write(admins.to_json(orient="records", index=False))
         message.reply_markdown("Admin removed.")
         log(context.bot, "I removed an admin (@" + context.args[0] + ") at @" + message.from_user.username +
@@ -396,7 +396,7 @@ def unknown(up: Update, context: CallbackContext):
 if __name__ == "__main__":
     log(logging="Initializing the Admins ...")
     constants.loadCreators()
-    with open("admins.json", "r") as users:
+    with open("/home/giuliocoa/Documents/gitHub/Bot/admins.json", "r") as users:
         admins = pandas.DataFrame(data=json.load(users), columns=["nickname", "id"])
     log(logging="Admins initializated\nInitializing the Updater ...")
     updater = Updater(token=constants.token(), use_context=True)

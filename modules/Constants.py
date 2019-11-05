@@ -21,7 +21,7 @@ class Constants:
             if username.lower() == x["nickname"].lower():
                 x["nickname"] = newUsername
                 break
-        with open("creators.json", "w") as users:
+        with open("/home/giuliocoa/Documents/gitHub/Bot/creators.json", "w") as users:
             users.write(json.dumps(self.__botCreators))
 
     def creators(self) -> list:
@@ -40,7 +40,7 @@ class Constants:
         return False
 
     def loadCreators(self):
-        with open("creators.json", "r") as users:
+        with open("/home/giuliocoa/Documents/gitHub/Bot/creators.json", "r") as users:
             self.__botCreators = json.loads(users.read())
 
     def log(self) -> int:
@@ -55,8 +55,8 @@ class Constants:
     @staticmethod
     def now() -> str:
         timer = time.localtime()
-        return "{0}:{1}:{2} of {3}-{4}-{5}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
-                                                   timer.tm_mday, timer.tm_mon, timer.tm_year)
+        return "{}:{}:{} of {}-{}-{}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
+                                             timer.tm_mday, timer.tm_mon, timer.tm_year)
 
     def token(self) -> str:
         return self.__botToken

@@ -13,13 +13,30 @@ from modules import Constants
 admins = None
 constants = Constants.Constants()
 initialLog = list()
+pwd = str(subprocess.check_output("pwd", shell=True))
+pwd = pwd.replace("b\'", "")
+pwd = pwd.replace("\\n\'", "")
+if pwd == "/":
+	path = "home/giuliocoa/Documents/gitHub/Bot"
+elif pwd == "/home":
+	path = "giuliocoa/Documents/gitHub/Bot"
+elif pwd == "/home/giuliocoa":
+	path = "Documents/gitHub/Bot"
+elif pwd == "/home/giuliocoa/Documents":
+	path = "gitHub/Bot"
+elif pwd == "/root":
+	path = "/home/giuliocoa/Documents/gitHub/Bot"
+elif pwd == "/data/data/com.termux/files/home":
+	path = "downloads/Bot"
+else:
+	path = "Bot"
 
 
 def addAdmin(up: Update, context: CallbackContext):
     """
         /addadmin [nickname]
     """
-    global admins, constants
+    global admins, constants, path
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
@@ -43,7 +60,7 @@ def addAdmin(up: Update, context: CallbackContext):
             Add the admin
         """
         admins = admins.append({"nickname": context.args[0]}, ignore_index=True)
-        with open("~/Documents/gitHub/Bot/admins.json", "w") as element:
+        with open("{}/admins.json".format(path), "w") as element:
             element.write(admins.to_json(orient="records", index=False))
         message.reply_markdown("Admin added.")
         log(context.bot, "I added an admin at @" + message.from_user.username + "\'s request at " +
@@ -304,7 +321,7 @@ def removeAdmin(up: Update, context: CallbackContext):
     """
         /removeadmin [nickname]
     """
-    global admins, constants
+    global admins, constants, path
 
     message = up.message
     if isAdmin(message.from_user.username) is True:
@@ -325,7 +342,7 @@ def removeAdmin(up: Update, context: CallbackContext):
                 admins.drop([i])
                 break
         admins.reset_index(drop=True)
-        with open("~/Documents/gitHub/Bot/admins.json", "w") as element:
+        with open("{}/admins.json".format(path), "w") as element:
             element.write(admins.to_json(orient="records", index=False))
         message.reply_markdown("Admin removed.")
         log(context.bot, "I removed an admin (@" + context.args[0] + ") at @" + message.from_user.username +
@@ -395,7 +412,7 @@ def unknown(up: Update, context: CallbackContext):
 if __name__ == "__main__":
     log(logging="Initializing the Admins ...")
     constants.loadCreators()
-    with open("~/Documents/gitHub/Bot/admins.json", "r") as users:
+    with open("{}/admins.json".format(path), "r") as users:
         admins = pandas.DataFrame(data=json.load(users), columns=["nickname", "id"])
     log(logging="Admins initializated\nInitializing the Updater ...")
     updater = Updater(token=constants.token(), use_context=True)

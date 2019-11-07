@@ -21,7 +21,7 @@ class Constants:
             if username.lower() == x["nickname"].lower():
                 x["nickname"] = newUsername
                 break
-        with open("/home/giuliocoa/Documents/gitHub/Bot/creators.json", "w") as users:
+        with open("~/Documents/gitHub/Bot/creators.json", "w") as users:
             users.write(json.dumps(self.__botCreators))
 
     def creators(self) -> list:
@@ -40,7 +40,7 @@ class Constants:
         return False
 
     def loadCreators(self):
-        with open("/home/giuliocoa/Documents/gitHub/Bot/creators.json", "r") as users:
+        with open("~/Documents/gitHub/Bot/creators.json", "r") as users:
             self.__botCreators = json.loads(users.read())
 
     def log(self) -> int:

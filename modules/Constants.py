@@ -122,8 +122,7 @@ class Constants:
 		return "{}:{}:{} of {}-{}-{}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
 											 timer.tm_mday, timer.tm_mon, timer.tm_year)
 
-	@staticmethod
-	def save():
+	def save(self):
 		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\":" + \
 				  self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
 		"""

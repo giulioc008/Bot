@@ -278,7 +278,6 @@ def log(client: Client = None, logging: str = ""):
 				client.send_message(constants.log, msg)
 			initialLog = None
 		client.send_message(constants.log, logging)
-		client.send(UpdateStatus(offline=True))
 	else:
 		initialLog.append(logging)
 

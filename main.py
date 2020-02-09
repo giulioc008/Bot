@@ -1,377 +1,349 @@
 import json
 
-import pandas
-from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, \
-    InputTextMessageContent, KeyboardButton, Message, ParseMode, ReplyKeyboardMarkup, Update
-from telegram.constants import MAX_MESSAGE_LENGTH
-from telegram.ext import CallbackContext, CallbackQueryHandler, CommandHandler, InlineQueryHandler, \
-    MessageHandler, Updater
-from telegram.ext.filters import Filters, MergedFilter
+import schedule
+from pyrogram import CallbackQuery, Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup, \
+					 InlineQuery, InlineQueryResultArticle, KeyboardButton, Message, ReplyKeyboardMarkup
 
 from modules import Constants
 
-admins = None
+commands = list(["addadmin",
+				 "command1",
+				 "command2",
+				 "command3",
+				 "help",
+				 "removeadmin",
+				 "report",
+				 "start"
+				])
 constants = Constants.Constants()
-initialLog = list()
-pwd = str(subprocess.check_output("pwd", shell=True))
-pwd = pwd.replace("b\'", "")
-pwd = pwd.replace("\\n\'", "")
-if pwd == "/":
-	path = "home/giuliocoa/Documents/gitHub/Bot"
-elif pwd == "/home":
-	path = "giuliocoa/Documents/gitHub/Bot"
-elif pwd == "/home/giuliocoa":
-	path = "Documents/gitHub/Bot"
-elif pwd == "/home/giuliocoa/Documents":
-	path = "gitHub/Bot"
-elif pwd == "/root":
-	path = "/home/giuliocoa/Documents/gitHub/Bot"
-elif pwd == "/data/data/com.termux/files/home":
-	path = "downloads/Bot"
-else:
-	path = "Bot"
+initialLog = list(["Initializing the Admins ...", "Admins initializated\nSetting the admins list ...",
+				   "Admins setted\nSetting the users list ...", "Users initializated\nInitializing the Client ..."])
+scheduler = schedule.default_scheduler
+"""
+	Initializing the Admins ...
+"""
+constants.loadCreators()
+"""
+	Admins initializated
+	Setting the admins list ...
+"""
+adminsIdList = set()
+i = constants.admins.to_json(orient="columns")
+i = i[len("{\"id\":{"):i.index("}")]
+i = i.split(",")
+i = list(map(lambda n: n.split(":"), i))
+i = list(map(lambda n: dict({n[0]: n[1]}), i))
+i = list(map(lambda n: list(n.values()), i))
+list(map(lambda n: list(map(lambda m: adminsIdList.add(int(m)), n)), i))
+adminsIdList = list(adminsIdList)
+"""
+	Admins setted
+	Setting the users list ...
+"""
+userIdList = set()
+i = constants.users.to_json(orient="columns")
+i = i[len("{\"id\":{"):i.index("}")]
+i = i.split(",")
+i = list(map(lambda n: n.split(":"), i))
+i = list(map(lambda n: dict({n[0]: n[1]}), i))
+i = list(map(lambda n: list(n.values()), i))
+list(map(lambda n: list(map(lambda m: userIdList.add(int(m)), n)), i))
+userIdList = list(userIdList)
+"""
+	Users initializated
+	Initializing the Client ...
+"""
+app = Client(session_name=constants.username, api_id=constants.id, api_hash=constants.hash, bot_token=constants.token)
 
 
-def addAdmin(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("addadmin", prefixes=list(["/"])) & Filters.user(adminsIdList) & Filters.private)
+def addAdmin(client: Client, message: Message):
     """
-        /addadmin [nickname]
+        /addadmin [username]
     """
-    global admins, constants, path
+	global adminsIdList, constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        """
-            Check if the argument is already an admin
-        """
-        if isAdmin(context.args[0]) is True:
-            message.reply_markdown("The user si already an admin.")
-            log(context.bot, "@" + message.from_user.username + "have sent an incorrect request at " +
-                constants.now() + ".")
-            return
-        """
-            Check if the syntax is correct
-        """
-        if len(context.args) != 1:
-            message.reply_markdown("The syntax is: `/addadmin [nickname]`.")
-            log(context.bot, "@" + message.from_user.username + "have sent an incorrect request at " +
-                constants.now() + ".")
-            return
-        """
-            Add the admin
-        """
-        admins = admins.append({"nickname": context.args[0]}, ignore_index=True)
-        with open("{}/admins.json".format(path), "w") as element:
-            element.write(admins.to_json(orient="records", index=False))
-        message.reply_markdown("Admin added.")
-        log(context.bot, "I added an admin at @" + message.from_user.username + "\'s request at " +
-            constants.now() + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Add admin")
+	user = client.get_users(message.command.pop(1))
+	text = "The user {}".format("{} ".format(user.first_name) if user.first_name is not None else "")
+	text += "{}is already present in the list of allowed chat.".format("{} ".format(user.last_name) if user.last_name is not None else "")
+	if user.id not in adminsIdList:
+		"""
+			Adding the chat to the database
+		"""
+		userDict = user.__dict__
+		try:
+			del userDict["_client"]
+		except KeyError:
+			pass
+		try:
+			del userDict["photo"]
+		except KeyError:
+			pass
+		try:
+			del userDict["restrictions"]
+		except KeyError:
+			pass
+		try:
+			del userDict["status"]
+		except KeyError:
+			pass
+		try:
+			del userDict["last_online_date"]
+		except KeyError:
+			pass
+		try:
+			del userDict["next_offline_date"]
+		except KeyError:
+			pass
+		try:
+			del userDict["dc_id"]
+		except KeyError:
+			pass
+		constants.admins = list([userDict])
+		text = "I added {}".format("{} ".format(user.first_name) if user.first_name is not None else "")
+		text += "{}to the list of allowed chat at {}.".format("{} ".format(user.last_name) if user.last_name is not None else "", constants.now())
+	log(client, text)
 
 
-def answerInlineButton(up: Update, context: CallbackContext):
+@app.on_callback_query(Filters.user(userIdList))
+def answerInlineButton(client: Client, callback_query: CallbackQuery):
     global constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        log(context.bot,
-            "@" + up.callback_query.from_user.username + " has pressed an Inline button at " + constants.now() + ".")
-        keyboard = list()
-        text = ""
-        if up.callback_query.data.lower() == "text":
-            keyboard.append([InlineKeyboardButton("Text", callback_data="Text"), ...])
-            text = "Text"
-        elif up.callback_query.data.lower() == "text":
-            keyboard.append([InlineKeyboardButton("Text", callback_data="Text"), ...])
-            text = "Text"
-        else:
-            keyboard.append([InlineKeyboardButton("Text", callback_data="Text"), ...])
-            text = "Text"
-        up.callback_query.edit_message_text(text, parse_mode=ParseMode.MARKDOWN)
-        up.callback_query.edit_message_reply_markup(InlineKeyboardMarkup(keyboard))
-        log(context.bot, "I have answered to an Inline button at " + constants.now() + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Inline button")
+	log(client, "@{} has pressed an Inline button at {}.".format(callback_query.from_user.username, constants.now()))
+	keyboard = list()
+	text = ""
+	if callback_query.data.lower() == "text":
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		text = "Text"
+	elif callback_query.data.lower() == "text":
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		text = "Text"
+	elif callback_query.data.lower() == "text":
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		text = "Text"
+	elif callback_query.data.lower() == "text":
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query="Text"), ...]))
+		text = "Text"
+	else:
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...]))
+		text = "Text"
+	callback_query.answer(text, show_alert=True)
+	callback_query.edit_message_text(text, disable_web_page_preview=True)
+	callback_query.edit_message_reply_markup(InlineKeyboardMarkup(keyboard))
+	log(client, "I have answered to an Inline button at {}.".format(constants.now()))
 
 
-def automaticRemovalStatus(up: Update, context: CallbackContext):
-    """
-        Removing the status message
-    """
-    message = up.message
-    message.delete()
-    log(context.bot, "I removed a status message from the " + message.chat.title + " at " + constants.now() + ".")
+@app.on_message(Filters.service)
+def automaticRemovalStatus(client: Client, message: Message):
+	"""
+		Removing the status message
+	"""
+	message.delete(revoke=True)
 
 
-def command1(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("command1", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+def command1(client: Client, message: Message):
     global constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        log(context.bot, "I launched /command1 at " + constants.now() + " because of @" +
-            message.from_user.username + ".")
-        """
-            If the command has any arguments, it can be acceded at context.args parameter
-        """
-    else:
-        messageNotAllowed(context.bot, message, "Command #1")
+	log(client, "I have answered to /command1 at {} because of @{}.".format(constants.now(), message.from_user.username))
+	"""
+		If the command has any arguments, it can be acceded at message.command parameter
+		That parameter is a list with the first element equal to the command (message.command(0) == "command1")
+	"""
 
 
-def command2(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("command2", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+def command2(client: Client, message: Message):
     """
         /command2
     """
-    global constants
+    global constants, scheduler
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        log(context.bot,
-            "@" + message.from_user.username + " have launched /command2 command at " + constants.now() + ".")
-        """
-            Checking if the Job Queue that Text is already active
-        """
-        if len(context.job_queue.get_jobs_by_name("Text")) == 0:
-            job = context.job_queue.run_repeating(queue1, XXXXXXXXX)
-            job.name = "Text"
-            message.reply_markdown("Text")
-            if constants.isCreator(message.from_user.id) is True:
-                log(context.bot,
-                    constants.name(
-                        message.from_user.id) + " activated the Job Queue that Text " +
-                    constants.now() + ".\nIt, every XXXXXXXXX seconds, Text.")
-            else:
-                log(context.bot,
-                    "@" + message.from_user.username + " activated the Job Queue that Text " +
-                    constants.now() + ".\nIt, every XXXXXXXXX seconds, Text.")
-        else:
-            message.reply_markdown("The Job Queue that Text is already activated.")
-            if constants.isCreator(message.from_user.id) is True:
-                log(context.bot,
-                    constants.name(
-                        message.from_user.id) + " tried to start the Job Queue that Text at " +
-                    constants.now() + ", although it was already active")
-            else:
-                log(context.bot,
-                    "@" + message.from_user.username + " tried to start the Job Queue that Text " +
-                    "at " + constants.now() + ", although it was already active")
-        if len(context.job_queue.get_jobs_by_name("Text")) == 0:
-            job = context.job_queue.run_repeating(queue2, XXXXXXXXX)
-            job.name = "Text"
-            message.reply_markdown("Text")
-            if constants.isCreator(message.from_user.id) is True:
-                log(context.bot,
-                    constants.name(
-                        message.from_user.id) + " activated the Job Queue that Text " +
-                    constants.now() + ".\nIt, every XXXXXXXXX seconds, Text.")
-            else:
-                log(context.bot,
-                    "@" + message.from_user.username + " activated the Job Queue that Text " +
-                    constants.now() + ".\nIt, every XXXXXXXXX seconds, Text.")
-        else:
-            message.reply_markdown("The Job Queue that Text is already activated.")
-            if constants.isCreator(message.from_user.id) is True:
-                log(context.bot,
-                    constants.name(
-                        message.from_user.id) + " tried to start the Job Queue that Text at " +
-                    constants.now() + ", although it was already active")
-            else:
-                log(context.bot,
-                    "@" + message.from_user.username + " tried to start the Job Queue that Text " +
-                    "at " + constants.now() + ", although it was already active")
+	log(client, "I have answered to /command2 at {} because of @{}.".format(constants.now(), message.from_user.username))
+	for i in range(constants.users.shape[0]):
+		if constants.users.at[i, "id"] == message.from_user.id and constants.users.at[i, "flag"] is False:
+			scheduler.every().day.at("14:00").do(queue1, client=client, ...)
+			log(client, "@{} activated the Job Queue that DO SOMETHING at {}.".format(message.from_user.username, constants.now()))
+			scheduler.every().monday.at("2:00").do(queue2, client=client, ...)
+			log(client, "@{} activated the Job Queue that DO SOMETHING ELSE at {}.".format(message.from_user.username, constants.now()))
 
-        ...
+			...
 
-        context.job_queue.start()
-    else:
-        messageNotAllowed(context.bot, message, "Command #2")
+			constants.users.at[i, "flag"] = True
+			break
 
 
-def command3(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("command3", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+def command3(client: Client, message: Message):
     """
         Command that reply with a keyboard
     """
     global constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        log(context.bot, "I launched /command3 at " + constants.now() + " because of @" +
-            message.from_user.username + ".")
-        keyboard = ReplyKeyboardMarkup([KeyboardButton("Text"), ...])
-        message.reply_markdown("Text", reply_markup=keyboard, resize_keyboard=True)
-    else:
-        messageNotAllowed(context.bot, message, "Command #3")
+	log(client, "I have answered to /command3 at {} because of @{}.".format(constants.now(), message.from_user.username))
+	keyboard = ReplyKeyboardMarkup(keyboard=list([list([KeyboardButton("Text"), ...]), ...]), resize_keyboard=True, one_time_keyboard=False)
+	message.reply_text("Text", reply_markup=keyboard)
 
 
-def error(up: Update, context: CallbackContext):
-    log(context.bot, "Update {} caused error {}".format(up, context.error))
-
-
-def help(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("help", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+def help(client: Client, message: Message):
     """
         /help
     """
-    global constants
+    global commands, constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        message.reply_markdown("In this section you will find all the help you need to use the bot.\n"
-                               "/command1 -> command1\n" +
-
-                                ...
-
-                               "/help -> Show the help.")
-        log(context.bot, "I helped @" + message.from_user.username + " at " + constants.now() + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Help")
+	message.reply_text("In this section you will find the list of the command of the bot.\n\t{}.".format("\n\t".join(commands)))
+	log(client, "I helped @" + message.from_user.username + " at " + constants.now() + ".")
 
 
-def inline(up: Update, context: CallbackContext):
+@app.on_inline_query(Filters.user(userIdList))
+def inline(client: Client, inline_query: InlineQuery):
     """
         Inline command
     """
     global constants
 
-    message = up.message
-    inlineQuery = up.inline_query
-    if isAdmin(inlineQuery.from_user.username) is True:
-        results = list()
-        queryId = ""
-        title = ""
-        text = ""
-        """
-            Checking if the text of the query is correct
-        """
-        if inlineQuery.query.lower() == "text":
-            queryId = "Text"
-            title = "Text"
-            text = InputTextMessageContent("Text", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-        elif inlineQuery.query.lower() == "text":
-            queryId = "Text"
-            title = "Text"
-            text = InputTextMessageContent("Text", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-
-            ...
-
-        else:
-            queryId = "Text"
-            title = "Text"
-            text = InputTextMessageContent("Text", parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-        results.append(InlineQueryResultArticle(id=queryId, title=title, input_message_content=text))
-        """
-            Sending the output
-        """
-        inlineQuery.answer(results)
-        log(context.bot, "I sent the answer to the Inline Query of @" + inlineQuery.from_user.username + ".")
-    else:
-        messageNotAllowed(context.bot,
-                          Message(0, inlineQuery.from_user, constants.now(), Chat(inlineQuery.from_user.id, "")),
-                          "Inline mode")
-
-
-def isAdmin(username: str) -> bool:
-    global admins
-
-    rows = admins.shape[0]
-    for element in range(rows):
-        if admins.at[element, "nickname"].lower() == username.lower():
-            return True
-    return False
-
-
-def log(bot: Bot = None, logging: str = ""):
-    global constants, initialLog
-
-    if bot is not None:
-        if initialLog is not None:
-            for message in initialLog:
-                for k in range(0, len(message), MAX_MESSAGE_LENGTH):
-                    bot.sendMessage(chat_id=constants.log(),
-                                    text=message[k * MAX_MESSAGE_LENGTH:(k + 1) * MAX_MESSAGE_LENGTH],
-                                    parse_mode=ParseMode.MARKDOWN)
-            initialLog = None
-        for k in range(0, len(logging), MAX_MESSAGE_LENGTH):
-            bot.sendMessage(chat_id=constants.log(),
-                            text=logging[k * MAX_MESSAGE_LENGTH:(k + 1) * MAX_MESSAGE_LENGTH],
-                            parse_mode=ParseMode.MARKDOWN)
-    else:
-        initialLog.append(logging)
+	results = list()
+	keyboard = list()
+	queryID = ""
+	title = ""
+	URL = ""
+	description = ""
+	text = ""
+	"""
+		Checking if the text of the query is correct
+	"""
+	if inline_query.query.lower() == "text":
+		queryID = "Text"
+		title = "Text"
+		URL = "Text"
+		description = "Text"
+		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+	elif inline_query.query.lower() == "text":
+		queryID = "Text"
+		title = "Text"
+		URL = "Text"
+		description = "Text"
+		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+	elif inline_query.query.lower() == "text":
+		queryID = "Text"
+		title = "Text"
+		URL = "Text"
+		description = "Text"
+		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+	elif inline_query.query.lower() == "text":
+		queryID = "Text"
+		title = "Text"
+		URL = "Text"
+		description = "Text"
+		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query="Text"), ...]))
+	else:
+		queryID = "Text"
+		title = "Text"
+		URL = "Text"
+		description = "Text"
+		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...]))
+	keyboard=InlineKeyboardMarkup(keyboard)
+	results.append(InlineQueryResultArticle(title=title, input_message_content=text, id=queryID, url=URL, description=description, reply_markup=keyboard))
+	results.append(InlineQueryResultArticle(title=title, input_message_content=text, id=queryID, url=URL, description=description, reply_markup=keyboard))
+	"""
+		Sending the output
+	"""
+	inline_query.answer(results, switch_pm_text="Text", switch_pm_parameter="Text")
+	log(client, "I sent the answer to the Inline Query of @" + inline_query.from_user.username + ".")
 
 
-def messageNotAllowed(bot: Bot, msg: Message, request: str):
-    msg.reply_markdown("You aren\'t an allowed user.")
-    log(bot, request + " requested by an unauthorized user (@" + msg.from_user.username + ") at " + constants.now() +
-        ".")
+def log(client: Client = None, logging: str = ""):
+	global constants, initialLog
+
+	if client is not None:
+		if initialLog is not None:
+			for msg in initialLog:
+				client.send_message(constants.log, msg)
+			initialLog = None
+		client.send_message(constants.log, logging)
+		client.send(UpdateStatus(offline=True))
+	else:
+		initialLog.append(logging)
 
 
-def queue1(context: CallbackContext):
+def queue1(client: Client, ...):
     """
         Do a Job in the Job Queue
     """
-    job = context.job
+	log(client, "I have done my job at {}.".format(constants.now()))
 
 
-def queue2(context: CallbackContext):
+def queue2(client: Client, ...):
     """
         Do a Job in the Job Queue
     """
-    job = context.job
+	log(client, "I have done my job at {}.".format(constants.now()))
 
 
-def removeAdmin(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("removeadmin", prefixes=list(["/"])) & Filters.user(adminsIdList) & Filters.private)
+def removeAdmin(client: Client, message: Message):
     """
-        /removeadmin [nickname]
-    """
-    global admins, constants, path
-
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        if len(context.args) != 1:
-            message.reply_markdown("The syntax is: `/removeadmin [nickname]`.")
-            log(context.bot,
-                "I helped @" + message.from_user.username + " with /removeadmin at " + constants.now() + ".")
-            return
-        if constants.isACreator(context.args[0]):
-            message.reply_markdown("You can\'t remove the creator of the bot from the admin list.")
-            log(context.bot, "@" + message.from_user.username + " tried to remove you as admin at " + constants.now() +
-                ".")
-            return
-        rows = admins.shape[0]
-        for i in range(rows):
-            if admins.at[i, "nickname"].lower() == context.args[0].lower():
-                context.args[0] = admins.at[i, "nickname"]
-                admins.drop([i])
-                break
-        admins.reset_index(drop=True)
-        with open("{}/admins.json".format(path), "w") as element:
-            element.write(admins.to_json(orient="records", index=False))
-        message.reply_markdown("Admin removed.")
-        log(context.bot, "I removed an admin (@" + context.args[0] + ") at @" + message.from_user.username +
-            "\'s request at " + constants.now() + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Remove admin")
-
-
-def report(up: Update, context: CallbackContext):
-    """
-        /report
+        /removeadmin [username]
     """
     global constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        if constants.isCreator(message.from_user.id) is True:
-            message.reply_markdown("command1 - command1\n" +
+	message.command.pop(0)
+	if len(message.command) != 1:
+		message.reply_text("The syntax is: `/removeadmin [username]`.")
+		log(client,
+			"I helped @{} with /removeadmin at {}.".format(message.from_user.username, constants.now()))
+		return
+	for i in range(constants.admins.shape[0]):
+		if constants.admins.at[i, "username"].lower() == message.command[0].lower():
+			if constants.creator == constants.admins.at[i, "id"]:
+				message.reply_text("You can\'t remove the creator of the bot from the admin list.")
+				log(client, "@{} tried to remove you as admin at {}.".format(message.from_user.username, constants.now()))
+				return
+			else:
+				message.command[0] = constants.admins.at[i, "username"]
+				constants.admins.drop(list([i]))
+				break
+	constants.admins.reset_index(drop=True)
+	constants.save()
+	message.reply_text("Admin removed.")
+	log(client, "I removed an admin (@{}) at @{}\'s request at {}.".format(message.command[0], message.from_user.username, constants.now()))
 
-                                    ...
 
-                                   "help - Show the help.")
-            log(context.bot, "I send a report to @" + message.from_user.username + " at " + constants.now() + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Report")
+@app.on_message(
+		Filters.command("report", prefixes=list(["/"])) & Filters.user(constants.creator) & Filters.private)
+def report(client: Client, message: Message):
+    """
+        /report
+    """
+    global commands, constants
+
+	text = commands.copy()
+	for i in text:
+		i += " - Description"
+	message.reply_text("\n".join(text))
+	log(client, "I send a report to @{} at {}.".format(message.from_user.username, constants.now()))
 
 
-def split(up: Update, context: CallbackContext):
-    message = up.message
+@app.on_message(Filters.text & Filters.user(userIdList) & Filters.private)
+def split(client: Client, message: Message):
     if message.text is not None:
         if message.text == " ... ":
             pass
@@ -384,76 +356,43 @@ def split(up: Update, context: CallbackContext):
             pass
 
 
-def start(up: Update, context: CallbackContext):
+@app.on_message(
+		Filters.command("start", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+def start(client: Client, message: Message):
     """
         /start
     """
     global constants
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        message.reply_markdown("Welcome @" + message.from_user.username + ".\nThis ...")
-        log(context.bot, "I started at " + constants.now() + " because of @" + message.from_user.username + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Start")
+	message.reply_text("Welcome @{}.\nThis bot ...".format(message.from_user.username))
+	log(client, "I started at {} because of @{}.".format(constants.now(), message.from_user.username))
 
 
-def unknown(up: Update, context: CallbackContext):
-    global constants
+def unknownFilter():
+	global commands
 
-    message = up.message
-    if isAdmin(message.from_user.username) is True:
-        message.reply_markdown("The insert command is wrong.\nInsert a new command.")
-        log(context.bot, "Unknown command at " + constants.now() + " because of @" + message.from_user.username + ".")
-    else:
-        messageNotAllowed(context.bot, message, "Unknown")
+	def func(flt, message: Message):
+		text = message.text
+		if text:
+			message.matches = list(flt.p.finditer(text)) or None
+			if bool(message.matches) is False and text.startswith("/") is True and len(text) > 1:
+				return True
+		return False
+	return Filters.create(func, "UnknownFilter", p=re.compile("/{}".format("|/".join(commands)), 0))
 
 
-if __name__ == "__main__":
-    log(logging="Initializing the Admins ...")
-    constants.loadCreators()
-    with open("{}/admins.json".format(path), "r") as users:
-        admins = pandas.DataFrame(data=json.load(users), columns=["nickname", "id"])
-    log(logging="Admins initializated\nInitializing the Updater ...")
-    updater = Updater(token=constants.token(), use_context=True)
-    log(logging="Updater initializated\nDispatching the handlers ...")
-    dispatcher = updater.dispatcher
-    # /addadmin
-    dispatcher.add_handler(CommandHandler("addadmin", addAdmin, filters=Filters.private))
-    # /command1
-    dispatcher.add_handler(CommandHandler("command1", command1, filters=Filters.private))
-    # /command2
-    dispatcher.add_handler(CommandHandler("command2", command2, filters=Filters.private))
-    # /command3
-    dispatcher.add_handler(CommandHandler("command3", command3, filters=Filters.private))
-    # /help
-    dispatcher.add_handler(CommandHandler("help", help, filters=Filters.private))
-    # /removeadmin
-    dispatcher.add_handler(CommandHandler("removeadmin", removeAdmin, filters=Filters.private))
-    # /report
-    dispatcher.add_handler(CommandHandler("report", report, filters=Filters.private))
-    # /start
-    dispatcher.add_handler(CommandHandler("start", start, filters=Filters.private))
-    # Generic text
-    dispatcher.add_handler(MessageHandler(MergedFilter(Filters.private, and_filter=Filters.text), split))
-    # Unknown command
-    dispatcher.add_handler(MessageHandler(MergedFilter(Filters.private, and_filter=Filters.command), unknown))
-    # Inline Mode
-    dispatcher.add_handler(InlineQueryHandler(inline))
-    # Inline button
-    dispatcher.add_handler(CallbackQueryHandler(answerInlineButton))
-    # Error handler
-    dispatcher.add_error_handler(error)
-    # Automatic removal of status messages
-    dispatcher.add_handler(
-        MessageHandler(MergedFilter(Filters.chat(chat_id=XXXXXXXXXXXXX), and_filter=Filters.status_update),
-                       automaticRemovalStatus))
-    log(logging="Handlers dispatched\nStart polling ...")
-    updater.start_polling()
-    """
-        log(logging="Handlers dispatched\nStart Webhook ...")
-        updater.start_webhook(listen="0.0.0.0", port=int(os.environ.get("PORT", "8443")), url_path=constants.token())
-        updater.bot.setWebhook("https://{0}.herokuapp.com/{1}".format(constants.username().lower(), constants.token()))
-    """
-    log(logging="Started serving @" + constants.username() + " ...")
-    updater.idle()
+@app.on_message(unknownFilter() & Filters.user(userIdList) & Filters.private)
+def unknown(client: Client, message: Message):
+	global constants
+
+	message.reply_text("This command isn\'t supported.")
+	log(client, "I managed an unsupported command at {}.".format(constants.now()))
+
+
+log(logging="Client initializated\nSetting the markup syntax ...")
+app.set_parse_mode("html")
+log(logging="Setted the markup syntax\nSetting the Job Queue ...")
+log(logging="Setted the Job Queue\nStarted serving ...")
+with app:
+	while True:
+		scheduler.run_pending()

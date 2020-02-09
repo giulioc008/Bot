@@ -1,106 +1,171 @@
 import json
 import time
+import subprocess
+
+import pandas
 
 
 class Constants:
 
-    def __init__(self):
-        self.__botToken = "TOKEN"
-        self.__botUsername = "USERNAME DEL BOT"
-        self.__botLog = -1001234567890
-        self.__botCreators = list()
-
-    def aName(self, username: str) -> str:
-        for x in self.__botCreators:
-            if username.lower() == x["nickname"].lower():
-                return x["name"]
-        return ""
-
-    def changeCreator(self, username: str, newUsername: str):
-        for x in self.__botCreators:
-            if username.lower() == x["nickname"].lower():
-                x["nickname"] = newUsername
-                break
-        		pwd = str(subprocess.check_output("pwd", shell=True))
+	def __init__(self):
+		self.__appHash = "HASH"
+		self.__appId = 0
+		self.__botAdmins = None
+		self.__botLog = 0
+		self.__botUsername = "Bot"
+		self.__botToken = "TOKEN DEL BOT"
+		self.__users = None
+		self.__creator = 0
+		pwd = str(subprocess.check_output("pwd", shell=True))
 		pwd = pwd.replace("b\'", "")
 		pwd = pwd.replace("\\n\'", "")
 		if pwd == "/":
-			path = "home/USER/Documents/gitHub/Bot/creators.json"
+			self.__path = "home/USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
 		elif pwd == "/home":
-			path = "USER/Documents/gitHub/Bot/creators.json"
+			self.__path = "USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
 		elif pwd == "/home/USER":
-			path = "Documents/gitHub/Bot/creators.json"
+			self.__path = "Documents/gitHub/{}/database.json".format(self.__botUsername)
 		elif pwd == "/home/USER/Documents":
-			path = "gitHub/Bot/creators.json"
+			self.__path = "gitHub/{}/database.json".format(self.__botUsername)
 		elif pwd == "/home/USER/Documents/gitHub":
-			path = "Bot/creators.json"
+			self.__path = "{}/database.json".format(self.__botUsername)
 		elif pwd == "/root":
-			path = "/home/USER/Documents/gitHub/Bot/creators.json"
+			self.__path = "/home/USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
 		elif pwd == "/data/data/com.termux/files/home":
-			path = "downloads/Bot/creators.json"
+			self.__path = "downloads/{}/database.json".format(self.__botUsername)
 		elif pwd == "/data/data/com.termux/files/home/downloads":
-			path = "Bot/creators.json"
+			self.__path = "{}/database.json".format(self.__botUsername)
 		else:
-			path = "creators.json"
-		with open(path, "w") as users:
-            users.write(json.dumps(self.__botCreators))
+			self.__path = "database.json"
 
-    def creators(self) -> list:
-        return self.__botCreators
+	@property
+	def admins(self) -> pandas.DataFrame:
+		return self.__botAdmins
 
-    def isACreator(self, username: str) -> bool:
-        for x in self.__botCreators:
-            if username.lower() == x["nickname"].lower():
-                return True
-        return False
+	@admins.setter
+	def admins(self, newAdmin: list):
+		self.__botAdmins = self.__botAdmins.append(newAdmin, ignore_index=True)
+		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\":" + \
+				  self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
+		"""
+			Saving the database
+		"""
+		with open(self.__path, "w") as users:
+			users.write(element)
 
-    def isCreator(self, userId: int) -> bool:
-        for x in self.__botCreators:
-            if userId == x["code"]:
-                return True
-        return False
+	@admins.deleter
+	def admins(self):
+		self.__botAdmins = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact",
+																	   "is_mutual_contact", "is_deleted",
+																	   "is_bot", "is_verified", "is_restricted",
+																	   "is_scam", "is_support", "first_name",
+																	   "last_name", "username", "language_code",
+																	   "phone_number"]))
+		element = "{\"admins\": [],\"users\":" + self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
+		"""
+			Saving the database
+		"""
+		with open(self.__path, "w") as users:
+			users.write(element)
 
-    def loadCreators(self):
-		pwd = pwd.replace("b\'", "")
-		pwd = pwd.replace("\\n\'", "")
-		if pwd == "/":
-			path = "home/USER/Documents/gitHub/Bot/creators.json"
-		elif pwd == "/home":
-			path = "USER/Documents/gitHub/Bot/creators.json"
-		elif pwd == "/home/USER":
-			path = "Documents/gitHub/Bot/creators.json"
-		elif pwd == "/home/USER/Documents":
-			path = "gitHub/Bot/creators.json"
-		elif pwd == "/home/USER/Documents/gitHub":
-			path = "Bot/creators.json"
-		elif pwd == "/root":
-			path = "/home/USER/Documents/gitHub/Bot/creators.json"
-		elif pwd == "/data/data/com.termux/files/home":
-			path = "downloads/Bot/creators.json"
-		elif pwd == "/data/data/com.termux/files/home/downloads":
-			path = "Bot/creators.json"
-		else:
-			path = "creators.json"
-		with open(path, "r") as users:
-            self.__botCreators = json.loads(users.read())
+	@property
+	def creator(self) -> int:
+		return self.__creator
 
-    def log(self) -> int:
-        return self.__botLog
+	@property
+	def databasePath(self) -> str:
+		return self.__path
 
-    def name(self, user_id: int) -> str:
-        for x in self.__botCreators:
-            if user_id == x["code"]:
-                return x["name"]
-        return ""
+	@property
+	def hash(self) -> str:
+		return self.__appHash
 
-    @staticmethod
-    def now() -> str:
-        timer = time.localtime()
-        return "{}:{}:{} of {}-{}-{}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
-                                             timer.tm_mday, timer.tm_mon, timer.tm_year)
+	@property
+	def id(self) -> int:
+		return self.__appId
 
-    def token(self) -> str:
-        return self.__botToken
+	def loadCreators(self):
+		"""
+			Reading the database
+		"""
+		with open(self.__path, "r") as users:
+			files = json.load(users)
+			"""
+		Setting the database
+		"""
+			self.__botAdmins = pandas.DataFrame(data=files["admins"], columns=list(["id", "is_self", "is_contact",
+																					"is_mutual_contact", "is_deleted",
+																					"is_bot", "is_verified", "is_restricted",
+																					"is_scam", "is_support", "first_name",
+																					"last_name", "username", "language_code",
+																					"phone_number"]))
+			self.__users = pandas.DataFrame(data=files["users"], columns=list(["id", "is_self", "is_contact",
+																			   "is_mutual_contact", "is_deleted",
+																			   "is_bot", "is_verified", "is_restricted",
+																			   "is_scam", "is_support", "first_name",
+																			   "last_name", "username", "language_code",
+																			   "phone_number", "flag"]))
+		"""
+			Setting the parameters
+		"""
+		for i in range(self.__botAdmins.shape[0]):
+			if self.__botAdmins.at[i, "username"] == "USERNAME":
+				self.__creator = int(self.__botAdmins.at[i, "id"])
 
-    def username(self) -> str:
-        return self.__botUsername
+	@property
+	def log(self) -> int:
+		return self.__botLog
+
+	@staticmethod
+	def now() -> str:
+		timer = time.localtime()
+		return "{}:{}:{} of {}-{}-{}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
+											 timer.tm_mday, timer.tm_mon, timer.tm_year)
+
+	@staticmethod
+	def save():
+		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\":" + \
+				  self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
+		"""
+			Saving the database
+		"""
+		with open(self.__path, "w") as users:
+			users.write(element)
+
+	@property
+	def token(self) -> str:
+		return self.__botToken
+
+	@property
+	def username(self) -> str:
+		return self.__botUsername
+
+	@property
+	def users(self) -> pandas.DataFrame:
+		return self.__users
+
+	@users.setter
+	def users(self, newUser: list):
+		self.__users = self.__chat.append(newUser, ignore_index=True)
+		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\":" + \
+				  self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
+		"""
+			Saving the database
+		"""
+		with open(self.__path, "w") as users:
+			users.write(element)
+
+	@users.deleter
+	def users(self):
+		self.__users = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact",
+																   "is_mutual_contact", "is_deleted",
+																   "is_bot", "is_verified", "is_restricted",
+																   "is_scam", "is_support", "first_name",
+																   "last_name", "username", "language_code",
+																   "phone_number", "flag"]))
+		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\": []}"
+		"""
+			Saving the database
+		"""
+		with open(self.__path, "w") as users:
+			users.write(element)

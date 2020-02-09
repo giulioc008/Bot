@@ -1,0 +1,21 @@
+[Install]
+Alias=bot.service
+
+[Service]
+ExecStart=path/Bot.sh
+RemainAfterExit=no
+Restart=on-failure
+Type=simple
+User=myUser
+
+[Unit]
+After=network.target
+AssertFileIsExecutable=path/Bot.sh
+AssertFileNotEmpty=path/Bot.sh
+AssertPathExists=path/Bot.sh
+CollectMode=inactive
+DefaultDependencies=yes
+Description=Service that run the script that manage the Bot
+FailureAction=reboot
+SuccessAction=none
+Wants=multi-user.target

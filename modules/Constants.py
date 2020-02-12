@@ -20,23 +20,23 @@ class Constants:
 		pwd = pwd.replace("b\'", "")
 		pwd = pwd.replace("\\n\'", "")
 		if pwd == "/":
-			self.__path = "home/USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
+			self.__path = "home/USER/Documents/gitHub/{}/".format(self.__botUsername)
 		elif pwd == "/home":
-			self.__path = "USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
+			self.__path = "USER/Documents/gitHub/{}/".format(self.__botUsername)
 		elif pwd == "/home/USER":
-			self.__path = "Documents/gitHub/{}/database.json".format(self.__botUsername)
+			self.__path = "Documents/gitHub/{}/".format(self.__botUsername)
 		elif pwd == "/home/USER/Documents":
-			self.__path = "gitHub/{}/database.json".format(self.__botUsername)
+			self.__path = "gitHub/{}/".format(self.__botUsername)
 		elif pwd == "/home/USER/Documents/gitHub":
-			self.__path = "{}/database.json".format(self.__botUsername)
+			self.__path = "{}/".format(self.__botUsername)
 		elif pwd == "/root":
-			self.__path = "/home/USER/Documents/gitHub/{}/database.json".format(self.__botUsername)
+			self.__path = "/home/USER/Documents/gitHub/{}/".format(self.__botUsername)
 		elif pwd == "/data/data/com.termux/files/home":
-			self.__path = "downloads/{}/database.json".format(self.__botUsername)
+			self.__path = "downloads/{}/".format(self.__botUsername)
 		elif pwd == "/data/data/com.termux/files/home/downloads":
-			self.__path = "{}/database.json".format(self.__botUsername)
+			self.__path = "{}/".format(self.__botUsername)
 		else:
-			self.__path = "database.json"
+			self.__path = "./"
 
 	@property
 	def admins(self) -> pandas.DataFrame:
@@ -50,7 +50,7 @@ class Constants:
 		"""
 			Saving the database
 		"""
-		with open(self.__path, "w") as users:
+		with open("{}database.json".format(self.__path), "w") as users:
 			users.write(element)
 
 	@admins.deleter
@@ -65,7 +65,7 @@ class Constants:
 		"""
 			Saving the database
 		"""
-		with open(self.__path, "w") as users:
+		with open("{}database.json".format(self.__path), "w") as users:
 			users.write(element)
 
 	@property
@@ -88,7 +88,7 @@ class Constants:
 		"""
 			Reading the database
 		"""
-		with open(self.__path, "r") as users:
+		with open("{}database.json".format(self.__path), "r") as users:
 			files = json.load(users)
 			"""
 		Setting the database
@@ -128,7 +128,7 @@ class Constants:
 		"""
 			Saving the database
 		"""
-		with open(self.__path, "w") as users:
+		with open("{}database.json".format(self.__path), "w") as users:
 			users.write(element)
 
 	@property
@@ -151,7 +151,7 @@ class Constants:
 		"""
 			Saving the database
 		"""
-		with open(self.__path, "w") as users:
+		with open("{}database.json".format(self.__path), "w") as users:
 			users.write(element)
 
 	@users.deleter
@@ -166,5 +166,5 @@ class Constants:
 		"""
 			Saving the database
 		"""
-		with open(self.__path, "w") as users:
+		with open("{}database.json".format(self.__path), "w") as users:
 			users.write(element)

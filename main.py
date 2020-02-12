@@ -1,4 +1,5 @@
 import json
+import logging as logger
 import re
 
 import schedule
@@ -19,6 +20,9 @@ commands = list(["addadmin",
 constants = Constants.Constants()
 initialLog = list(["Initializing the Admins ...", "Admins initializated\nSetting the admins list ...",
 				   "Admins setted\nSetting the users list ...", "Users initializated\nInitializing the Client ..."])
+logger.basicConfig(filename="{}{}.log".format(constants.databasePath, constants.username), datefmt="%d/%m/%Y %H:%M:%S", encoding="utf-8", format="At %(asctime)s was logged the event:\t%(levelname)s - %(message)s", level=logger.INFO)
+for i in initialLog:
+    logger.info(i)
 scheduler = schedule.default_scheduler
 """
 	Initializing the Admins ...
@@ -105,6 +109,7 @@ def addAdmin(client: Client, message: Message):
 		text = "I added {}".format("{} ".format(user.first_name) if user.first_name is not None else "")
 		text += "{}to the list of allowed chat at {}.".format("{} ".format(user.last_name) if user.last_name is not None else "", constants.now())
 	log(client, text)
+    logger.info(text)
 
 
 @app.on_callback_query(Filters.user(userIdList))
@@ -136,6 +141,7 @@ def answerInlineButton(client: Client, callback_query: CallbackQuery):
 	callback_query.edit_message_text(text, disable_web_page_preview=True)
 	callback_query.edit_message_reply_markup(InlineKeyboardMarkup(keyboard))
 	log(client, "I have answered to an Inline button at {}.".format(constants.now()))
+    logger.info("I have answered to an Inline button at {}.".format(constants.now()))
 
 
 @app.on_message(Filters.service)
@@ -151,11 +157,12 @@ def automaticRemovalStatus(client: Client, message: Message):
 def command1(client: Client, message: Message):
     global constants
 
-	log(client, "I have answered to /command1 at {} because of @{}.".format(constants.now(), message.from_user.username))
 	"""
 		If the command has any arguments, it can be acceded at message.command parameter
 		That parameter is a list with the first element equal to the command (message.command(0) == "command1")
 	"""
+	log(client, "I have answered to /command1 at {} because of @{}.".format(constants.now(), message.from_user.username))
+    logger.info("I have answered to /command1 at {} because of @{}.".format(constants.now(), message.from_user.username))
 
 
 @app.on_message(
@@ -166,7 +173,6 @@ def command2(client: Client, message: Message):
     """
     global constants, scheduler
 
-	log(client, "I have answered to /command2 at {} because of @{}.".format(constants.now(), message.from_user.username))
 	for i in range(constants.users.shape[0]):
 		if constants.users.at[i, "id"] == message.from_user.id and constants.users.at[i, "flag"] is False:
 			scheduler.every().day.at("14:00").do(queue1, client=client, ...)
@@ -178,6 +184,8 @@ def command2(client: Client, message: Message):
 
 			constants.users.at[i, "flag"] = True
 			break
+	log(client, "I have answered to /command2 at {} because of @{}.".format(constants.now(), message.from_user.username))
+    logger.info("I have answered to /command2 at {} because of @{}.".format(constants.now(), message.from_user.username))
 
 
 @app.on_message(
@@ -188,9 +196,10 @@ def command3(client: Client, message: Message):
     """
     global constants
 
-	log(client, "I have answered to /command3 at {} because of @{}.".format(constants.now(), message.from_user.username))
 	keyboard = ReplyKeyboardMarkup(keyboard=list([list([KeyboardButton("Text"), ...]), ...]), resize_keyboard=True, one_time_keyboard=False)
 	message.reply_text("Text", reply_markup=keyboard)
+	log(client, "I have answered to /command3 at {} because of @{}.".format(constants.now(), message.from_user.username))
+    logger.info("I have answered to /command3 at {} because of @{}.".format(constants.now(), message.from_user.username))
 
 
 @app.on_message(
@@ -202,7 +211,8 @@ def help(client: Client, message: Message):
     global commands, constants
 
 	message.reply_text("In this section you will find the list of the command of the bot.\n\t{}.".format("\n\t".join(commands)))
-	log(client, "I helped @" + message.from_user.username + " at " + constants.now() + ".")
+	log(client, "I helped @{} at {}.".format(message.from_user.username, constants.now()))
+    logger.info("I helped @{} at {}.".format(message.from_user.username, constants.now()))
 
 
 @app.on_inline_query(Filters.user(userIdList))
@@ -267,10 +277,11 @@ def inline(client: Client, inline_query: InlineQuery):
 		Sending the output
 	"""
 	inline_query.answer(results, switch_pm_text="Text", switch_pm_parameter="Text")
-	log(client, "I sent the answer to the Inline Query of @" + inline_query.from_user.username + ".")
+	log(client, "I sent the answer to the Inline Query of @{}.".format(inline_query.from_user.username))
+    logger.info("I sent the answer to the Inline Query of @{}.".format(inline_query.from_user.username))
 
 
-def log(client: Client = None, logging: str = ""):
+def log(client: Client = None: str = ""):
 	global constants, initialLog
 
 	if client is not None:
@@ -278,23 +289,29 @@ def log(client: Client = None, logging: str = ""):
 			for msg in initialLog:
 				client.send_message(constants.log, msg)
 			initialLog = None
-		client.send_message(constants.log, logging)
+		client.send_message(constants.log)
 	else:
 		initialLog.append(logging)
 
 
 def queue1(client: Client, ...):
+    global constants
+
     """
         Do a Job in the Job Queue
     """
 	log(client, "I have done my job at {}.".format(constants.now()))
+    logger.info("I have done my job at {}.".format(constants.now()))
 
 
 def queue2(client: Client, ...):
+    global constants
+
     """
         Do a Job in the Job Queue
     """
 	log(client, "I have done my job at {}.".format(constants.now()))
+    logger.info("I have done my job at {}.".format(constants.now()))
 
 
 @app.on_message(
@@ -310,12 +327,14 @@ def removeAdmin(client: Client, message: Message):
 		message.reply_text("The syntax is: `/removeadmin [username]`.")
 		log(client,
 			"I helped @{} with /removeadmin at {}.".format(message.from_user.username, constants.now()))
+		logger.info("I helped @{} with /removeadmin at {}.".format(message.from_user.username, constants.now()))
 		return
 	for i in range(constants.admins.shape[0]):
 		if constants.admins.at[i, "username"].lower() == message.command[0].lower():
 			if constants.creator == constants.admins.at[i, "id"]:
 				message.reply_text("You can\'t remove the creator of the bot from the admin list.")
 				log(client, "@{} tried to remove you as admin at {}.".format(message.from_user.username, constants.now()))
+				logger.info("@{} tried to remove you as admin at {}.".format(message.from_user.username, constants.now()))
 				return
 			else:
 				message.command[0] = constants.admins.at[i, "username"]
@@ -325,6 +344,7 @@ def removeAdmin(client: Client, message: Message):
 	constants.save()
 	message.reply_text("Admin removed.")
 	log(client, "I removed an admin (@{}) at @{}\'s request at {}.".format(message.command[0], message.from_user.username, constants.now()))
+    logger.info("I removed an admin (@{}) at @{}\'s request at {}.".format(message.command[0], message.from_user.username, constants.now()))
 
 
 @app.on_message(
@@ -340,6 +360,7 @@ def report(client: Client, message: Message):
 		i += " - Description"
 	message.reply_text("\n".join(text))
 	log(client, "I send a report to @{} at {}.".format(message.from_user.username, constants.now()))
+    logger.info("I send a report to @{} at {}.".format(message.from_user.username, constants.now()))
 
 
 @app.on_message(Filters.text & Filters.user(userIdList) & Filters.private)
@@ -366,6 +387,7 @@ def start(client: Client, message: Message):
 
 	message.reply_text("Welcome @{}.\nThis bot ...".format(message.from_user.username))
 	log(client, "I started at {} because of @{}.".format(constants.now(), message.from_user.username))
+    logger.info("I started at {} because of @{}.".format(constants.now(), message.from_user.username))
 
 
 def unknownFilter():
@@ -387,12 +409,16 @@ def unknown(client: Client, message: Message):
 
 	message.reply_text("This command isn\'t supported.")
 	log(client, "I managed an unsupported command at {}.".format(constants.now()))
+    logger.info("I managed an unsupported command at {}.".format(constants.now()))
 
 
 log(logging="Client initializated\nSetting the markup syntax ...")
+logger.info("Client initializated\nSetting the markup syntax ...")
 app.set_parse_mode("html")
 log(logging="Setted the markup syntax\nSetting the Job Queue ...")
+logger.info("Setted the markup syntax\nSetting the Job Queue ...")
 log(logging="Setted the Job Queue\nStarted serving ...")
+logger.info("Setted the Job Queue\nStarted serving ...")
 with app:
 	while True:
 		scheduler.run_pending()

@@ -1192,3 +1192,7 @@ zsdoc/data
 *_REMOTE_*.txt
 
 # End of https://www.gitignore.io/api/c,git,vim,c++,zsh,node,kate,java,venv,linux,cmake,clion,latex,matlab,python,pycharm,ltspice,intellij,webstorm,phpstorm,jetbrains,assembler,notepadpp,codeblocks,dotfilessh,virtualenv,objective-c,dotsettings
+
+### Pyrogram ###
+# Created by Giulio Coa
+*.session-journal

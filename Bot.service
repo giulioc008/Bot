@@ -2,7 +2,7 @@
 Alias=bot.service
 
 [Service]
-ExecStart=python3 path/main.py
+ExecStart=python3.7 path/main.py
 RemainAfterExit=no
 Restart=on-failure
 Type=simple

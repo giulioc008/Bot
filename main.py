@@ -20,7 +20,7 @@ commands = list(["addadmin",
 constants = Constants.Constants()
 initialLog = list(["Initializing the Admins ...", "Admins initializated\nSetting the admins list ...",
 				   "Admins setted\nSetting the users list ...", "Users initializated\nInitializing the Client ..."])
-logger.basicConfig(filename="{}{}.log".format(constants.databasePath, constants.username), datefmt="%d/%m/%Y %H:%M:%S", encoding="utf-8", format="At %(asctime)s was logged the event:\t%(levelname)s - %(message)s", level=logger.INFO)
+logger.basicConfig(filename="{}{}.log".format(constants.databasePath, constants.username), datefmt="%d/%m/%Y %H:%M:%S", format="At %(asctime)s was logged the event:\t%(levelname)s - %(message)s", level=logger.INFO)
 for i in initialLog:
     logger.info(i)
 scheduler = schedule.default_scheduler
@@ -281,7 +281,7 @@ def inline(client: Client, inline_query: InlineQuery):
     logger.info("I sent the answer to the Inline Query of @{}.".format(inline_query.from_user.username))
 
 
-def log(client: Client = None: str = ""):
+def log(client: Client = None, logging: str = ""):
 	global constants, initialLog
 
 	if client is not None:
@@ -289,7 +289,7 @@ def log(client: Client = None: str = ""):
 			for msg in initialLog:
 				client.send_message(constants.log, msg)
 			initialLog = None
-		client.send_message(constants.log)
+		client.send_message(constants.log, logging)
 	else:
 		initialLog.append(logging)
 

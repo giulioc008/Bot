@@ -1,5 +1,4 @@
 import json
-import time
 import subprocess
 
 import pandas
@@ -11,7 +10,6 @@ class Constants:
 		self.__appHash = "HASH"
 		self.__appId = 0
 		self.__botAdmins = None
-		self.__botLog = 0
 		self.__botUsername = "Bot"
 		self.__botToken = "TOKEN DEL BOT"
 		self.__users = None
@@ -111,16 +109,6 @@ class Constants:
 		for i in range(self.__botAdmins.shape[0]):
 			if self.__botAdmins.at[i, "username"] == "USERNAME":
 				self.__creator = int(self.__botAdmins.at[i, "id"])
-
-	@property
-	def log(self) -> int:
-		return self.__botLog
-
-	@staticmethod
-	def now() -> str:
-		timer = time.localtime()
-		return "{}:{}:{} of {}-{}-{}".format(timer.tm_hour, timer.tm_min, timer.tm_sec,
-											 timer.tm_mday, timer.tm_mon, timer.tm_year)
 
 	def save(self):
 		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\":" + \

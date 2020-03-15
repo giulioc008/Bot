@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS `Admins` (
   `is_support` BOOLEAN DEFAULT False,
   `first_name` TEXT DEFAULT NULL,
   `last_name` TEXT DEFAULT NULL,
-  `username` TEXT DEFAULT NULL,
+  `username` TEXT UNIQUE DEFAULT NULL,
   `language_code` TEXT DEFAULT NULL,
   `phone_number` TEXT DEFAULT NULL
   PRIMARY KEY (`id`)
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `Users` (
   `is_support` BOOLEAN DEFAULT False,
   `first_name` TEXT DEFAULT NULL,
   `last_name` TEXT DEFAULT NULL,
-  `username` TEXT DEFAULT NULL,
+  `username` TEXT UNIQUE DEFAULT NULL,
   `language_code` TEXT DEFAULT NULL,
   `phone_number` TEXT DEFAULT NULL,,
   `flag` BOOLEAN DEFAULT False,

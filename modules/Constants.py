@@ -53,12 +53,7 @@ class Constants:
 
 	@admins.deleter
 	def admins(self):
-		self.__botAdmins = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact",
-																	   "is_mutual_contact", "is_deleted",
-																	   "is_bot", "is_verified", "is_restricted",
-																	   "is_scam", "is_support", "first_name",
-																	   "last_name", "username", "language_code",
-																	   "phone_number"]))
+		self.__botAdmins = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact", "is_mutual_contact", "is_deleted", "is_bot", "is_verified", "is_restricted", "is_scam", "is_support", "first_name", "last_name", "username", "language_code", "phone_number"]))
 		element = "{\"admins\": [],\"users\":" + self.__users.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + "}"
 		"""
 			Saving the database
@@ -91,18 +86,8 @@ class Constants:
 			"""
 		Setting the database
 		"""
-			self.__botAdmins = pandas.DataFrame(data=files["admins"], columns=list(["id", "is_self", "is_contact",
-																					"is_mutual_contact", "is_deleted",
-																					"is_bot", "is_verified", "is_restricted",
-																					"is_scam", "is_support", "first_name",
-																					"last_name", "username", "language_code",
-																					"phone_number"]))
-			self.__users = pandas.DataFrame(data=files["users"], columns=list(["id", "is_self", "is_contact",
-																			   "is_mutual_contact", "is_deleted",
-																			   "is_bot", "is_verified", "is_restricted",
-																			   "is_scam", "is_support", "first_name",
-																			   "last_name", "username", "language_code",
-																			   "phone_number", "flag"]))
+			self.__botAdmins = pandas.DataFrame(data=files["admins"], columns=list(["id", "is_self", "is_contact", "is_mutual_contact", "is_deleted", "is_bot", "is_verified", "is_restricted", "is_scam", "is_support", "first_name", "last_name", "username", "language_code", "phone_number"]))
+			self.__users = pandas.DataFrame(data=files["users"], columns=list(["id", "is_self", "is_contact", "is_mutual_contact", "is_deleted", "is_bot", "is_verified", "is_restricted", "is_scam", "is_support", "first_name", "last_name", "username", "language_code", "phone_number", "flag"]))
 		"""
 			Setting the parameters
 		"""
@@ -144,12 +129,7 @@ class Constants:
 
 	@users.deleter
 	def users(self):
-		self.__users = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact",
-																   "is_mutual_contact", "is_deleted",
-																   "is_bot", "is_verified", "is_restricted",
-																   "is_scam", "is_support", "first_name",
-																   "last_name", "username", "language_code",
-																   "phone_number", "flag"]))
+		self.__users = pandas.DataFrame(data=dict(), columns=list(["id", "is_self", "is_contact", "is_mutual_contact", "is_deleted", "is_bot", "is_verified", "is_restricted", "is_scam", "is_support", "first_name", "last_name", "username", "language_code", "phone_number", "flag"]))
 		element = "{\"admins\":" + self.__botAdmins.to_json(orient="records").replace("\":", "\": ").replace(",\"", ", \"") + ",\"users\": []}"
 		"""
 			Saving the database

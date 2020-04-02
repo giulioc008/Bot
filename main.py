@@ -43,7 +43,7 @@ async def addAdmin(client: Client, message: Message):
 	"""
 	global adminsIdList
 
-	await user = client.get_users(message.command.pop(1))
+	user = await client.get_users(message.command.pop(1))
 	text = "@{} is already present in the admin list.".format(user.username))
 	if user.id in adminsIdList:
 		return

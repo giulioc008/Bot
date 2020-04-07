@@ -46,6 +46,18 @@ Module used to create the Bot
 
 
 
+### Requests
+
+HTTP library for Python, built for human beings
+
+* Version: 2.23.0
+* Website: https://requests.readthedocs.io/en/master/
+* Documentation: https://requests.readthedocs.io/en/master/user/advanced/
+* Module name: **requests**
+
+
+
+
 ### Schedule
 
 Python job scheduling for humans

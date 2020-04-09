@@ -16,6 +16,17 @@ Modules used to make the Bot work on 1 single thread
 
 
 
+### Pandas
+
+Open source easy-to-use data structures and data analysis tools for Python
+
+* Version: 1.0.3
+* Website: https://pandas.pydata.org/docs/
+* Documentation: https://pandas.pydata.org/docs/reference/frame.html
+* Module name: **pandas**
+
+
+
 ### PyMySQL
 
 Module used to connect to a MySQL Server

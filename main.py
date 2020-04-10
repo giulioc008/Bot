@@ -36,7 +36,7 @@ logger.info("Users initializated\nInitializing the Client ...")
 app = Client(session_name=constants.username, api_id=constants.id, api_hash=constants.hash, bot_token=constants.token)
 
 
-@app.on_message(Filters.command("addadmin", prefixes=list(["/"])) & Filters.user(adminsIdList) & Filters.private)
+@app.on_message(Filters.command("addadmin", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
 async def addAdmin(client: Client, message: Message):
 	"""
 		/addadmin <username>
@@ -117,7 +117,7 @@ def automaticRemovalStatus(_, message: Message):
 	await message.delete(revoke=True)
 
 
-@app.on_message(Filters.command("command1", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("command1", prefixes="/") & Filters.user(userIdList) & Filters.private)
 async def command1(client: Client, message: Message):
 	"""
 		If the command has any arguments, it can be acceded at message.command parameter
@@ -126,7 +126,7 @@ async def command1(client: Client, message: Message):
 	logger.info("I have answered to /command1 because of @{}.".format(message.from_user.username))
 
 
-@app.on_message(Filters.command("command2", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("command2", prefixes="/") & Filters.user(userIdList) & Filters.private)
 async def command2(_, message: Message):
 	"""
 		/command2
@@ -147,7 +147,7 @@ async def command2(_, message: Message):
 	logger.info("I have answered to /command2 ecause of @{}.".format(message.from_user.username))
 
 
-@app.on_message(Filters.command("command3", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("command3", prefixes="/") & Filters.user(userIdList) & Filters.private)
 async def command3(_, message: Message):
 	"""
 		Command that reply with a keyboard
@@ -157,7 +157,7 @@ async def command3(_, message: Message):
 	logger.info("I have answered to /command3 because of @{}.".format(message.from_user.username))
 
 
-@app.on_message(Filters.command("help", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("help", prefixes="/") & Filters.user(userIdList) & Filters.private)
 async def help(_, message: Message):
 	"""
 		/help
@@ -245,7 +245,7 @@ def queue2(client: Client, ...):
 	logger.info("I have done my job.")
 
 
-@app.on_message(Filters.command("removeadmin", prefixes=list(["/"])) & Filters.user(adminsIdList) & Filters.private)
+@app.on_message(Filters.command("removeadmin", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
 async def removeAdmin(_, message: Message):
 	"""
 		/removeadmin <username>
@@ -272,7 +272,7 @@ async def removeAdmin(_, message: Message):
 	logger.info("I removed @{} from the admin database.".format(message.command[0]))
 
 
-@app.on_message(Filters.command("report", prefixes=list(["/"])) & Filters.user(constants.creator) & Filters.private)
+@app.on_message(Filters.command("report", prefixes="/") & Filters.user(constants.creator) & Filters.private)
 async def report(_, message: Message):
 	"""
 		/report
@@ -299,7 +299,7 @@ async def split(client: Client, message: Message):
 		pass
 
 
-@app.on_message(Filters.command("start", prefixes=list(["/"])) & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("start", prefixes="/") & Filters.user(userIdList) & Filters.private)
 async def start(_, message: Message):
 	"""
 		/start

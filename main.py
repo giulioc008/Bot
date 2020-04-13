@@ -51,14 +51,14 @@ async def addAdmin(client: Client, message: Message):
 		Adding the chat to the database
 	"""
 	userDict = user.__dict__
-	userDict.pop("_client")
-	userDict.pop("_")
-	userDict.pop("photo")
-	userDict.pop("restrictions")
-	userDict.pop("status")
-	userDict.pop("last_online_date")
-	userDict.pop("next_offline_date")
-	userDict.pop("dc_id")
+	userDict.pop("_client", None)
+	userDict.pop("_", None)
+	userDict.pop("photo", None)
+	userDict.pop("restrictions", None)
+	userDict.pop("status", None)
+	userDict.pop("last_online_date", None)
+	userDict.pop("next_offline_date", None)
+	userDict.pop("dc_id", None)
 	constants.admins = list([userDict])
 	text = "I added @{} to the admins database.".format(user.username)
     logger.info(text)

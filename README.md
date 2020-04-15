@@ -49,7 +49,7 @@ Module used to connect to a MySQL Server
 
 Module used to create the Bot
 
-* Version: 0.16.0
+* Version: 0.16.0 asyncio
 * Website: https://docs.pyrogram.org/
 * Documentation: https://docs.pyrogram.org/api/client
 * Module name: **pyrogram**

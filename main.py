@@ -3,7 +3,7 @@ import re
 import asyncio
 import schedule
 from pyrogram import CallbackQuery, Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, KeyboardButton, Message, ReplyKeyboardMarkup
-
+from pyrogram.errors import FloodWait
 from modules import Constants
 
 commands = list(["addadmin", "command1", "command2", "command3", "help", "removeadmin", "report", "start"])
@@ -34,6 +34,42 @@ list(map(lambda n: list(map(lambda m: userIdList.add(int(m)), n)), i))
 userIdList = list(userIdList)
 logger.info("Users initializated\nInitializing the Client ...")
 app = Client(session_name=constants.username, api_id=constants.id, api_hash=constants.hash, bot_token=constants.token)
+
+
+async def split_edit_text(message: Message, text: str):
+	"""
+		A coroutine that edits the text of a message; if text is too long sends more messages.
+		:param message: Message to edit
+		:param text: Text to insert
+		:return: None
+	"""
+	global messageMaxLength
+
+	await message.edit_text(text[:messageMaxLength])
+	if len(text) >= messageMaxLength:
+		for i in range(1, len(text), messageMaxLength):
+			try:
+				await message.reply_text(text[i:i + messageMaxLength], quote=False)
+			except FloodWait as e:
+				await asyncio.sleep(e.x)
+
+
+async def split_reply_text(message: Message, text: str):
+	"""
+		A coroutine that reply to a message; if text is too long sends more messages.
+		:param message: Message to reply
+		:param text: Text to insert
+		:return: None
+	"""
+	global messageMaxLength
+
+	await message.reply_text(text[:messageMaxLength], quote=False)
+	if len(text) >= messageMaxLength:
+		for i in range(1, len(text), messageMaxLength):
+			try:
+				await message.reply_text(text[i:i + messageMaxLength], quote=False)
+			except FloodWait as e:
+				await asyncio.sleep(e.x)
 
 
 @app.on_message(Filters.command("addadmin", prefixes="/") & Filters.user(adminsIdList) & Filters.private)

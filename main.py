@@ -6,7 +6,7 @@ from pyrogram import CallbackQuery, Client, Filters, InlineKeyboardButton, Inlin
 from pyrogram.errors import FloodWait
 from modules import Constants
 
-commands = list(["addadmin", "command1", "command2", "command3", "help", "removeadmin", "report", "start"])
+commands = ["addadmin", "command1", "command2", "command3", "help", "removeadmin", "report", "start"]
 constants = Constants.Constants()
 logger.basicConfig(filename="{}{}.log".format(constants.databasePath, constants.username), datefmt="%d/%m/%Y %H:%M:%S", format="At %(asctime)s was logged the event:\t%(levelname)s - %(message)s", level=logger.INFO)
 scheduler = schedule.default_scheduler

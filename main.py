@@ -261,7 +261,7 @@ async def help(_, message: Message):
 
 
 @app.on_message(Filters.command("init", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
-def initializing(client: Client, _):
+async def initializing(client: Client, _):
 	global config
 
 	max_length = await client.send(GetConfig())

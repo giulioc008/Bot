@@ -151,14 +151,23 @@ async def add_to_the_database(client: Client, message: Message):
 	chat.pop("last_online_date", None)
 	chat.pop("next_offline_date", None)
 	chat.pop("dc_id", None)
+	chat.pop("is_self", None)
+	chat.pop("is_contact", None)
+	chat.pop("is_mutual_contact", None)
+	chat.pop("is_deleted", None)
+	chat.pop("is_bot", None)
+	chat.pop("is_verified", None)
+	chat.pop("is_restricted", None)
+	chat.pop("is_scam", None)
+	chat.pop("is_support", None)
 
 	with connection.cursor() as cursor:
 		if config.get("creator") in lists:
-			cursor.execute("INSERT INTO `Admins` (`id`, `is_self` ,`is_contact`, `is_mutual_contact`, `is_deleted`, `is_bot`, `is_verified`, `is_restricted`, `is_scam`, `is_support`, `first_name`, `last_name`, `username`, `language_code`, `phone_number`, `role`) VALUES (%(id)s, %(is_self)s, %(is_contact)s, %(is_mutual_contact)s, %(is_deleted)s, %(is_bot)s, %(is_verified)s, %(is_restricted)s, %(is_scam)s, %(is_support)s, %(first_name)s, %(last_name)s, %(username)s, %(language_code)s, %(phone_number)s)", chat)
+			cursor.execute("INSERT INTO `Admins` (`id`, `first_name`, `last_name`, `username`, `language_code`, `phone_number`) VALUES (%(id)s, %(first_name)s, %(last_name)s, %(username)s, %(language_code)s, %(phone_number)s)", chat)
 			await message.chat.promote_member(chat["id"], can_change_info=True, can_post_messages=True, can_edit_messages=False, can_delete_messages=True, can_restrict_members=True, can_invite_users=True, can_pin_messages=True, can_promote_members=False)
 			text = "I added {}{} to the list of allowed user.".format("{} ".format(chat["first_name"]) if chat["first_name"] is not None else "", "{} ".format(chat["last_name"]) if chat["last_name"] is not None else "")
 		else:
-			cursor.execute("INSERT INTO `Chats` (`id`, `type`, `is_verified`, `is_restricted`, `is_scam`, `is_support`, `title`, `username`, `first_name`, `last_name`, `invite_link`) VALUES (%(id)s, %(type)s, %(is_verified)s, %(is_restricted)s, %(is_scam)s, %(is_support)s, %(title)s, %(username)s, %(first_name)s, %(last_name)s, %(invite_link)s)", chat)
+			cursor.execute("INSERT INTO `Chats` (`id`, `type`, `title`, `username`, `first_name`, `last_name`, `invite_link`) VALUES (%(id)s, %(type)s, %(title)s, %(username)s, %(first_name)s, %(last_name)s, %(invite_link)s)", chat)
 			text = "I added {} to the list of allowed chat.".format(chat["title"])
 		connection.commit()
 
@@ -452,8 +461,17 @@ async def updateDatabase(client: Client, message: Message = None):
 			i.pop("last_online_date", None)
 			i.pop("next_offline_date", None)
 			i.pop("dc_id", None)
+			i.pop("is_self", None)
+			i.pop("is_contact", None)
+			i.pop("is_mutual_contact", None)
+			i.pop("is_deleted", None)
+			i.pop("is_bot", None)
+			i.pop("is_verified", None)
+			i.pop("is_restricted", None)
+			i.pop("is_scam", None)
+			i.pop("is_support", None)
 			# Updating the admins' database
-			cursor.execute("UPDATE `Admins` SET `is_self`=%(is_self)s, `is_contact`=%(is_contact)s, `is_mutual_contact`=%(is_mutual_contact)s, `is_deleted`=%(is_deleted)s, `is_bot`=%(is_bot)s, `is_verified`=%(is_verified)s, `is_restricted`=%(is_restricted)s, `is_scam`=%(is_scam)s, `is_support`=%(is_support)s, `first_name`=%(first_name)s, `last_name`=%(last_name)s, `username`=%(username)s, `language_code`=%(language_code)s, `phone_number`=%(phone_number)s WHERE `id`=%(id)s", i)
+			cursor.execute("UPDATE `Admins` SET `first_name`=%(first_name)s, `last_name`=%(last_name)s, `username`=%(username)s, `language_code`=%(language_code)s, `phone_number`=%(phone_number)s WHERE `id`=%(id)s", i)
 		connection.commit()
 
 	# Updating the chats' database
@@ -478,8 +496,12 @@ async def updateDatabase(client: Client, message: Message = None):
 			i.pop("restrictions", None)
 			i.pop("permissions", None)
 			i.pop("distance", None)
+			i.pop("is_verified", None)
+			i.pop("is_restricted", None)
+			i.pop("is_scam", None)
+			i.pop("is_support", None)
 			# Updating the chats' database
-			cursor.execute("UPDATE `Chats` SET `type`=%(type)s, `is_verified`=%(is_verified)s, `is_restricted`=%(is_restricted)s, `is_scam`=%(is_scam)s, `is_support`=%(is_support)s, `title`=%(title)s, `username`=%(username)s, `first_name`=%(first_name)s, `last_name`=%(last_name)s, `invite_link`=%(invite_link)s WHERE `id`=%(id)s", i)
+			cursor.execute("UPDATE `Chats` SET `type`=%(type)s, `title`=%(title)s, `username`=%(username)s, `first_name`=%(first_name)s, `last_name`=%(last_name)s, `invite_link`=%(invite_link)s WHERE `id`=%(id)s", i)
 		connection.commit()
 
 	await stopFilter.commute()

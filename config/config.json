@@ -1,0 +1,72 @@
+{
+  "commands": [
+    {
+      "name": "add",
+      "description": "Add an admin to the database",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "command1",
+      "description": "Command example",
+      "domain": "all",
+      "parameters": ""
+    },
+    {
+      "name": "command2",
+      "description": "Command example",
+      "domain": "all",
+      "parameters": ""
+    },
+    {
+      "name": "help",
+      "description": "Show the help",
+      "domain": "all",
+      "parameters": ""
+    },
+    {
+      "name": "init",
+      "description": "Initializing a bot's parameters",
+      "domain": "admin",
+      "parameters": ""
+    },
+    {
+      "name": "remove",
+      "description": "Remove an admin from the database",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "report",
+      "description": "Send a report on the list of the commands",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "start",
+      "description": "Start the bot",
+      "domain": "all",
+      "parameters": ""
+    },
+    {
+      "name": "update",
+      "description": "Update the database",
+      "domain": "admin",
+      "parameters": ""
+    }
+  ],
+  "database": {
+    "host": "localhost",
+    "username": "username",
+    "password": "password",
+    "port": 3306,
+    "name": "name"
+  },
+  "logger": {
+    "format": "%(asctime)s [%(levelname)s] %(message)s",
+    "level": "",
+    "path": ""
+  },
+  "messageMaxLength": 0,
+  "creator": ""
+}

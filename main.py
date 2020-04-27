@@ -1,39 +1,68 @@
-import logging as logger
-import re
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import asyncio
-import schedule
+import logging as logger
+import pymysql
 from pyrogram import CallbackQuery, Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, KeyboardButton, Message, ReplyKeyboardMarkup
 from pyrogram.errors import FloodWait
-from modules import Constants
+import re
+from res.configurations import Configurations
 
-commands = ["addadmin", "command1", "command2", "command3", "help", "removeadmin", "report", "start"]
-constants = Constants.Constants()
-logger.basicConfig(filename="{}{}.log".format(constants.databasePath, constants.username), datefmt="%d/%m/%Y %H:%M:%S", format="At %(asctime)s was logged the event:\t%(levelname)s - %(message)s", level=logger.INFO)
-scheduler = schedule.default_scheduler
-logger.info("Initializing the Admins ...")
-constants.loadCreators()
-logger.info("Admins initializated\nSetting the admins list ...")
-adminsIdList = set()
-i = constants.admins.to_json(orient="columns")
-i = i[len("{\"id\":{"):i.index("}")]
-i = i.split(",")
-i = list(map(lambda n: n.split(":"), i))
-i = list(map(lambda n: dict({n[0]: n[1]}), i))
-i = list(map(lambda n: list(n.values()), i))
-list(map(lambda n: list(map(lambda m: adminsIdList.add(int(m)), n)), i))
-adminsIdList = list(adminsIdList)
-logger.info("Admins setted\nSetting the users list ...")
-userIdList = set()
-i = constants.users.to_json(orient="columns")
-i = i[len("{\"id\":{"):i.index("}")]
-i = i.split(",")
-i = list(map(lambda n: n.split(":"), i))
-i = list(map(lambda n: dict({n[0]: n[1]}), i))
-i = list(map(lambda n: list(n.values()), i))
-list(map(lambda n: list(map(lambda m: userIdList.add(int(m)), n)), i))
-userIdList = list(userIdList)
-logger.info("Users initializated\nInitializing the Client ...")
-app = Client(session_name=constants.username, api_id=constants.id, api_hash=constants.hash, bot_token=constants.token)
+def stopFilterCommute(self):
+	self.flag = not self.flag
+
+
+adminsIdList = list()
+chatIdList = list()
+
+configurations_map = {
+	"commands": "commands",
+	"database": "database",
+	"logger": "logger",
+	"message_max_length": "messageMaxLength",
+	"creator": "creator"
+}
+
+config = Configurations("config/config.json", configurations_map)
+config.set("app_hash", os.environ.pop("app_hash", None))
+config.set("app_id", os.environ.pop("app_id", None))
+config.set("bot_token", os.environ.pop("bot_token", None))
+config.set("bot_username", os.environ.pop("bot_username", None))
+config.set("creator", os.environ.pop("creator", None))
+
+connection = pymysql.connect(
+	host=config.get("database")["host"],
+	user=config.get("database")["username"],
+	password=config.get("database")["password"],
+	database=config.get("database")["name"],
+	port=config.get("database")["port"],
+	charset="utf8",
+	cursorclass=pymysql.cursors.DictCursor,
+	autocommit=False)
+
+logger.basicConfig(
+	filename=config.get("logger")["path"],
+	datefmt="%d/%m/%Y %H:%M:%S",
+	format=config.get("logger")["format"],
+	level=config.get("logger").pop("level", "INFO"))
+
+minute = 60
+scheduler = AsyncIOScheduler()
+stopFilter = Filters.create(lambda self, _: self.flag, flag=True, commute=stopFilterCommute)
+
+with connection.cursor() as cursor:
+	logger.info("Setting the admins list ...")
+	cursor.execute("SELECT `id` FROM `Admins`")
+
+	for i in cursor.fetchall():
+		adminsIdList.append(i["id"])
+	logger.info("Admins setted\nSetting the chats list ...")
+	cursor.execute("SELECT `id` FROM `Chats`")
+
+	for i in cursor.fetchall():
+		chatIdList.append(i["id"])
+
+logger.info("Chats initializated\nInitializing the Client ...")
+app = Client(session_name=config.get("username"), api_id=config.get("api_id"), api_hash=config.get("api_hash"), bot_token=config.get("bot_token"))
 
 
 async def split_edit_text(message: Message, text: str):
@@ -43,13 +72,13 @@ async def split_edit_text(message: Message, text: str):
 		:param text: Text to insert
 		:return: None
 	"""
-	global messageMaxLength
+	global config
 
-	await message.edit_text(text[:messageMaxLength])
-	if len(text) >= messageMaxLength:
-		for i in range(1, len(text), messageMaxLength):
+	await message.edit_text(text[:config.get("message_max_length")])
+	if len(text) >= config.get("message_max_length"):
+		for i in range(1, len(text), config.get("message_max_length")):
 			try:
-				await message.reply_text(text[i:i + messageMaxLength], quote=False)
+				await message.reply_text(text[i:i + config.get("message_max_length")], quote=False)
 			except FloodWait as e:
 				await asyncio.sleep(e.x)
 
@@ -61,49 +90,89 @@ async def split_reply_text(message: Message, text: str):
 		:param text: Text to insert
 		:return: None
 	"""
-	global messageMaxLength
+	global config
 
-	await message.reply_text(text[:messageMaxLength], quote=False)
-	if len(text) >= messageMaxLength:
-		for i in range(1, len(text), messageMaxLength):
+	await message.reply_text(text[:config.get("message_max_length")], quote=False)
+	if len(text) >= config.get("message_max_length"):
+		for i in range(1, len(text), config.get("message_max_length")):
 			try:
-				await message.reply_text(text[i:i + messageMaxLength], quote=False)
+				await message.reply_text(text[i:i + config.get("message_max_length")], quote=False)
 			except FloodWait as e:
 				await asyncio.sleep(e.x)
 
 
-@app.on_message(Filters.command("addadmin", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
-async def addAdmin(client: Client, message: Message):
-	"""
-		/addadmin <username>
-	"""
-	global adminsIdList
+@app.on_message(Filters.command("add", prefixes="/") & (Filters.user(config.get("creator")) | Filters.channel) & stopFilter)
+async def add_to_the_database(client: Client, message: Message):
+	# /add
+	global adminsIdList, chatIdList, config, stopFilter
 
-	user = await client.get_users(message.command.pop(1))
-	text = "@{} is already present in the admin list.".format(user.username))
-	if user.id in adminsIdList:
+	await stopFilter.commute()
+	# Checking if the message arrive from a channel and, if not, checking if the user that runs the command is allowed
+	if message.from_user is not None and message.from_user.id != config.get("creator"):
+		await stopFilter.commute()
 		return
-	"""
-		Adding the chat to the database
-	"""
-	userDict = user.__dict__
-	userDict.pop("_client", None)
-	userDict.pop("_", None)
-	userDict.pop("photo", None)
-	userDict.pop("restrictions", None)
-	userDict.pop("status", None)
-	userDict.pop("last_online_date", None)
-	userDict.pop("next_offline_date", None)
-	userDict.pop("dc_id", None)
-	constants.admins = list([userDict])
-	text = "I added @{} to the admins database.".format(user.username)
-    logger.info(text)
+
+	lists = chatIdList
+	text = "The chat {} is already present in the list of allowed chat.".format(chat.title)
+
+	# Checking if the data are of a chat or of a user
+	if message.reply_to_message is not None:
+		chat = await client.get_users(message.reply_to_message.from_user.id)
+		chat = chat.__dict__
+		lists = adminsIdList
+		text = "The user @{} is already an admin.".format(chat["username"])
+	else:
+		chat = await client.get_chat(message.chat.id)
+		chat = chat.__dict__
+
+		# Deleting the message
+		await message.delete(revoke=True)
+
+	# Checking if the chat/user is in the list
+	if chat["id"] in lists:
+		await stopFilter.commute()
+		logger.info(text)
+		return
+
+	# Adding the chat/user to the database
+	lists.append(chat["id"])
+
+	# Removing inutil informations
+	chat.pop("_client", None)
+	chat.pop("_", None)
+	chat.pop("photo", None)
+	chat.pop("description", None)
+	chat.pop("pinned_message", None)
+	chat.pop("sticker_set_name", None)
+	chat.pop("can_set_sticker_set", None)
+	chat.pop("members_count", None)
+	chat.pop("restrictions", None)
+	chat.pop("permissions", None)
+	chat.pop("distance", None)
+	chat.pop("status", None)
+	chat.pop("last_online_date", None)
+	chat.pop("next_offline_date", None)
+	chat.pop("dc_id", None)
+
+	with connection.cursor() as cursor:
+		if config.get("creator") in lists:
+			cursor.execute("INSERT INTO `Admins` (`id`, `is_self` ,`is_contact`, `is_mutual_contact`, `is_deleted`, `is_bot`, `is_verified`, `is_restricted`, `is_scam`, `is_support`, `first_name`, `last_name`, `username`, `language_code`, `phone_number`, `role`) VALUES (%(id)s, %(is_self)s, %(is_contact)s, %(is_mutual_contact)s, %(is_deleted)s, %(is_bot)s, %(is_verified)s, %(is_restricted)s, %(is_scam)s, %(is_support)s, %(first_name)s, %(last_name)s, %(username)s, %(language_code)s, %(phone_number)s)", chat)
+			await message.chat.promote_member(chat["id"], can_change_info=True, can_post_messages=True, can_edit_messages=False, can_delete_messages=True, can_restrict_members=True, can_invite_users=True, can_pin_messages=True, can_promote_members=False)
+			text = "I added {}{} to the list of allowed user.".format("{} ".format(chat["first_name"]) if chat["first_name"] is not None else "", "{} ".format(chat["last_name"]) if chat["last_name"] is not None else "")
+		else:
+			cursor.execute("INSERT INTO `Chats` (`id`, `type`, `is_verified`, `is_restricted`, `is_scam`, `is_support`, `title`, `username`, `first_name`, `last_name`, `invite_link`) VALUES (%(id)s, %(type)s, %(is_verified)s, %(is_restricted)s, %(is_scam)s, %(is_support)s, %(title)s, %(username)s, %(first_name)s, %(last_name)s, %(invite_link)s)", chat)
+			text = "I added {} to the list of allowed chat.".format(chat["title"])
+		connection.commit()
+
+	await stopFilter.commute()
+	logger.info(text)
 
 
-@app.on_callback_query(Filters.user(userIdList))
+@app.on_callback_query()
 async def answerInlineButton(_, callback_query: CallbackQuery):
 	keyboard = list()
 	text = ""
+
 	if callback_query.data.lower() == "text":
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 		text = "Text"
@@ -122,9 +191,12 @@ async def answerInlineButton(_, callback_query: CallbackQuery):
 	else:
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...]))
 		text = "Text"
+
 	await callback_query.answer(text, show_alert=True)
+
 	await callback_query.edit_message_text(text, disable_web_page_preview=True)
 	await callback_query.edit_message_reply_markup(InlineKeyboardMarkup(keyboard))
+
 	logger.info("I have answered to an Inline button.")
 
 
@@ -133,8 +205,9 @@ def automaticRemovalStatus(_, message: Message):
 	await message.delete(revoke=True)
 
 
-@app.on_message(Filters.command("command1", prefixes="/") & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("command1", prefixes="/") & Filters.private)
 async def command1(client: Client, message: Message):
+	# /command1
 	"""
 		If the command has any arguments, it can be acceded at message.command parameter
 		That parameter is a list with the first element equal to the command (message.command[0] == "command1")
@@ -142,53 +215,54 @@ async def command1(client: Client, message: Message):
 	logger.info("I have answered to /command1 because of @{}.".format(message.from_user.username))
 
 
-@app.on_message(Filters.command("command2", prefixes="/") & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("command2", prefixes="/") & Filters.private)
 async def command2(_, message: Message):
-	"""
-		/command2
-	"""
-	global constants, scheduler
+	# /command2
+	# Command that reply with a keyboard
+	keyboard=list()
 
-	for i in range(constants.users.shape[0]):
-		if constants.users.at[i, "id"] == message.from_user.id and constants.users.at[i, "flag"] is False:
-			scheduler.every().day.at("14:00").do(queue1, client=client, ...)
-			logger.info("@{} activated the Job Queue that DO SOMETHING.".format(message.from_user.username))
-			scheduler.every().monday.at("2:00").do(queue2, client=client, ...)
-			logger.info("@{} activated the Job Queue that DO SOMETHING ELSE.".format(message.from_user.username))
+	keyboard.append([KeyboardButton("Text"), ...])
+	keyboard.append([KeyboardButton("Text"), ...])
+	keyboard.append([KeyboardButton("Text"), ...])
+	keyboard.append([KeyboardButton("Text"), ...])
+	keyboard.append([KeyboardButton("Text"), ...])
 
-			...
+	keyboard = ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=False)
 
-			constants.users.at[i, "flag"] = True
-			break
-	logger.info("I have answered to /command2 ecause of @{}.".format(message.from_user.username))
-
-
-@app.on_message(Filters.command("command3", prefixes="/") & Filters.user(userIdList) & Filters.private)
-async def command3(_, message: Message):
-	"""
-		Command that reply with a keyboard
-	"""
-	keyboard = ReplyKeyboardMarkup(keyboard=list([list([KeyboardButton("Text"), ...]), ...]), resize_keyboard=True, one_time_keyboard=False)
 	await message.reply_text("Text", reply_markup=keyboard)
-	logger.info("I have answered to /command3 because of @{}.".format(message.from_user.username))
+
+	logger.info("I have answered to /command2 because of @{}.".format(message.from_user.username))
 
 
-@app.on_message(Filters.command("help", prefixes="/") & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("help", prefixes="/") & Filters.private)
 async def help(_, message: Message):
-	"""
-		/help
-	"""
-	global commands
+	# /help
+	global config
 
-	await message.reply_text("In this section you will find the list of the command of the bot.\n\t{}.".format("\n\t".join(commands)))
-	logger.info("I helped @{}.".format(message.from_user.username))
+	commands = config.get("commands")
+
+	# Filter the commands list in base at their domain
+	if message.from_user.id not in adminsIdList:
+		commands = list(filter(lambda n: n["domain"] != "admin", commands))
+	if message.from_user.id != config.get("creator"):
+		commands = list(filter(lambda n: n["domain"] != "creator", commands))
+
+	await split_reply_text(message, "In this section you will find the list of the command of the bot.\n\t{}".format("\n\t".join(list(map(lambda n: "<code>/{} {}</code> - {}".format(n["name"], n["parameters"], n["description"])), commands))))
+
+	logger.info("I sent the help.")
+
+
+@app.on_message(Filters.command("init", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
+def initializing(client: Client, _):
+	global config
+
+	max_length = await client.send(GetConfig())
+	config.set("message_max_length", max_length.message_length_max)
 
 
 @app.on_inline_query(Filters.user(userIdList))
 async def inline(_, inline_query: InlineQuery):
-	"""
-		Inline command
-	"""
+	# Inline command
 	results = list()
 	keyboard = list()
 	queryID = ""
@@ -196,22 +270,25 @@ async def inline(_, inline_query: InlineQuery):
 	URL = ""
 	description = ""
 	text = ""
-	"""
-		Checking if the text of the query is correct
-	"""
+
+	# Checking if the text of the query is correct
 	if inline_query.query.lower() == "text":
 		queryID = "Text"
 		title = "Text"
 		URL = "Text"
 		description = "Text"
+
 		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 	elif inline_query.query.lower() == "text":
 		queryID = "Text"
 		title = "Text"
 		URL = "Text"
 		description = "Text"
+
 		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 	elif inline_query.query.lower() == "text":
@@ -219,7 +296,9 @@ async def inline(_, inline_query: InlineQuery):
 		title = "Text"
 		URL = "Text"
 		description = "Text"
+
 		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
@@ -228,21 +307,24 @@ async def inline(_, inline_query: InlineQuery):
 		title = "Text"
 		URL = "Text"
 		description = "Text"
+
 		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query="Text"), ...]))
 	else:
 		queryID = "Text"
 		title = "Text"
 		URL = "Text"
 		description = "Text"
+
 		text = InputTextMessageContent("Text", disable_web_page_preview=True)
+
 		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...]))
 	keyboard=InlineKeyboardMarkup(keyboard)
+
 	results.append(InlineQueryResultArticle(title=title, input_message_content=text, id=queryID, url=URL, description=description, reply_markup=keyboard))
 	results.append(InlineQueryResultArticle(title=title, input_message_content=text, id=queryID, url=URL, description=description, reply_markup=keyboard))
-	"""
-		Sending the output
-	"""
+
 	await inline_query.answer(results, switch_pm_text="Text", switch_pm_parameter="Text")
 	logger.info("I sent the answer to the Inline Query of @{}.".format(inline_query.from_user.username))
 
@@ -261,49 +343,70 @@ def queue2(client: Client, ...):
 	logger.info("I have done my job.")
 
 
-@app.on_message(Filters.command("removeadmin", prefixes="/") & Filters.user(adminsIdList) & Filters.private)
-async def removeAdmin(_, message: Message):
-	"""
-		/removeadmin <username>
-	"""
-	message.command.pop(0)
-	if len(message.command) != 1:
-		await message.reply_text("The syntax is: <code>/removeadmin &lt;username&gt;</code>.")
-		logger.info("I helped @{} with /removeadmin.".format(message.from_user.username))
+@app.on_message(Filters.command("remove", prefixes="/") & (Filters.user(config.get("creator")) | Filters.channel) & stopFilter)
+async def remove_from_the_database(_, message: Message):
+	# /remove
+	global adminsIdList, chatIdList, config, stopFilter
+
+	await stopFilter.commute()
+
+	# Checking if the message arrive from a channel and, if not, checking if the user that runs the command is allowed
+	if message.from_user is not None and message.from_user.id != config.get("creator"):
+		await stopFilter.commute()
 		return
-	for i in range(constants.admins.shape[0]):
-		if constants.admins.at[i, "username"].lower() == message.command[0].lower():
-			if constants.creator == constants.admins.at[i, "id"]:
-				await message.reply_text("You can\'t remove the creator of the bot from the admin list.")
-				await client.send_message(constants.creator, "@{} have tried to remove you as admin.".format(message.from_user.username))
-				logger.info("@{} tried to remove you as admin.".format(message.from_user.username))
-				return
-			else:
-				message.command[0] = constants.admins.at[i, "username"]
-				constants.admins.drop(list([i]))
-				break
-	constants.admins.reset_index(drop=True)
-	constants.save()
-	await message.reply_text("Admin removed.")
-	logger.info("I removed @{} from the admin database.".format(message.command[0]))
+
+	lists = chatIdList
+	title = message.chat.title
+	text = "The chat {} hasn\'t been removed from the list of allowed chat.".format(title)
+
+	# Checking if the data are of a chat or of a user
+	if message.reply_to_message is not None:
+		ids = message.reply_to_message.from_user.id
+		lists = adminsIdList
+		text = "The user @{} hasn\'t been removed from the admins list.".format(message.reply_to_message.from_user.username)
+	else:
+		ids = message.chat.id
+		# Deleting the message
+		await message.delete(revoke=True)
+
+	# Checking if the chat/user is in the list
+	if ids not in lists:
+		await stopFilter.commute()
+		logger.info(text)
+		return
+
+	# Removing the chat/user from the database
+	lists.remove(ids)
+
+	with connection.cursor() as cursor:
+		if config.get("creator") in lists:
+			cursor.execute("DELETE FROM `Admins` WHERE `id`=%(id)s", {"id": ids})
+			await message.chat.restrict_member(ids, can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True, can_add_web_page_previews=True, can_send_polls=True, can_change_info=False, can_invite_users=True, can_pin_messages=False)
+			text = "The user @{} has been removed from the admins list.".format(message.reply_to_message.from_user.username)
+		else:
+			cursor.execute("DELETE FROM `Chats` WHERE `id`=%(id)s", {"id": ids})
+			text = "The chat {} has been removed from the list of allowed chat.".format(title)
+		connection.commit()
+
+	await stopFilter.commute()
+	logger.info(text)
 
 
-@app.on_message(Filters.command("report", prefixes="/") & Filters.user(constants.creator) & Filters.private)
+@app.on_message(Filters.command("report", prefixes="/") & Filters.user(config.get("creator")) & Filters.private)
 async def report(_, message: Message):
-	"""
-		/report
-	"""
-	global commands
+	# /report
+	global config
 
-	text = list(map(lambda n: "{} - Description".format(n), commands))
-	await message.reply_text("\n".join(text))
+	await message.reply_text("\n".join(list(map(lambda n: "{} - {}".format(n["name"], n["description"]), config.get("commands")))))
+
 	logger.info("I send a report.")
 
 
-@app.on_message(Filters.text & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.text & Filters.private)
 async def split(client: Client, message: Message):
     if message.text is None:
 		return
+
 	if message.text == " ... ":
 		pass
 	elif message.text == " ... ":
@@ -315,13 +418,74 @@ async def split(client: Client, message: Message):
 		pass
 
 
-@app.on_message(Filters.command("start", prefixes="/") & Filters.user(userIdList) & Filters.private)
+@app.on_message(Filters.command("start", prefixes="/") & Filters.private)
 async def start(_, message: Message):
-	"""
-		/start
-	"""
+	# /start
 	await message.reply_text("Welcome @{}.\nThis bot ...".format(message.from_user.username))
 	logger.info("I started because of @{}.".format(message.from_user.username))
+
+
+@app.on_message(Filters.command("update", prefixes="/") & Filters.user(adminsIdList) & Filters.private & stopFilter)
+async def updateDatabase(client: Client, message: Message = None):
+	# /update
+	global adminsIdList, chatIdList, connection, config, stopFilter
+
+	await stopFilter.commute()
+
+	# Checking if the updating was programmed or not
+	if message is not None:
+		await message.delete(revoke=True)
+
+	# Updating the admin's database
+	adminsIdList.remove(config.get("creator"))
+	chats = await client.get_users(adminsIdList)
+	adminsIdList.append(config.get("creator"))
+	await chats.append(client.get_me())
+	chats = list(map(lambda n: n.__dict__, chats))
+
+	with connection.cursor() as cursor:
+		for i in chats:
+			# Removing inutil informations
+			i.pop("_client", None)
+			i.pop("_", None)
+			i.pop("photo", None)
+			i.pop("restrictions", None)
+			i.pop("status", None)
+			i.pop("last_online_date", None)
+			i.pop("next_offline_date", None)
+			i.pop("dc_id", None)
+			# Updating the admins' database
+			cursor.execute("UPDATE `Admins` SET `is_self`=%(is_self)s, `is_contact`=%(is_contact)s, `is_mutual_contact`=%(is_mutual_contact)s, `is_deleted`=%(is_deleted)s, `is_bot`=%(is_bot)s, `is_verified`=%(is_verified)s, `is_restricted`=%(is_restricted)s, `is_scam`=%(is_scam)s, `is_support`=%(is_support)s, `first_name`=%(first_name)s, `last_name`=%(last_name)s, `username`=%(username)s, `language_code`=%(language_code)s, `phone_number`=%(phone_number)s WHERE `id`=%(id)s", i)
+		connection.commit()
+
+	# Updating the chats' database
+	chats = list()
+	for i in chatIdList:
+		try:
+			await chats.append(client.get_chat(i).__dict__)
+		except FloodWait as e:
+			await asyncio.sleep(e.x)
+
+	with connection.cursor() as cursor:
+		for i in chats:
+			# Removing inutil informations
+			i.pop("_client", None)
+			i.pop("_", None)
+			i.pop("photo", None)
+			i.pop("description", None)
+			i.pop("pinned_message", None)
+			i.pop("sticker_set_name", None)
+			i.pop("can_set_sticker_set", None)
+			i.pop("members_count", None)
+			i.pop("restrictions", None)
+			i.pop("permissions", None)
+			i.pop("distance", None)
+			# Updating the chats' database
+			cursor.execute("UPDATE `Chats` SET `type`=%(type)s, `is_verified`=%(is_verified)s, `is_restricted`=%(is_restricted)s, `is_scam`=%(is_scam)s, `is_support`=%(is_support)s, `title`=%(title)s, `username`=%(username)s, `first_name`=%(first_name)s, `last_name`=%(last_name)s, `invite_link`=%(invite_link)s WHERE `id`=%(id)s", i)
+		connection.commit()
+
+	await stopFilter.commute()
+	logger.info("I have updated the database.")
 
 
 def unknownFilter():
@@ -337,7 +501,7 @@ def unknownFilter():
 	return Filters.create(func, "UnknownFilter", p=re.compile("/{}".format("|/".join(commands)), 0))
 
 
-@app.on_message(unknownFilter() & Filters.user(userIdList) & Filters.private)
+@app.on_message(unknownFilter() & Filters.private)
 async def unknown(_, message: Message):
 	await message.reply_text("This command isn\'t supported.")
 	logger.info("I managed an unsupported command.")
@@ -345,8 +509,11 @@ async def unknown(_, message: Message):
 
 logger.info("Client initializated\nSetting the markup syntax ...")
 app.set_parse_mode("html")
-logger.info("Setted the markup syntax\nSetting the Job Queue ...")
-logger.info("Setted the Job Queue\nStarted serving ...")
-with app:
-	while True:
-		scheduler.run_pending()
+
+logger.info("Set the markup syntax\nSetting the Job Queue ...")
+scheduler.add_job(updateDatabase, "interval", seconds=24 * 60 * minute, client=app)
+
+logger.info("Set the Job Queue\nStarted serving ...")
+scheduler.start()
+app.run()
+connection.close()

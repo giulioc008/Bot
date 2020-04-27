@@ -1,4 +1,5 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 import asyncio
 import logging as logger
 import pymysql
@@ -534,7 +535,7 @@ logger.info("Client initializated\nSetting the markup syntax ...")
 app.set_parse_mode("html")
 
 logger.info("Set the markup syntax\nSetting the Job Queue ...")
-scheduler.add_job(updateDatabase, "interval", seconds=24 * 60 * minute, client=app)
+scheduler.add_job(updateDatabase, IntervalTrigger(days=1,timezone="Europe/Rome"), client=app)
 
 logger.info("Set the Job Queue\nStarted serving ...")
 scheduler.start()

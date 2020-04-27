@@ -62,7 +62,7 @@ with connection.cursor() as cursor:
 		chatIdList.append(i["id"])
 
 logger.info("Chats initializated\nInitializing the Client ...")
-app = Client(session_name=config.get("username"), api_id=config.get("api_id"), api_hash=config.get("api_hash"), bot_token=config.get("bot_token"))
+app = Client(session_name=config.get("bot_username"), api_id=config.get("api_id"), api_hash=config.get("api_hash"), bot_token=config.get("bot_token"))
 
 
 async def split_edit_text(message: Message, text: str):
@@ -174,22 +174,22 @@ async def answerInlineButton(_, callback_query: CallbackQuery):
 	text = ""
 
 	if callback_query.data.lower() == "text":
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
 		text = "Text"
 	elif callback_query.data.lower() == "text":
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
+		keyboard.append(([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
 		text = "Text"
 	elif callback_query.data.lower() == "text":
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...]))
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text"), ...])
 		text = "Text"
 	elif callback_query.data.lower() == "text":
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query="Text"), ...]))
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query="Text"), ...])
 		text = "Text"
 	else:
-		keyboard.append(list([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...]))
+		keyboard.append([InlineKeyboardButton("Text", callback_data="Text", url="Text", switch_inline_query_current_chat="Text"), ...])
 		text = "Text"
 
 	await callback_query.answer(text, show_alert=True)
@@ -489,7 +489,7 @@ async def updateDatabase(client: Client, message: Message = None):
 
 
 def unknownFilter():
-	global commands
+	global config
 
 	def func(flt, message: Message):
 		text = message.text
@@ -498,6 +498,9 @@ def unknownFilter():
 			if bool(message.matches) is False and text.startswith("/") is True and len(text) > 1:
 				return True
 		return False
+
+	commands = list(map(lambda n: n["name"], config.get("commands")))
+
 	return Filters.create(func, "UnknownFilter", p=re.compile("/{}".format("|/".join(commands)), 0))
 
 

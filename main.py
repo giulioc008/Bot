@@ -17,9 +17,7 @@ chatIdList = list()
 configurations_map = {
 	"commands": "commands",
 	"database": "database",
-	"logger": "logger",
-	"message_max_length": "messageMaxLength",
-	"creator": "creator"
+	"logger": "logger"
 }
 
 config = Configurations("config/config.json", configurations_map)

@@ -1,0 +1,7 @@
+aiofile==1.5.2
+APScheduler==3.6.3
+PyMySQL==0.9.3
+pyrogram==0.16.0.asyncio
+requests==2.23.0
+telegraph==1.4.0
+TgCrypto==1.2.0

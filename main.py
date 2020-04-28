@@ -22,7 +22,7 @@ configurations_map = {
 }
 
 config = Configurations("config/config.json", configurations_map)
-config.parse()
+await config.parse()
 config.set("app_hash", os.environ.pop("app_hash", None))
 config.set("app_id", os.environ.pop("app_id", None))
 config.set("bot_token", os.environ.pop("bot_token", None))

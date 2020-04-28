@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `Chats` (
   `id` BIGINT,
   `type` TEXT NOT NULL,
   `title` TEXT DEFAULT NULL,
-  `username` TEXT UNIQUE DEFAULT NULL,
+  `username` VARCHAR(32) UNIQUE DEFAULT NULL,
   `first_name` TEXT DEFAULT NULL,
   `last_name` TEXT DEFAULT NULL,
   `invite_link` TEXT DEFAULT NULL,

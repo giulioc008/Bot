@@ -1,8 +1,8 @@
 aiofile==1.5.2
 APScheduler==3.6.3
+cryptography==2.9.2
 PyMySQL==0.9.3
 https://github.com/pyrogram/pyrogram/archive/asyncio.zip
-pyrogram==0.16.0
 requests==2.23.0
 telegraph==1.4.0
 TgCrypto==1.2.0

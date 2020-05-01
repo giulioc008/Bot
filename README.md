@@ -71,7 +71,7 @@ Module used to create the UserBot
 * Documentation: https://docs.pyrogram.org/api/client
 * Module name: **pyrogram**
 * Requirements: **TgCrypto**
-* Installing: `sudo python3 -m pip install --upgrade --no-cache-dir https://github.com/pyrogram/pyrogram/archive/asyncio.zip`
+* Installing: `sudo python3 -m pip install --upgrade --no-cache-dir https://github.com/pyrogram/pyrogram/archive/asyncio.zip; sudo python3 -m pip install --upgrade --no-cache-dir TgCrypto`
 
 
 

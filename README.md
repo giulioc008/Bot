@@ -22,7 +22,7 @@ Modules used to do asynchronous file operations
 Library that lets you schedule your Python code to be executed later, either just once or periodically
 
 * Version: 3.6.3
-* Website: https://pymysql.readthedocs.io/en/latest/
+* Website: https://apscheduler.readthedocs.io/en/stable/index.html
 * Documentation: https://apscheduler.readthedocs.io/en/stable/modules/schedulers/asyncio.html#module-apscheduler.schedulers.asyncio
 * Modules name: **apscheduler**
 * Requirements:

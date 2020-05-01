@@ -29,7 +29,7 @@ Library that lets you schedule your Python code to be executed later, either jus
 	- Python >= 3.4: none
 	- Python 3.3: **asyncio**
 	- Python <= 3.2: **trollius**
-* Installing: `sudo python3 -m pip install --upgrade --no-cache-dir apscheduler`
+* Installing: `sudo python3 -m pip install --upgrade --no-cache-dir APScheduler`
 
 
 
@@ -70,7 +70,7 @@ Module used to create the UserBot
 * Website: https://docs.pyrogram.org/
 * Documentation: https://docs.pyrogram.org/api/client
 * Module name: **pyrogram**
-* Requirements: **tgcrypto**
+* Requirements: **TgCrypto**
 * Installing: `sudo python3 -m pip install --upgrade --no-cache-dir https://github.com/pyrogram/pyrogram/archive/asyncio.zip`
 
 

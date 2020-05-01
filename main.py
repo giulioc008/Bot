@@ -21,13 +21,15 @@ configurations_map = {
 	"logger": "logger"
 }
 
+loop = asyncio.get_event_loop()
+
 config = Configurations("config/config.json", configurations_map)
-await config.parse()
+loop.run_until_complete(config.parse())
 config.set("app_hash", os.environ.pop("app_hash", None))
-config.set("app_id", os.environ.pop("app_id", None))
+config.set("app_id", int(os.environ.pop("app_id", None)))
 config.set("bot_token", os.environ.pop("bot_token", None))
 config.set("bot_username", os.environ.pop("bot_username", None))
-config.set("creator", os.environ.pop("creator", None))
+config.set("creator", int(os.environ.pop("creator", None)))
 
 connection = pymysql.connect(
 	host=config.get("database")["host"],
@@ -43,7 +45,7 @@ logger.basicConfig(
 	filename=config.get("logger")["path"],
 	datefmt="%d/%m/%Y %H:%M:%S",
 	format=config.get("logger")["format"],
-	level=config.get("logger").pop("level", "INFO"))
+	level=config.get("logger").pop("level", logger.INFO))
 
 minute = 60
 scheduler = AsyncIOScheduler()

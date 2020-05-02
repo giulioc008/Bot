@@ -4,6 +4,7 @@ AssertPathIsDirectory=path_to_the_bot_directory
 AssertDirectoryNotEmpty=path_to_the_bot_directory
 AssertPathExists=path_to_the_bot_directory/main.py
 AssertFileNotEmpty=path_to_the_bot_directory/main.py
+After=network.target
 Description=Service that run the script that manage a Bot
 
 [Service]
@@ -15,4 +16,5 @@ User=my_user
 WorkingDirectory=path_to_the_bot_directory
 
 [Install]
+Alias=bot.service
 WantedBy=multi-user.target

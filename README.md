@@ -66,7 +66,7 @@ Module used to connect to a MySQL Server
 
 Module used to create the UserBot
 
-* Version: 0.17.0.asyncio
+* Version: 0.17.0-async
 * Website: https://docs.pyrogram.org/
 * Documentation: https://docs.pyrogram.org/api/client
 * Module name: **pyrogram**

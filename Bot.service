@@ -1,19 +1,18 @@
-[Install]
-Alias=bot.service
+[Unit]
+AssertPathExists=path_to_the_bot_directory
+AssertPathIsDirectory=path_to_the_bot_directory
+AssertDirectoryNotEmpty=path_to_the_bot_directory
+AssertPathExists=path_to_the_bot_directory/main.py
+AssertFileNotEmpty=path_to_the_bot_directory/main.py
+Description=Service that run the script that manage a Bot
 
 [Service]
 ExecStart=python3 main.py
-RemainAfterExit=no
 Restart=on-failure
+RestartSec=5s
 Type=simple
-User=myUser
-WorkingDirectory=path
+User=my_user
+WorkingDirectory=path_to_the_bot_directory
 
-[Unit]
-After=network.target
-CollectMode=inactive
-DefaultDependencies=yes
-Description=Service that run the script that manage a Bot
-FailureAction=reboot
-SuccessAction=none
-Wants=multi-user.target
+[Install]
+WantedBy=multi-user.target

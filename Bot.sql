@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `Admins` (
   `last_name` TEXT DEFAULT NULL,
   `username` VARCHAR(32) UNIQUE DEFAULT NULL,
   `language_code` TEXT DEFAULT NULL,
-  `phone_number` TEXT DEFAULT NULL
+  `phone_number` TEXT DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8;
 

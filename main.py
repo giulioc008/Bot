@@ -64,7 +64,7 @@ with connection.cursor() as cursor:
 		chatIdList.append(i["id"])
 
 logger.info("Chats initializated\nInitializing the Client ...")
-app = Client(session_name=config.get("bot_username"), api_id=config.get("api_id"), api_hash=config.get("api_hash"), bot_token=config.get("bot_token"))
+app = Client(session_name=config.get("bot_username"), api_id=config.get("app_id"), api_hash=config.get("app_hash"), bot_token=config.get("bot_token"))
 
 
 async def split_edit_text(message: Message, text: str):

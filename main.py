@@ -8,7 +8,7 @@ from pyrogram.errors import FloodWait
 import re
 from res.configurations import Configurations
 
-def stopFilterCommute(self):
+async def stopFilterCommute(self):
 	self.flag = not self.flag
 
 

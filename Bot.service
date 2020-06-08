@@ -8,7 +8,7 @@ After=network.target
 Description=Service that run the script that manage a Bot
 
 [Service]
-ExecStart=python3 main.py
+ExecStart=source venv/bin/activate; python3 main.py; deactivate
 Restart=on-failure
 RestartSec=5s
 Type=simple

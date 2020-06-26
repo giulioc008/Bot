@@ -26,8 +26,8 @@ config.set("bot_username", os.environ.pop("bot_username", None))
 
 connection = pymysql.connect(
 	host=config.get("database")["host"],
-	user=config.get("database")["username"],
-	password=config.get("database")["password"],
+	user=os.environ.pop("database_username", config.get("database")["username"]),
+	password=os.environ.pop("database_password", config.get("database")["password"]),
 	database=config.get("database")["name"],
 	port=config.get("database")["port"],
 	charset="utf8",

@@ -3,7 +3,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 import asyncio
 import logging as logger
 import pymysql
-from pyrogram import CallbackQuery, Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, KeyboardButton, Message, ReplyKeyboardMarkup
+from pyrogram import CallbackQuery, ChatPermission, Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, KeyboardButton, Message, ReplyKeyboardMarkup
 from pyrogram.errors import FloodWait
 import re
 import res
@@ -52,6 +52,9 @@ with connection.cursor() as cursor:
 
 	cursor.execute("SELECT `id` FROM `Admins`;")
 	admins_list = list(map(lambda n: n["id"], cursor.fetchall()))
+
+	cursor.execute("SELECT * FROM `Blackist`;")
+	blacklist = list(map(lambda n: n["id"], cursor.fetchall()))
 
 	logger.info("Admins setted\nSetting the chats list ...")
 	cursor.execute("SELECT `id` FROM `Chats`;")
@@ -170,7 +173,7 @@ async def announces(client: Client, message: Message):
 	logger.info("I\'ve answered to /ads because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_callback_query()
+@app.on_callback_query(~Filters.user(blacklist))
 async def answer_inline_button(client: Client, callback_query: CallbackQuery):
 	global config, connection
 
@@ -261,12 +264,12 @@ async def automatic_management_service(_, message: Message):
 	await message.delete(revoke=True)
 
 
-@app.on_message(Filters.command(["ban", "banall", "unban"], prefixes="/") & Filters.user(config.get("creator")) & Filters.chat(chats_list))
+@app.on_message(Filters.command(["ban", "banall", "unban", "kick"], prefixes="/") & Filters.user(admins_list) & Filters.chat(chats_list))
 async def ban_hammer(client: Client, message: Message):
 	# /ban
 	# /banall
 	# /unban <username>
-	global chats_list, config, connection
+	global chats_list, config
 
 	command = message.command.pop(0)
 
@@ -275,14 +278,22 @@ async def ban_hammer(client: Client, message: Message):
 		await res.split_reply_text(config, message, "The syntax is: <code>/unban &lt;username&gt;</code>.", quote=False)
 		logger.info("{} have sent an incorrect /unban request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 		return
+	elif message.reply_to_message is None:
+		logger.info("{} have sent an incorrect /{} request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id, command))
+		return
 
 	# Executing the command
 	if command == "unban":
 		user = await client.get_users(message.command.pop(0))
 		await message.chat.unban_member(user.id)
-	elif message.reply_to_message is not None:
+	else:
 		user = message.reply_to_message.from_user
-		await message.chat.kick_member(user.id)
+		limits = 0
+
+		if command == "kick":
+			limits = 31
+
+		await message.chat.kick_member(user.id, until_date=limits)
 
 		# Checking if the player must be banned from all chats
 		if command == "banall":
@@ -292,7 +303,64 @@ async def ban_hammer(client: Client, message: Message):
 
 				await client.kick_chat_member(i, user.id)
 
-	await res.split_reply_text(config, message, "I have {}ned @{}{}.".format(command[: command.rindex("n")], user.username, "from all chats" if command == "banall" else ""), quote=True)
+	await res.split_reply_text(config, message, "I have {}ed @{}{}.".format(" {}n".format(command[: command.rindex("n")]) if command != "kick" else command, user.username, "from all chats" if command == "banall" else ""), quote=False)
+	logger.info("I\'ve answered to /{} because of {}.".format(command, "@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+
+
+@app.on_message(Filters.command(["blacklist", "unblacklist"], prefixes="/") & Filters.user(admins_list) & Filters.chat(chats_list))
+async def blacklist(client: Client, message: Message):
+	# /blacklist
+	# /unblacklist <username>
+	global admins_list, blacklist, chats_list, config, connection
+
+	command = message.command.pop(0)
+
+	# Checking if the command is correct
+	if command == "unblacklist" and message.command is False:
+		await res.split_reply_text(config, message, "The syntax is: <code>/unblacklist &lt;username&gt;</code>.", quote=False)
+		logger.info("{} have sent an incorrect /unblacklist request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+		return
+	elif message.reply_to_message is None:
+		logger.info("{} have sent an incorrect /blacklist request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+		return
+
+	# Executing the command
+	if command == "unblacklist":
+		user = await client.get_users(message.command.pop(0))
+
+		blacklist.remove(user.id)
+
+		for i in chats_list:
+			await client.unban_chat_member(i, user.id)
+
+		# Removing the user from the blacklist
+		with connection.cursor() as cursor:
+			cursor.execute("DELETE FROM `Blacklist` WHERE `id`=%(id)s;", {
+				"id": user.id
+			})
+		connection.commit()
+	else:
+		user = message.reply_to_message.from_user
+
+		admins_list.remove(user.id)
+
+		blacklist.append(user.id)
+
+		for i in chats_list:
+			await client.kick_chat_member(i, user.id)
+
+		# Adding the user to the blacklist
+		with connection.cursor() as cursor:
+			cursor.execute("DELETE FROM `Admins` WHERE `id`=%(id)s;", {
+				"id": user.id
+			})
+
+			cursor.execute("INSERT INTO `Blacklist` (`id`) VALUES (%(id)s);", {
+				"id": user.id
+			})
+		connection.commit()
+
+	await res.split_reply_text(config, message, "I have {}ed @{}.".format(command, user.username), quote=False)
 	logger.info("I\'ve answered to /{} because of {}.".format(command, "@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
@@ -315,7 +383,7 @@ async def check_database(_, message: Message):
 	logger.info("I\'ve answered to /check because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_message(Filters.command("command1", prefixes="/") & Filters.private)
+@app.on_message(Filters.command("command1", prefixes="/") & Filters.private & ~Filters.user(blacklist))
 async def command1(client: Client, message: Message):
 	# /command1
 	"""
@@ -325,7 +393,7 @@ async def command1(client: Client, message: Message):
 	logger.info("I\'ve answered to /command1 because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_message(Filters.command("command2", prefixes="/") & Filters.private)
+@app.on_message(Filters.command("command2", prefixes="/") & Filters.private & ~Filters.user(blacklist))
 async def command2(_, message: Message):
 	# /command2
 	keyboard=list()
@@ -345,7 +413,7 @@ async def command2(_, message: Message):
 	logger.info("I\'ve answered to /command2 because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_message(Filters.command("help", prefixes="/") & Filters.private)
+@app.on_message(Filters.command("help", prefixes="/") & Filters.private & ~Filters.user(blacklist))
 async def help(_, message: Message):
 	# /help
 	global admins_list, config
@@ -384,7 +452,7 @@ async def initializing(client: Client, _):
 	logger.info("I\'ve answered to /init because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_inline_query()
+@app.on_inline_query(~Filters.user(blacklist))
 async def inline(_, inline_query: InlineQuery):
 	# Inline command
 	query = inline_query.query.lower()
@@ -413,6 +481,67 @@ async def inline(_, inline_query: InlineQuery):
 
 	await inline_query.answer(response, cache_time=1)
 	logger.info("I sent the answer to the Inline Query of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+
+
+@app.on_message(Filters.command("link", prefixes="/") & Filters.group & Filters.chat(chats_list) & ~Filters.user(blacklist))
+async def link(client: Client, message: Message):
+	# /link
+	global config
+
+	text = "@{} is the link to this chat.".format(message.chat.username) if message.chat.username is not None else ""
+
+	if message.chat.username is None:
+		chat = client.get_chat(message.chat.id)
+
+		text = "This is the <a href=\"{}\">link</a> to this chat.".format(chat.invite_link)
+
+	await res.split_reply_text(config, message, text, quote=False)
+	logger.info("I\'ve answered to /link because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+
+
+@app.on_message(Filters.command(["mute", "silence", "unmute", "unsilence"], prefixes="/") & Filters.user(admins_list) & Filters.group & Filters.chat(chats_list))
+async def mute_hammer(client: Client, message: Message):
+	# /mute [time]
+	# /silence
+	# /unmute
+	# /unsilence
+	global admins_list, config, connection
+
+	command = message.command.pop(0)
+
+	# Checking if the command is correct
+	if "mute" in command and message.reply_to_message is None:
+		logger.info("{} have sent an incorrect /{} request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id, command))
+		return
+
+	permission = message.chat.permissions
+
+	# Checking if the command is /mute or /silence
+	if "un" not in command:
+		permission = ChatPermission(can_send_messages=False, can_send_media_messages=False, can_send_stickers=False, can_send_animations=False, can_send_games=False, can_use_inline_bots=False, can_add_web_page_previews=False, can_send_polls=False, can_change_info=False, can_pin_messages=False)
+
+	# Executing the command
+	if "mute" in command:
+		user = message.reply_to_message.from_user
+
+		if user.id in admins_list:
+			return
+
+		limits = 0
+
+		if command == "mute" and message.command is True:
+			limits = message.command.pop(0)
+
+		await message.chat.restrict_member(user.id, permissions, until_date=limits)
+	else:
+		for i in message.chat.iter_members():
+			if i.user.id in admins_list:
+				continue
+
+			await message.chat.restrict_member(i.user.id, permission)
+
+	await res.split_reply_text(config, message, "I have {}d {}.".format(command, "@{}".format(user.username) if "mute" in command else "all the users in the chat"), quote=False)
+	logger.info("I\'ve answered to /{} because of {}.".format(command, "@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
 def queue1(client: Client, ...):
@@ -486,7 +615,7 @@ async def report(_, message: Message):
 	logger.info("I\'ve answered to /report because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_message(Filters.text & Filters.private)
+@app.on_message(Filters.text & Filters.private & ~Filters.user(blacklist))
 async def split(client: Client, message: Message):
 	if message.text == " ... ":
 		pass
@@ -499,7 +628,7 @@ async def split(client: Client, message: Message):
 		pass
 
 
-@app.on_message(Filters.command("start", prefixes="/") & Filters.user(players_allowed_list) & Filters.private)
+@app.on_message(Filters.command("start", prefixes="/") & Filters.private & ~Filters.user(blacklist))
 async def start(client: Client, message: Message):
 	# /start
 	global config
@@ -508,7 +637,7 @@ async def start(client: Client, message: Message):
 	logger.info("I\'ve answered to /start because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_message(res.unknown_filter(config) & Filters.private)
+@app.on_message(res.unknown_filter(config) & Filters.private & ~Filters.user(blacklist))
 async def unknown(_, message: Message):
 	global config
 

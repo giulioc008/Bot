@@ -25,6 +25,12 @@
       "parameters": ""
     },
     {
+      "name": "blacklist",
+      "description": "Insert a player in the blacklist",
+      "domain": "admin",
+      "parameters": ""
+    },
+    {
       "name": "check",
       "description": "Check the database",
       "domain": "creator",
@@ -55,6 +61,24 @@
       "parameters": ""
     },
     {
+      "name": "kick",
+      "description": "Kick a player",
+      "domain": "admin",
+      "parameters": ""
+    },
+    {
+      "name": "link",
+      "description": "Retrieve the invite link to the chat",
+      "domain": "all",
+      "parameters": ""
+    },
+    {
+      "name": "mute",
+      "description": "Mute a player",
+      "domain": "admin",
+      "parameters": "[time]"
+    },
+    {
       "name": "remove",
       "description": "Remove an admin from the database",
       "domain": "creator",
@@ -64,6 +88,12 @@
       "name": "report",
       "description": "Send a report on the list of the commands",
       "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "silence",
+      "description": "Silence a chat",
+      "domain": "admin",
       "parameters": ""
     },
     {
@@ -79,6 +109,24 @@
       "parameters": ""
     },
     {
+      "name": "unblacklist",
+      "description": "Remove a player from the blacklist",
+      "domain": "admin",
+      "parameters": "&lt;username&gt;"
+    },
+     {
+      "name": "unmute",
+      "description": "Unmute a player",
+      "domain": "admin",
+      "parameters": ""
+    },
+     {
+      "name": "unsilence",
+      "description": "Unsilence a chat",
+      "domain": "admin",
+      "parameters": ""
+    },
+   {
       "name": "update",
       "description": "Update the database",
       "domain": "admin",

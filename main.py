@@ -130,9 +130,17 @@ async def add_to_the_database(client: Client, message: Message):
 
 	with connection.cursor() as cursor:
 		if chat.get("type", None) is None:
-			# Updating the players database
+			# Adding the user to the database
 			cursor.execute("INSERT INTO `Admins` (`id`, `first_name`, `last_name`, `username`, `phone_number`) VALUES (%(id)s, %(first_name)s, %(last_name)s, %(username)s, %(phone_number)s);", chat)
+
 			await message.chat.promote_member(chat["id"], can_change_info=True, can_post_messages=True, can_edit_messages=False, can_delete_messages=True, can_restrict_members=True, can_invite_users=True, can_pin_messages=True, can_promote_members=False)
+			for i in chats_list:
+				# Checking if the user is in the chat
+				try:
+					await client.get_chat_member(i, chat["id"])
+				except ChannelInvalid:
+					# Updating the player's privilege
+					await client.promote_chat_member(i, chat["id"], can_change_info=True, can_post_messages=True, can_edit_messages=False, can_delete_messages=True, can_restrict_members=True, can_invite_users=True, can_pin_messages=True, can_promote_members=False)
 
 			text = "Admin added to the database."
 		else:
@@ -144,6 +152,36 @@ async def add_to_the_database(client: Client, message: Message):
 
 	await res.split_reply_text(config, message, text, quote=False)
 	logger.info("I\'ve answered to /add because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+
+
+@app.on_message(Filters.chat(chats_list) & Filters.regex("^(\@admin)\s+(\S+.*)$", re.IGNORECASE | re.UNICODE | re.MULTILINE) & ~Filters.user(blacklist))
+async def admin(client: Client, message: Message):
+	global config, connection
+
+	# Retrieving the admins
+	with connection.cursor() as cursor:
+		cursor.execute("SELECT `id`, `first_name`, `username` FROM `Admins`")
+		admins = cursor.fetchall()
+
+	if message.from_user.username is not None:
+		text = "\n@{} needs your help".format(message.from_user.username)
+	else:
+		text = "\n<a href=\"tg://user?id={}\">{}</a> needs your help".format(message.from_user.id, message.from_user.first_name)
+
+	# Retrieving the eventual message for the admins
+	match = message.matches.pop(0)
+	if match.group(2) != "":
+		text += " for {}".format(match.group(2))
+	text += "."
+
+	# Tagging the admins
+	await res.split_reply_text(config, message.reply_to_message, " ".join(list(map(lambda n: "@{}".format(i["username"]) if i["username"] is not None else "<a href=\"tg://user?id={}\">{}</a>".format(i["id"], i["first_name"]), admins))), quote=True)
+	await message.delete(revoke=True)
+
+	for i in admins:
+		await client.send_message(i["id"], "{}{}".format("@{}".format(i["username"]) if i["username"] is not None else "<a href=\"tg://user?id={}\">{}</a>".format(i["id"], i["first_name"]), text))
+
+	logger.info("I sent {}{}\'s request to the competent admin.".format("{} ".format(message.from_user.first_name) if message.from_user.first_name is not None else "", "{} ".format(message.from_user.last_name) if message.from_user.last_name is not None else "")
 
 
 @app.on_message(Filters.command("ads", prefixes="/") & Filters.user(admins_list) & Filters.private)
@@ -173,7 +211,7 @@ async def announces(client: Client, message: Message):
 	logger.info("I\'ve answered to /ads because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_callback_query(~Filters.user(blacklist))
+@app.on_callback_query(Filters.chat(chats_list) & ~Filters.user(blacklist))
 async def answer_inline_button(client: Client, callback_query: CallbackQuery):
 	global config, connection
 
@@ -226,7 +264,7 @@ async def answer_inline_button(client: Client, callback_query: CallbackQuery):
 	logger.info("I have answered to an Inline button.")
 
 
-@app.on_message(Filters.service)
+@app.on_message(Filters.service & Filters.chat(chats_list))
 async def automatic_management_service(_, message: Message):
 	global config, connection
 
@@ -269,6 +307,7 @@ async def ban_hammer(client: Client, message: Message):
 	# /ban
 	# /banall
 	# /unban <username>
+	# /kick
 	global chats_list, config
 
 	command = message.command.pop(0)
@@ -280,6 +319,12 @@ async def ban_hammer(client: Client, message: Message):
 		return
 	elif message.reply_to_message is None:
 		logger.info("{} have sent an incorrect /{} request.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id, command))
+		return
+
+	# Checking if the admin can ban or unban the members of the chat
+	user = await message.chat.get_member(message.from_user.id)
+	if user.can_restrict_members is False:
+		await message.delete(revoke=True)
 		return
 
 	# Executing the command
@@ -452,7 +497,7 @@ async def initializing(client: Client, _):
 	logger.info("I\'ve answered to /init because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-@app.on_inline_query(~Filters.user(blacklist))
+@app.on_inline_query(Filters.chat(chats_list) & ~Filters.user(blacklist))
 async def inline(_, inline_query: InlineQuery):
 	# Inline command
 	query = inline_query.query.lower()
@@ -596,7 +641,14 @@ async def remove_from_the_database(client: Client, message: Message):
 			cursor.execute("DELETE FROM `Admins` WHERE `id`=%(id)s;", {
 				"id": chat.id
 			})
-			await message.promote_member(chat.id, can_change_info=False, can_post_messages=True, can_edit_messages=False, can_delete_messages=False, can_restrict_members=False, can_invite_users=True, can_pin_messages=False, can_promote_members=False)
+
+			for i in chats_list:
+				# Checking if the user is in the chat
+				try:
+					await client.get_chat_member(i, chat["id"])
+				except ChannelInvalid:
+					# Downgrading the player's privilege
+					await client.promote_chat_member(i, chat["id"], can_change_info=False, can_post_messages=True, can_edit_messages=False, can_delete_messages=False, can_restrict_members=False, can_invite_users=True, can_pin_messages=False, can_promote_members=False)
 
 			text = "Admin removed from the database."
 	connection.commit()

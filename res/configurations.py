@@ -8,19 +8,18 @@ from aiofile import AIOFile
 # This map (dict) contains the configurations for your configurations.
 # class property name -> configuration name
 # Only the values mapped in this dict will be imported from file, so update it every time a change is made.
-DEFAULT_MAP = dict({
+DEFAULT_MAP = {
 	"app_hash": "appHash",
 	"app_id": "appId",
 	"bot_username": "botUsername",
 	"bot_token": "botToken",
-	"creator": "creator",
 	"path": "path"
-})
+}
 
 
 class Configurations:
-	def __init__(self, path: str, map=DEFAULT_MAP):
-		self.__filePath = path
+	def __init__(self, path: str, map = DEFAULT_MAP):
+		self.__file_path = path
 		self.__map = map
 
 		# Setting the properties of the class
@@ -37,11 +36,11 @@ class Configurations:
 
 	async def parse(self):
 		# Checking if the path is set
-		if self.__filePath is None:
+		if self.__file_path is None:
 			raise FileNotSetException()
 
 		# Reading the file
-		async with AIOFile(self.__filePath, "r") as f:
+		async with AIOFile(self.__file_path, "r") as f:
 			content = await f.read()
 			content = json.loads(content)
 

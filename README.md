@@ -87,9 +87,3 @@ Python Telegraph API wrapper
 * Module name: **telegraph**
 * Requirements: **requests**
 * Installing: `pip install --upgrade --no-cache-dir telegraph`
-
-
-
-## How to install the dependencies
-
-To install the dependencies, create a [Virtual Enviroment](https://packaging.python.org/tutorials/installing-packages/#creating-virtual-environments) and use: `pip install -r requirements.txt`

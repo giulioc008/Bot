@@ -61,6 +61,12 @@
       "parameters": ""
     },
     {
+      "name": "ip",
+      "description": "Check the IP address of the host service",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
       "name": "kick",
       "description": "Kick a player",
       "domain": "admin",

@@ -8,6 +8,8 @@ from pyrogram.errors import FloodWait
 import re
 import res
 from res import Configurations
+import requests
+from telegraph import Telegraph
 
 configurations_map = {
 	"commands": "commands",
@@ -428,6 +430,26 @@ async def check_database(_, message: Message):
 	logger.info("I\'ve answered to /check because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
+@app.on_message(Filters.command("ip", prefixes="/") & Filters.user(config.get("creator")))
+async def check_IP(_, message: Message):
+	# Retrieve the HTML page that contains the public IP's informations
+	response = requests.get(url="http://ip4.me")
+	response.raise_for_status()
+
+	# Extracting the IP from the HTML page
+	result = re.findall("(.*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*.*)", response.text)
+	result = result.pop(0)
+	result = re.findall("(.*[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*)", result)
+	result = result.pop(0)
+	i = result.rfind(">")
+	i += 1
+	result = result[i:]
+
+	await res.split_reply_text(config, message, "The IP address of my host service is {}.".format(result), quote=False)
+
+	logger.info("I\'ve answered to /ip because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
+
+
 @app.on_message(Filters.command("command1", prefixes="/") & Filters.private & ~Filters.user(blacklist))
 async def command1(client: Client, message: Message):
 	# /command1
@@ -453,7 +475,7 @@ async def command2(_, message: Message):
 
 	keyboard = ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=False)
 
-	await message.reply_text("Text", reply_markup=keyboard)
+	await res.split_reply_text(config, message, "Text", reply_markup=keyboard)
 
 	logger.info("I\'ve answered to /command2 because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
@@ -506,6 +528,11 @@ async def inline(_, inline_query: InlineQuery):
 
 	# Checking if the text of the query is correct
 	if query == "text":
+		telegraph = Telegraph()
+
+		response.append(telegraph.get_page("Text", return_content=True, return_html=True))
+		response = list(map(lambda n: InlineQueryResultArticle(title=n["title"], input_message_content=InputTextMessageContent("Text", parse_mode="html", disable_web_page_preview=True), url=n["url"], description=n["description"]), response))
+	elif query == "text":
 		title = "Text"
 		url = "Text"
 		description = "Text"

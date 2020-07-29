@@ -63,7 +63,7 @@ with connection.cursor() as cursor:
 	chats_list = list(map(lambda n: n["id"], cursor.fetchall()))
 
 logger.info("Chats initializated\nInitializing the Client ...")
-app = Client(session_name=config.get("bot_username"), api_id=config.get("app_id"), api_hash=config.get("app_hash"), bot_token=config.get("bot_token"), lang_code="it", workdir=".")
+app = Client(session_name=config.get("bot_username"), api_id=config.get("app_id"), api_hash=config.get("app_hash"), bot_token=config.get("bot_token"), lang_code="it", workdir=".", parse_mode="html")
 
 
 @app.on_message(Filters.command("add", prefixes="/") & (Filters.user(config.get("creator")) | Filters.channel))
@@ -868,10 +868,7 @@ async def update(client: Client, message: Message = None):
 	logger.info("I\'ve answered to /update because of {}.".format("@{}".format(message.from_user.username) if message.from_user.username is not None else message.from_user.id))
 
 
-logger.info("Client initializated\nSetting the markup syntax ...")
-app.set_parse_mode("html")
-
-logger.info("Set the markup syntax\nStarted serving ...")
+logger.info("Client initializated\nStarted serving ...")
 scheduler.start()
 app.run()
 connection.close()

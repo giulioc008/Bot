@@ -142,7 +142,10 @@
 
 			// Checking if the statement have errors
 			if ($statement) {
+				// Completing the query
 				$statement -> bind_param('s', $language);
+
+				// Executing the query
 				$result = $statement -> execute();
 
 				// Checking if the query has product a result
@@ -150,6 +153,7 @@
 					$language = 'en';
 				}
 
+				// Closing the statement
 				$statement -> close();
 			}
 
@@ -195,7 +199,10 @@
 
 			// Checking if the statement have errors
 			if ($statement) {
+				// Completing the query
 				$statement -> bind_param('s', $language);
+
+				// Executing the query
 				$result = $statement -> execute();
 
 				// Checking if the query has product a result
@@ -203,6 +210,7 @@
 					$language = 'en';
 				}
 
+				// Closing the statement
 				$statement -> close();
 			}
 
@@ -399,7 +407,10 @@
 
 			// Checking if the statement have errors
 			if ($statement) {
+				// Completing the query
 				$statement -> bind_param('s', $language);
+
+				// Executing the query
 				$result = $statement -> execute();
 
 				// Checking if the query has product a result
@@ -407,6 +418,7 @@
 					$language = 'en';
 				}
 
+				// Closing the statement
 				$statement -> close();
 			}
 
@@ -469,7 +481,7 @@
 								return;
 							}
 
-							// Checking if the language is supported
+							// Retrieving the admins of the bot list
 							$result = $this -> DB -> query('SELECT id FROM Admins;');
 
 							// Checking if the query is failed or if it hasn't product a result
@@ -485,12 +497,34 @@
 
 							$result -> free();
 
+							// Retrieving the staff group
+							$statement = $this -> DB -> prepare('SELECT staff_group FROM Data WHERE id=?;');
+
+							// Checking if the statement have errors
+							if ($statement) {
+								// Completing the query
+								$bot = yield $this -> getSelf();
+								$statement -> bind_param('s', $bot['id']);
+
+								// Executing the query
+								$statement -> execute();
+
+								// Setting the output variables
+								$statement -> bind_result($staff_group);
+
+								// Retrieving the result
+								$statement -> fetch();
+
+								// Closing the statement
+								$statement -> close();
+							}
+
 							/**
 							* Checking if is a serious use of the /announce command (command runned in the staff group) and if the user is an admin of the bot
 							*
 							* in_array() check if the array contains an item that match the element
 							*/
-							if ($message['to_id']['chat_id'] == $this -> DB['staff_group'] && in_array($sender['id'], $admins)) {
+							if ($message['to_id']['chat_id'] == $staff_group && in_array($sender['id'], $admins)) {
 								$chats = yield $this -> getDialogs();
 
 								// Cycle on the chats where the bot is present
@@ -558,12 +592,50 @@
 							return;
 						}
 
+						// Retrieving the admins of the bot list
+						$result = $this -> DB -> query('SELECT id FROM Admins;');
+
+						// Checking if the query is failed or if it hasn't product a result
+						if ($result == FALSE || $result -> num_rows === 0) {
+							$this -> logger('Failed to make the query, because ' . $this -> DB -> error, \danog\MadelineProto\Logger::ERROR);
+						}
+
+						// Cycle on the result
+						$admins = $result -> fetch_all(MYSQLI_ASSOC);
+						$admins = array_map(function ($n) {
+							return $n['id'];
+						}, $admins);
+
+						$result -> free();
+
+						// Retrieving the staff group
+						$statement = $this -> DB -> prepare('SELECT staff_group FROM Data WHERE id=?;');
+
+						// Checking if the statement have errors
+						if ($statement) {
+							// Completing the query
+							$bot = yield $this -> getSelf();
+							$statement -> bind_param('s', $bot['id']);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($staff_group);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+						}
+
 						/**
 						* Checking if is a global use of the /(un)ban command (command runned in the staff group) and if the user is an admin of the bot
 						*
 						* in_array() check if the array contains an item that match the element
 						*/
-						if (preg_match('/^(un)?ban/miu', $command) && $message['to_id']['chat_id'] == $this -> DB['staff_group'] && in_array($sender['id'], $this -> DB['admins'])) {
+						if (preg_match('/^(un)?ban/miu', $command) && $message['to_id']['chat_id'] == $staff_group && in_array($sender['id'], $admins)) {
 							// Checking if the command has arguments
 							if (isset($args) == FALSE) {
 								yield $this -> messages -> sendMessage([
@@ -844,14 +916,32 @@
 							return;
 						}
 
+						// Retrieving the help message
+						$statement = $this -> DB -> prepare('SELECT help_message FROM Languages WHERE lang_code=?;');
+
+						// Checking if the statement have errors
+						if ($statement) {
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+						}
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => $this -> DB[$language]['help'],
-							'parse_mode' => 'HTML',
-							'reply_markup' => [
-								'inline_keyboard' => $this -> get_keyboard('', $language)
-							]
+							'message' => $answer,
+							'parse_mode' => 'HTML'
 						]);
 						break;
 					case 'link':
@@ -876,12 +966,28 @@
 							return;
 						}
 
+						// Retrieving the admins of the bot list
+						$result = $this -> DB -> query('SELECT id FROM Admins;');
+
+						// Checking if the query is failed or if it hasn't product a result
+						if ($result == FALSE || $result -> num_rows === 0) {
+							$this -> logger('Failed to make the query, because ' . $this -> DB -> error, \danog\MadelineProto\Logger::ERROR);
+						}
+
+						// Cycle on the result
+						$admins = $result -> fetch_all(MYSQLI_ASSOC);
+						$admins = array_map(function ($n) {
+							return $n['id'];
+						}, $admins);
+
+						$result -> free();
+
 						/**
 						* Checking if the user is an admin
 						*
 						* in_array() check if the array contains an item that match the element
 						*/
-						if (in_array($sender['id'], $this -> DB['admins']) == FALSE) {
+						if (in_array($sender['id'], $admins) == FALSE) {
 							yield $this -> messages -> sendMessage([
 								'no_webpage' => TRUE,
 								'peer' => $sender['id'],
@@ -891,21 +997,59 @@
 							return;
 						}
 
-						/**
-						* Retrieving the commands list and converting it into an array which element are a botCommand element
-						*
-						* array_map() converts the array by applying the closures to its elements
-						*/
-						$commands = array_map(function ($n) {
-							return [
-								'_' => 'botCommand',
-								'command' => $n['name'],
-								'description' => $n['description']
-							];
-						}, $this -> DB['commands']);
-
 						yield $this -> bots -> setCommands([
-							'commands' => $commands
+							'commands' => [
+								[
+									'_' => 'botCommand',
+									'command' => 'announce',
+									'description' => 'If it\'s used into the staff group, send an announce in all the groups, otherwise only in the group where it\'s used'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'ban',
+									'description' => 'If it\'s used into the staff group, ban a user from all the groups, otherwise only from the group where it\'s used'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'help',
+									'description' => 'Send the help of the bot'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'kick',
+									'description' => 'Kick a user from a group'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'link',
+									'description' => 'Send the invite link of the (super)group'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'mute',
+									'description' => 'Mute a user in a group'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'report',
+									'description' => 'Set the bot commands'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'start',
+									'description' => 'Starts the bot'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'unban',
+									'description' => 'If it\'s used into the staff group, unban a user from all the groups, otherwise only from the group where it\'s used'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'unmute',
+									'description' => 'Unmute a user from a group'
+								]
+							]
 						]);
 						break;
 					case 'start':
@@ -914,14 +1058,32 @@
 							return;
 						}
 
+						// Retrieving the start message
+						$statement = $this -> DB -> prepare('SELECT start_message FROM Languages WHERE lang_code=?;');
+
+						// Checking if the statement have errors
+						if ($statement) {
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+						}
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => str_replace('${sender_first_name}', $sender['first_name'], $this -> DB[$language]['welcome']),
-							'parse_mode' => 'HTML',
-							'reply_markup' => [
-								'inline_keyboard' => $this -> get_keyboard('', $language)
-							]
+							'message' => str_replace('${sender_first_name}', $sender['first_name'], $answer),
+							'parse_mode' => 'HTML'
 						]);
 						break;
 					default:

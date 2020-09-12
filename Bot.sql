@@ -17,6 +17,7 @@ CREATE TABLE `Blacklist` (
 ) DEFAULT CHARACTER SET utf8;
 
 CREATE TABLE `Data` (
+  `id` BIGINT,
   `staff_group` BIGINT,
   PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8;
@@ -24,5 +25,6 @@ CREATE TABLE `Data` (
 CREATE TABLE `Languages` (
   `lang_code` VARCHARACTER(20),
   `start_message` TEXT DEFAULT NULL,
+  `help_message` TEXT DEFAULT NULL,
   PRIMARY KEY (`lang_code`)
 ) DEFAULT CHARACTER SET utf8;

@@ -1,0 +1,52 @@
+{
+  "commands": [
+    {
+      "name": "add",
+      "description": "Add an admin to the database",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "blacklist",
+      "description": "Insert a player in the blacklist",
+      "domain": "admin",
+      "parameters": ""
+    },
+    {
+      "name": "check",
+      "description": "Check the database",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "remove",
+      "description": "Remove an admin from the database",
+      "domain": "creator",
+      "parameters": ""
+    },
+    {
+      "name": "silence",
+      "description": "Silence a chat",
+      "domain": "admin",
+      "parameters": ""
+    },
+    {
+      "name": "unblacklist",
+      "description": "Remove a player from the blacklist",
+      "domain": "admin",
+      "parameters": "&lt;username&gt;"
+    },
+     {
+      "name": "unsilence",
+      "description": "Unsilence a chat",
+      "domain": "admin",
+      "parameters": ""
+    },
+   {
+      "name": "update",
+      "description": "Update the database",
+      "domain": "admin",
+      "parameters": ""
+    }
+  ],
+}

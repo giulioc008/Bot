@@ -487,16 +487,34 @@
 					$banned = [
 						'multiple' = TRUE
 					];
-					$members = [];
+
+					/*
+					* Checking if the welcome message is setted
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($answer) == FALSE) {
+						$members = [];
+					}
 
 					// Cycle on the list of the new member
-					foreach ($message['action']['users'] as $key => $value) {
+					foreach ($message['action']['users'] as $new_member) {
 						// Downloading the user's informations from the Combot Anti-Spam API
-						$result = execute_request('https://api.cas.chat/check?user_id=' . $value, TRUE);
+						$result = execute_request('https://api.cas.chat/check?user_id=' . $new_member, TRUE);
 						$result = json_decode($result, TRUE);
 
 						// Retrieving the data of the new member
-						$new_member = yield $this -> getInfo($value);
+						$new_member = yield $this -> getInfo($new_member);
 						$new_member = $new_member['User'] ?? NULL;
 
 						/*
@@ -515,12 +533,30 @@
 						* 	array()
 						*/
 						if ($result['ok'] == FALSE && empty($new_member) && $new_member['_'] === 'user' && $new_member['scam'] == FALSE && $new_member['deleted'] == FALSE) {
-							$members []= $new_member;
+							/*
+							* Checking if the welcome message is setted
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($answer) == FALSE) {
+								$members []= $new_member;
+							}
+							continue;
 						}
 
 						$banned []= [
 							'channel' => $update['chat_id'],
-							'user_id' => $value,
+							'user_id' => $new_member['id'],
 							'banned_rights' => [
 								'_' => 'chatBannedRights',
 								'view_messages' => TRUE,
@@ -542,17 +578,34 @@
 
 					yield $this -> channels -> editBanned($banned);
 
-					$members = array_map(function ($n) {
-						return '<a href=\"mention:' . $n['id'] . '\" >' . $n['first_name'] . '</a>';
-					}, $members);
-					$answer = str_replace('${mentions}', implode(', ', $members), $answer);
+					/*
+					* Checking if the welcome message is setted
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($answer) == FALSE) {
+						$members = array_map(function ($n) {
+							return '<a href=\"mention:' . $n['id'] . '\" >' . $n['first_name'] . '</a>';
+						}, $members);
+						$answer = str_replace('${mentions}', implode(', ', $members), $answer);
 
-					yield $this -> messages -> sendMessage([
-						'no_webpage' => TRUE,
-						'peer' => $update['chat_id'],
-						'message' => $answer,
-						'parse_mode' => 'HTML'
-					]);
+						yield $this -> messages -> sendMessage([
+							'no_webpage' => TRUE,
+							'peer' => $update['chat_id'],
+							'message' => $answer,
+							'parse_mode' => 'HTML'
+						]);
+					}
 				} else if ($message['action']['_'] === 'messageActionChatJoinedByLink') {
 					// Downloading the user's informations from the Combot Anti-Spam API
 					$result = execute_request('https://api.cas.chat/check?user_id=' . $message['from_id'], TRUE);
@@ -600,14 +653,31 @@
 						]);
 					}
 
-					$answer = str_replace('${mentions}', '<a href=\"mention:' . $new_member['id'] . '\" >' . $new_member['first_name'] . '</a>', $answer);
+					/*
+					* Checking if the welcome message is setted
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($answer) == FALSE) {
+						$answer = str_replace('${mentions}', '<a href=\"mention:' . $new_member['id'] . '\" >' . $new_member['first_name'] . '</a>', $answer);
 
-					yield $this -> messages -> sendMessage([
-						'no_webpage' => TRUE,
-						'peer' => $update['chat_id'],
-						'message' => $answer,
-						'parse_mode' => 'HTML'
-					]);
+						yield $this -> messages -> sendMessage([
+							'no_webpage' => TRUE,
+							'peer' => $update['chat_id'],
+							'message' => $answer,
+							'parse_mode' => 'HTML'
+						]);
+					}
 				}
 
 				yield $this -> channels -> deleteMessages([
@@ -623,8 +693,12 @@
 			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
 			$message['message'] = mysqli_real_escape_string($this -> DB, $message['message']);
 
-			// Checking if the chat is a channel
-			if ($message['to_id']['_'] === 'peerChannel') {
+			// Retrieving the chat's data
+			$chat = yield $this -> getPwrChat($message['to_id']['_'] === 'peerUser' ? $message['from_id'] : ($message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id']));
+
+			// Checking if the chat is a (super)group or a private
+			if ($chat['type'] != 'user' && $chat['type'] != 'supergroup' && $chat['type'] == 'chat') {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a bot or a channel.');
 				return;
 			}
 
@@ -648,6 +722,7 @@
 			* 	array()
 			*/
 			if (empty($sender) || $sender['_'] !== 'user') {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the sender isn\'t a normal user.');
 				return;
 			}
 
@@ -704,20 +779,19 @@
 			if (preg_match('/^\@admin([[:blank:]\n]{1}((\n|.)*))?$/miu', $message['message'], $matches)) {
 				// Checking if the chat is a private chat
 				if ($message['to_id']['_'] === 'peerUser') {
+					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (@admin section).');
 					return;
 				}
 
-				// Retrieving the admins list
-				$chat = yield $this -> getPwrChat($message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id']);
-
-				if ($chat['type'] != 'supergroup' && $chat['type'] == 'chat') {
-					return;
-				}
-
+				/**
+				* Retrieving the admins list
+				*
+				* array_filter() filters the array by the role of each member
+				* array_map() convert each admins to its id
+				*/
 				$admins = array_filter($chat['participants'], function ($n) {
 					return $n['role'] == 'admin' || $n['role'] == 'creator';
 				});
-
 				$admins = array_map(function ($n) {
 					return $n['user'];
 				}, $admins);
@@ -727,7 +801,7 @@
 
 				// Checking if the statement have errors
 				if ($statement == FALSE) {
-					return;
+					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
 				}
 
 				// Completing the query
@@ -744,6 +818,25 @@
 
 				// Closing the statement
 				$statement -> close();
+
+				/*
+				* Checking if the admin message isn't setted
+				*
+				* empty() check if the argument is empty
+				* 	''
+				* 	""
+				* 	'0'
+				* 	"0"
+				* 	0
+				* 	0.0
+				* 	NULL
+				* 	FALSE
+				* 	[]
+				* 	array()
+				*/
+				if (empty($answer)) {
+					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
+				}
 
 				// Creating the message to send to the admins
 				$answer = str_replace('${sender_id}', $sender['id'], $answer)
@@ -768,8 +861,8 @@
 				yield $this -> messages -> sendMessage($message);
 
 				// Sending the report to the channel
-				$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> has sent an @admin request into <a href=\"' . $chat['exported_invite'] . '\" >' . $title . '</a>.');
-			// Checking if is a command
+				$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> has sent an @admin request into <a href=\"' . $chat['exported_invite'] . '\" >' . $chat['title'] . '</a>.');
+			// Checking if is a bot command
 			} else if (preg_match('/^\/([[:alnum:]\@]+)[[:blank:]]?([[:alnum:]]|[^\n]+)?$/miu', $message['message'], $matches)) {
 				// Retrieving the command
 				$command = explode('@', $matches[1])[0];
@@ -780,6 +873,31 @@
 					case 'remove':
 						// Checking if the chat is a private chat
 						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
+							return;
+						}
+
+						// Checking if the sender is a bot's admin
+						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Completing the query
+						$statement -> bind_param('i', $sender['id']);
+
+						// Executing the query
+						$result = $statement -> execute();
+
+						// Closing the statement
+						$statement -> close();
+
+						// Checking if the statement have errors
+						if ($result == FALSE) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
 
@@ -792,6 +910,7 @@
 
 						// Checking if the result is valid
 						if ($reply_message['_'] === 'messages.messagesNotModified') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
 
@@ -817,6 +936,7 @@
 						* 	array()
 						*/
 						if (empty($user) || $user['_'] !== 'user') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the user of the reply_message isn\'t a normal user (/' . $command . ' section).');
 							return;
 						}
 
@@ -848,8 +968,8 @@
 
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
-							'peer' => $message['to_id']['chat_id'],
-							'message' => 'Admin ' . $command . $command == 'add' ? 'e' : '' . 'd.',
+							'peer' => $chat['id'],
+							'message' => 'Admin ' . $command . ($command == 'add' ? 'e' : '' . 'd.'),
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
 						]);
@@ -860,11 +980,26 @@
 					case 'announce':
 						// Checking if the chat is a private chat
 						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
-						// Checking if the command has arguments
-						if (isset($args)) {
+						/*
+						* Checking if the command have arguments
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($args) == FALSE) {
 							$args = html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 							// Checking if the sender is a bot's admin
@@ -888,7 +1023,7 @@
 							// Checking if is a serious use of the /announce command (command runned by a bot's admin)
 							if ($result) {
 								// Retrieving the staff group
-								$statement = $this -> DB -> prepare('SELECT NULL FROM `Data` WHERE `id`=? AND `staff_group`=?;');
+								$statement = $this -> DB -> prepare('SELECT `id` FROM `Chats` WHERE `staff_group`=?;');
 
 								// Checking if the statement have errors
 								if ($statement == FALSE) {
@@ -897,43 +1032,38 @@
 								}
 
 								// Completing the query
-								$bot = yield $this -> getSelf();
-								$statement -> bind_param('ii', $bot['id'], $message['to_id']['chat_id']);
+								$statement -> bind_param('i', $chat['id']);
 
 								// Executing the query
 								$result = $statement -> execute();
 
-								// Closing the statement
-								$statement -> close();
-
 								// Checking if is a serious use of the /announce command (command runned in the staff group)
 								if ($result) {
-									$message = [
+									// Setting the output variables
+									$statement -> bind_result($result);
+
+									// Retrieving the result
+									$statement -> fetch();
+
+									$messages = [
 										'multiple' => true
 									];
 
-									$chats = yield $this -> getDialogs();
-
-									// Cycle on the chats where the bot is present
-									foreach ($chats as $peer) {
-										$message []= [
+									// Cycle on the chats that have this staff group
+									foreach ($result as $id) {
+										$messages []= [
 											'no_webpage' => TRUE,
-											'peer' => $peer,
+											'peer' => $id,
 											'message' => $args,
 											'parse_mode' => 'HTML'
 										];
 									}
 
-									yield $this -> messages -> sendMessage($message);
-									return;
+									yield $this -> messages -> sendMessage($messages);
 								}
-							}
 
-							// Retrieving the data of the chat
-							$chat = yield $this -> getPwrChat($message['to_id']['chat_id']);
-
-							// Checking if the chat is a group or a supergroup
-							if ($chat['type'] != 'supergroup' && $chat['type'] != 'chat') {
+								// Closing the statement
+								$statement -> close();
 								return;
 							}
 
@@ -955,22 +1085,18 @@
 							*
 							* in_array() check if the array contains an item that match the element
 							*/
-							if (in_array($sender['id'], $admins)) {
-								yield $this -> messages -> sendMessage([
-									'no_webpage' => TRUE,
-									'peer' => $message['to_id']['chat_id'],
-									'message' => $args,
-									'parse_mode' => 'HTML'
-								]);
+							if (in_array($sender['id'], $admins) == FALSE) {
+								$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the sender isn\'t an admin of the chat (/' . $command . ' section).');
+								return;
 							}
-						}
 
-						yield $this -> channels -> deleteMessages([
-							'revoke' => TRUE,
-							'id' => [
-								$message['id']
-							]
-						]);
+							yield $this -> messages -> sendMessage([
+								'no_webpage' => TRUE,
+								'peer' => $chat['id'],
+								'message' => $args,
+								'parse_mode' => 'HTML'
+							]);
+						}
 						break;
 					case 'ban':
 					case 'kick':
@@ -981,6 +1107,7 @@
 					case 'unsilence':
 						// Checking if the chat is a private chat
 						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1005,7 +1132,7 @@
 						// Checking if is a serious use of the /(un)ban command (command runned by a bot's admin)
 						if (preg_match('/^(un)?ban/miu', $command) && $result) {
 							// Retrieving the staff group
-							$statement = $this -> DB -> prepare('SELECT NULL FROM `Data` WHERE `id`=? AND `staff_group`=?;');
+							$statement = $this -> DB -> prepare('SELECT `id` FROM `Chats` WHERE `staff_group`=?;');
 
 							// Checking if the statement have errors
 							if ($statement == FALSE) {
@@ -1014,26 +1141,47 @@
 							}
 
 							// Completing the query
-							$bot = yield $this -> getSelf();
-							$statement -> bind_param('ii', $bot['id'], $message['to_id']['chat_id']);
+							$statement -> bind_param('i', $chat['id']);
 
 							// Executing the query
 							$result = $statement -> execute();
 
-							// Closing the statement
-							$statement -> close();
-
 							// Checking if is a serious use of the /(un)ban command (command runned in the staff group)
 							if ($result) {
-								// Checking if the command has arguments
-								if (isset($args) == FALSE) {
+								// Setting the output variables
+								$statement -> bind_result($result);
+
+								// Retrieving the result
+								$statement -> fetch();
+
+								/*
+								* Checking if the command haven't arguments
+								*
+								* empty() check if the argument is empty
+								* 	''
+								* 	""
+								* 	'0'
+								* 	"0"
+								* 	0
+								* 	0.0
+								* 	NULL
+								* 	FALSE
+								* 	[]
+								* 	array()
+								*/
+								if (empty($args) {
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
-										'peer' => $message['to_id']['chat_id'],
+										'peer' => $chat['id'],
 										'message' => 'The syntax of the command is: <code>/' . $command . ' &lt;user_id|username&gt;</code>.',
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
+
+									// Closing the statement
+									$statement -> close();
+
+									$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the command have a wrong syntax (/' . $command . ' section).');
 									return;
 								}
 
@@ -1042,7 +1190,7 @@
 								$user = $user['User'] ?? NULL;
 
 								/*
-								* Checking if the User is setted
+								* Checking if the user isn't a normal user
 								*
 								* empty() check if the argument is empty
 								* 	''
@@ -1059,24 +1207,24 @@
 								if (empty($user) || $user['_'] !== 'user') {
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
-										'peer' => $message['to_id']['chat_id'],
+										'peer' => $chat['id'],
 										'message' => 'The username/id is invalid.',
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
+
+									$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the command have a wrong syntax (/' . $command . ' section).');
 									return;
 								}
 
-								$chats = yield $this -> getDialogs();
-
-								// Cycle on the chats where the bot is present
-								foreach ($chats as $peer) {
+								// Cycle on the chats that have this staff group
+								foreach ($result as $id) {
 									// Retrieving the data of the chat
-									$chat = yield $this -> getInfo($peer);
-									$chat = $chat['Chat'] ?? NULL;
+									$sub_chat = yield $this -> getInfo($id);
+									$sub_chat = $sub_chat['Chat'] ?? NULL;
 
 									/*
-									* Checking if the chat is setted
+									* Checking if the chat isn't setted
 									*
 									* empty() check if the argument is empty
 									* 	''
@@ -1090,14 +1238,14 @@
 									* 	[]s
 									* 	array()
 									*/
-									if (empty($chat) || ($chat['_'] !== 'chat' && $chat['_'] !== 'channel')) {
+									if (empty($sub_chat) || ($sub_chat['_'] != 'chat' && $sub_chat['_'] != 'channel') || ($sub_chat['_'] == 'channel' && $sub_chat['_']['broadcast'] == TRUE)) {
 										continue;
 									}
 
 									yield $this -> channels -> editBanned([
-										'channel' => $chat['id'],
+										'channel' => $sub_chat['id'],
 										'user_id' => $user['id'],
-										'banned_rights' => $command == 'unban' ? $chat['default_banned_rights'] : [
+										'banned_rights' => $command == 'unban' ? $sub_chat['default_banned_rights'] : [
 											'_' => 'chatBannedRights',
 											'view_messages' => TRUE,
 											'send_messages' => TRUE,
@@ -1118,15 +1266,32 @@
 
 								// Sending the report to the channel
 								$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . 'ned <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a> from all chats.');
-								return;
 							}
+
+							// Closing the statement
+							$statement -> close();
+							return;
 						}
 
 						// Setting limit to forever
 						$limit = 0;
 
-						// Checking if the command is /mute, if it has arguments and if the arguments are correct
-						if ($command == 'mute' && isset($args) && preg_match('/^([[:digit:]]+)[[:blank:]]?([[:alpha:]]+)$/miu', html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
+						/*
+						* Checking if the command is /mute, if it has arguments and if the arguments are correct
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]s
+						* 	array()
+						*/
+						if ($command == 'mute' && empty($args) == FALSE && preg_match('/^([[:digit:]]+)[[:blank:]]?([[:alpha:]]+)$/miu', html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
 							$limit = $matches[1];
 
 							// Converting the units to seconds
@@ -1192,36 +1357,13 @@
 
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
-										'peer' => $message['to_id']['chat_id'],
+										'peer' => $chat['id'],
 										'message' => $answer,
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
 									break;
 							}
-						}
-
-						// Retrieving the data of the chat
-						$chat = yield $this -> getInfo($message['to_id']['chat_id']);
-						$chat = $chat['Chat'] ?? NULL;
-
-						/*
-						* Checking if the chat is setted
-						*
-						* empty() check if the argument is empty
-						* 	''
-						* 	""
-						* 	'0'
-						* 	"0"
-						* 	0
-						* 	0.0
-						* 	NULL
-						* 	FALSE
-						* 	[]
-						* 	array()
-						*/
-						if (empty($chat) || ($chat['_'] !== 'chat' && $chat['_'] !== 'channel')) {
-							return;
 						}
 
 						// Retrieving the message this message replies to
@@ -1233,6 +1375,7 @@
 
 						// Checking if the result is valid
 						if ($reply_message['_'] === 'messages.messagesNotModified') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
 
@@ -1258,13 +1401,14 @@
 						* 	array()
 						*/
 						if (empty($user) || $user['_'] !== 'user') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the user of the reply_message isn\'t a normal user (/' . $command . ' section).');
 							return;
 						}
 
 						// Checking if the command is one of: /ban, /kick or /mute
 						if ($command == 'ban' || $command == 'kick' || $command == 'mute') {
 							yield $this -> channels -> editBanned([
-								'channel' => $message['to_id']['chat_id'],
+								'channel' => $chat['id'],
 								'user_id' => $reply_message['from_id'],
 								'banned_rights' => [
 									'_' => 'chatBannedRights',
@@ -1288,27 +1432,27 @@
 						// Checking if the command is one of: /kick, /unban or /unmute
 						if ($command == 'kick' || $command == 'unban' || $command == 'unmute') {
 							yield $this -> channels -> editBanned([
-								'channel' => $message['to_id']['chat_id'],
+								'channel' => $chat['id'],
 								'user_id' => $reply_message['from_id'],
 								'banned_rights' => $chat['default_banned_rights']
 							]);
 						}
 
-						// Checking if is a /silence command
-						if ($command == 'silence') {
+						// Checking if is a /(un)silence command
+						if (preg_match('/^(un)?silence/miu', $command)) {
 							yield $this -> messages -> editChatDefaultBannedRights([
-								'peer' => $message['to_id']['chat_id'],
+								'peer' => $chat['id'],
 								'banned_rights' => [
 									'_' => 'chatBannedRights',
 									'view_messages' => FALSE,
-									'send_messages' => TRUE,
-									'send_media' => TRUE,
-									'send_stickers' => TRUE,
-									'send_gifs' => TRUE,
-									'send_games' => TRUE,
-									'send_inline' => TRUE,
-									'embed_links' => TRUE,
-									'send_polls' => TRUE,
+									'send_messages' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_media' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_stickers' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_gifs' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_games' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_inline' => $command == 'unsilence' ? FALSE : TRUE,
+									'embed_links' => $command == 'unsilence' ? FALSE : TRUE,
+									'send_polls' => $command == 'unsilence' ? FALSE : TRUE,
 									'change_info' => TRUE,
 									'invite_users' => FALSE,
 									'pin_messages' => TRUE,
@@ -1317,34 +1461,11 @@
 							]);
 						}
 
-						// Checking if is a /unsilence command
-						if ($command == 'unsilence') {
-							yield $this -> messages -> editChatDefaultBannedRights([
-								'peer' => $message['to_id']['chat_id'],
-								'banned_rights' => [
-									'_' => 'chatBannedRights',
-									'view_messages' => FALSE,
-									'send_messages' => FALSE,
-									'send_media' => FALSE,
-									'send_stickers' => FALSE,
-									'send_gifs' => FALSE,
-									'send_games' => FALSE,
-									'send_inline' => FALSE,
-									'embed_links' => FALSE,
-									'send_polls' => FALSE,
-									'change_info' => TRUE,
-									'invite_users' => FALSE,
-									'pin_messages' => TRUE,
-									'until_date' => 0
-								]
-							]);
-						}
-
-						// Checking if is a /mute permanent command
+						// Checking if is a permanent /mute command
 						if ($command == 'mute' && ($limit < 30 || $limit > 60 * 60 * 24 * 366)) {
 							yield $this -> messages -> sendMessage([
 								'no_webpage' => TRUE,
-								'peer' => $message['to_id']['chat_id'],
+								'peer' => $chat['id'],
 								'message' => 'You have muted <a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> forever.',
 								'reply_to_msg_id' => $message['id'],
 								'parse_mode' => 'HTML'
@@ -1364,10 +1485,16 @@
 						$verb .= 'd';
 
 						// Sending the report to the channel
-						$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $verb . ' <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a>' . $command == 'mute' && $limit > 30 && $limit < 60 * 60 * 24 * 366 ? ' for ' . $args : '' . '.');
+						$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $verb . ' <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a>' . ($command == 'mute' && $limit > 30 && $limit < 60 * 60 * 24 * 366 ? ' for ' . $args : '') . '.');
 						break;
 					case 'blacklist':
 					case 'unblacklist':
+						// Checking if the chat is a private chat
+						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
+							return;
+						}
+
 						// Checking if the sender is an admin
 						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
 
@@ -1387,12 +1514,7 @@
 						$statement -> close();
 
 						if ($result == FALSE) {
-							yield $this -> messages -> sendMessage([
-								'no_webpage' => TRUE,
-								'peer' => $sender['id'],
-								'message' => 'You can\'t use this command.',
-								'parse_mode' => 'HTML'
-							]);
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
 
@@ -1405,6 +1527,7 @@
 
 						// Checking if the result is valid
 						if ($reply_message['_'] === 'messages.messagesNotModified') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
 
@@ -1430,6 +1553,7 @@
 						* 	array()
 						*/
 						if (empty($user) || $user['_'] !== 'user') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the user of the reply_message isn\'t a normal user (/' . $command . ' section).');
 							return;
 						}
 
@@ -1460,6 +1584,7 @@
 					case 'help':
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1486,6 +1611,25 @@
 						// Closing the statement
 						$statement -> close();
 
+						/*
+						* Checking if the help message is setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description)';
+						}
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
@@ -1496,6 +1640,7 @@
 					case 'link':
 						// Checking if the chat is a private chat
 						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1522,11 +1667,28 @@
 						// Closing the statement
 						$statement -> close();
 
-						$chat = yield $this -> getPwrChat($message['to_id']['chat_id']);
+						/*
+						* Checking if the help message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
+						}
 
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
-							'peer' => $message['to_id']['chat_id'],
+							'peer' => $chat['id'],
 							'message' => str_replace('${invite_link}', $chat['invite'], $answer),
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
@@ -1535,6 +1697,7 @@
 					case 'report':
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1563,6 +1726,8 @@
 								'message' => 'You can\'t use this command.',
 								'parse_mode' => 'HTML'
 							]);
+
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
 
@@ -1664,6 +1829,7 @@
 					case 'start':
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1690,6 +1856,25 @@
 						// Closing the statement
 						$statement -> close();
 
+						/*
+						* Checking if the start message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
+						}
+
 						$answer = str_replace('${sender_id}', $sender['id'], $answer);
 						$answer = str_replace('${sender_first_name}', $sender['first_name'], $answer);
 
@@ -1701,6 +1886,12 @@
 						]);
 						break;
 					case 'update':
+						// Checking if the chat isn't a private chat
+						if ($message['to_id']['_'] !== 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
+							return;
+						}
+
 						$banned = [
 							'multiple' = TRUE
 						];
@@ -1718,6 +1909,91 @@
 
 						$result -> free();
 
+						$statement = $this -> DB -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Cycle on the list of the chats
+						foreach ($chats as $DB_chat) {
+							// Retrieving the data of the chat
+							$DB_chat = yield $this -> getInfo($DB_chat['id']);
+							$DB_chat = $DB_chat['Chat'] ?? NULL;
+
+							/*
+							* Checking if the chat is a group that is migrated to a supergroup
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($DB_chat) == FALSE && $DB_chat['_'] === 'chat' && $DB_chat['migrated_to']['_'] !== 'inputChannelEmpty') {
+								// Closing the statement
+								$statement -> close();
+
+								$old_id = $DB_chat['id'];
+								$DB_chat = yield $this -> getPwrChat($DB_chat['migrated_to']['channel_id']);
+
+								$statement = $this -> DB -> prepare('UPDATE `Chats` SET `id`=?, `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
+
+								// Checking if the statement have errors
+								if ($statement == FALSE) {
+									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+
+									$statement = $this -> DB -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+										return;
+									}
+									continue;
+								}
+
+								$statement -> bind_param('issssi', $DB_chat['id'], $DB_chat['type'], $DB_chat['title'], $DB_chat['username'], $DB_chat['invite'], $old_id);
+
+								// Executing the query
+								$statement -> execute()
+
+								// Closing the statement
+								$statement -> close();
+
+								// Commit the change
+								$this -> DB -> commit();
+
+								$statement = $this -> DB -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
+
+								// Checking if the statement have errors
+								if ($statement == FALSE) {
+									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+									return;
+								}
+								continue;
+							}
+
+							$statement -> bind_param('ssssi', $DB_chat['type'], $DB_chat['title'], $DB_chat['username'], $DB_chat['invite'], $DB_chat['id']);
+
+							// Executing the query
+							$result = $statement -> execute()
+						}
+
+						// Closing the statement
+						$statement -> close();
+
+						// Commit the change
+						$this -> DB -> commit();
+
 						/**
 						* Retrieving the (super)groups list
 						*
@@ -1731,94 +2007,10 @@
 							return $n['id'];
 						}, $chats);
 
-						$statement = $this -> DB -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
-
-						// Checking if the statement have errors
-						if ($statement == FALSE) {
-							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-							return;
-						}
-
-						// Cycle on the list of the chats
-						foreach ($chats as $chat) {
+						// Cycle on the list of the (super)groups
+						foreach ($chats as $DB_chat) {
 							// Retrieving the data of the chat
-							$chat = yield $this -> getPwrChat($chat);
-
-							$statement -> bind_param('ssssi', $chat['type'], $chat['title'], $chat['username'], $chat['invite'], $chat['id']);
-
-							// Executing the query
-							$result = $statement -> execute()
-
-							// Checking if the group is migrated to a supergroup
-							if ($result == FALSE) {
-								// Removing the old data
-								$result = $this -> DB -> prepare('DELETE FROM `Chats` WHERE `id`=?;');
-
-								// Checking if the statement have errors
-								if ($statement == FALSE) {
-									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-									continue;
-								}
-
-								$statement -> bind_param('i', $chat['id']);
-
-								// Executing the query
-								$statement -> execute()
-
-								// Closing the statement
-								$statement -> close();
-
-								$this -> DB -> commit();
-
-								// Insert the new data
-								$chat = yield $this -> getInfo($chat['id']);
-								$chat = $chat['Chat'] ?? NULL;
-
-								/*
-								* Checking if the chat is setted and if the supergroup is a normal supergroup
-								*
-								* empty() check if the argument is empty
-								* 	''
-								* 	""
-								* 	'0'
-								* 	"0"
-								* 	0
-								* 	0.0
-								* 	NULL
-								* 	FALSE
-								* 	[]
-								* 	array()
-								*/
-								if (empty($chat) == FALSE && $chat['_'] === 'chat' && $chat['migrated_to']['_'] !== 'inputChannelEmpty') {
-									$chat = yield $this -> getPwrChat($chat['migrated_to']['channel_id']);
-
-									$statement = $this -> DB -> prepare('INSERT INTO `Chats` (`id`, `type`, `title`, `username`, `invite_link`) VALUES (?, ?, ?, ?, ?);');
-
-									// Checking if the statement have errors
-									if ($statement == FALSE) {
-										$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-										continue;
-									}
-
-									$statement -> bind_param('issss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite']);
-
-									// Executing the query
-									$statement -> execute()
-
-									// Closing the statement
-									$statement -> close();
-								}
-
-								$this -> DB -> commit();
-
-								$statement = $this -> DB -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
-
-								// Checking if the statement have errors
-								if ($statement == FALSE) {
-									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-									return;
-								}
-							}
+							$DB_chat = yield $this -> getPwrChat($DB_chat);
 
 							/**
 							* Retrieving the members' list of the chat
@@ -1826,7 +2018,7 @@
 							* array_filter() filters the array by the type of each member
 							* array_map() convert each member to its id
 							*/
-							$members = array_filter($chat['participants'], function ($n) {
+							$members = array_filter($DB_chat['participants'], function ($n) {
 								return $n['role'] == 'user';
 							});
 							$members = array_map(function ($n) {
@@ -1885,14 +2077,13 @@
 							}
 						}
 
-						// Closing the statement
-						$statement -> close();
-
-						$this -> DB -> commit();
-
 						yield $this -> channels -> editBanned($banned);
 
-						// Retrieving the admins' list
+						/**
+						* Retrieving the admins' list
+						*
+						* array_map() convert admin to its id
+						*/
 						$result = $this -> DB -> query('SELECT `id` FROM `Admins`;');
 
 						// Checking if the query is failed
@@ -1902,15 +2093,11 @@
 						}
 
 						$admins = $result -> fetch_all(MYSQLI_ASSOC);
+						$result -> free();
 
-						/**
-						* array_map() convert admin to its id
-						*/
 						$admins = array_map(function ($n) {
 							return $n['id'];
 						}, $admins);
-
-						$result -> free();
 
 						$statement = $this -> DB -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
 
@@ -1921,8 +2108,8 @@
 						}
 
 						// Cycle on the list of the admins
-						foreach ($admins as $admin) {
-							$admin = yield $this -> getInfo($admin);
+						foreach ($admins as $id) {
+							$admin = yield $this -> getInfo($id);
 							$admin = $admin['User'] ?? NULL;
 
 							/*
@@ -1941,7 +2128,44 @@
 							* 	array()
 							*/
 							if (empty($admin) || $admin['_'] !== 'user') {
-								return;
+								// Closing the statement
+								$statement -> close();
+
+								$statement = $this -> DB -> prepare('DELETE FROM `Admins` WHERE `id`=?;');
+
+								// Checking if the statement have errors
+								if ($statement == FALSE) {
+									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+
+									$statement = $this -> DB -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+										return;
+									}
+									continue;
+								}
+
+								$statement -> bind_param('i', $id);
+
+								// Executing the query
+								$statement -> execute()
+
+								// Closing the statement
+								$statement -> close();
+
+								// Commit the change
+								$this -> DB -> commit();
+
+								$statement = $this -> DB -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
+
+								// Checking if the statement have errors
+								if ($statement == FALSE) {
+									$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+									return;
+								}
+								continue;
 							}
 
 							$statement -> bind_param('ssi', $admin['first_name'], $admin['last_name'], $admin['id']);
@@ -1953,11 +2177,62 @@
 						// Closing the statement
 						$statement -> close();
 
+						// Commit the change
 						$this -> DB -> commit();
+
+						// Retrieving the update message
+						$statement = $this -> DB -> prepare('SELECT `update_message` FROM `Languages` WHERE `lang_code`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$answer = 'Database updated.';
+						}
+
+						// Completing the query
+						$statement -> bind_param('s', $language);
+
+						// Executing the query
+						$statement -> execute();
+
+						// Setting the output variables
+						$statement -> bind_result($answer);
+
+						// Retrieving the result
+						$statement -> fetch();
+
+						// Closing the statement
+						$statement -> close();
+
+						/*
+						* Checking if the update message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = 'Database updated.';
+						}
+
+						yield $this -> messages -> sendMessage([
+							'no_webpage' => TRUE,
+							'peer' => $sender['id'],
+							'message' => $answer,
+							'parse_mode' => 'HTML'
+						]);
 						break;
 					default:
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1984,6 +2259,25 @@
 						// Closing the statement
 						$statement -> close();
 
+						/*
+						* Checking if the unknown message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = 'This command isn\'t supported.';
+						}
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
@@ -1991,6 +2285,16 @@
 							'parse_mode' => 'HTML'
 						]);
 						break;
+				}
+
+				// Checking if the chat isn't a private chat
+				if ($message['to_id']['_'] !== 'peerUser') {
+					yield $this -> channels -> deleteMessages([
+						'revoke' => TRUE,
+						'id' => [
+							$message['id']
+						]
+					]);
 				}
 			}
 		}

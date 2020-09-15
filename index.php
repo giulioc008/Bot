@@ -4,15 +4,19 @@
 	*
 	* This template can be reused in accordance with the MIT license.
 	*
-	* @author     Giulio Coa
-	* @license    https://www.linux.it/scegli-una-licenza/licenses/mit/
+	* @author		Giulio Coa
+	* @copyright	2020- Giulio Coa <giuliocoa@gmail.com>
+	* @license		https://www.linux.it/scegli-una-licenza/licenses/mit/
 	*/
 
 	// Installing the MadelineProto library
-	if (file_exists('madeline.php') == FALSE) {
-		copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
-	}
-	require_once 'madeline.php';
+	/**
+	* if (file_exists('madeline.php') == FALSE) {
+	* 	copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
+	* }
+	* require_once 'madeline.php';
+	*/
+	require_once 'vendor/autoload.php';
 
 	// Creating the bot
 	class Bot extends danog\MadelineProto\EventHandler {
@@ -457,30 +461,79 @@
 				return;
 			}
 
+			// Retrieving the chat's data
+			$chat = yield $this -> getPwrChat($message['to_id']['_'] === 'peerUser' ? $message['from_id'] : ($message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id']));
+
+			// Checking if the chat is an allowed chat
+			$statement = $this -> DB -> prepare('SELECT NULL FROM `Chats` WHERE `id`=?;');
+
+			// Checking if the statement have errors
+			if ($statement == FALSE) {
+				$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+				return;
+			}
+
+			// Completing the query
+			$statement -> bind_param('i', $chat['id']);
+
+			// Executing the query
+			$result = $statement -> execute();
+
+			// Closing the statement
+			$statement -> close();
+
+			// Checking if the query have product a result
+			if ($chat['type'] != 'user' && $chat['type'] != 'bot' && $result == FALSE) {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
+
+				// Leaving the chat
+				if ($chat['type'] == 'chat') {
+					$bot = yield $this -> getSelf();
+
+					$this -> messages -> deleteChatUser([
+						'chat_id' => $chat['id'],
+						'user_id' => $bot['id']
+					]);
+				} else {
+					$this -> channels -> leaveChannel([
+						'channel' => $chat['id']
+					]);
+				}
+
+				$this -> logger('The bot have lefted the unauthorized chat.');
+				return;
+			}
+
+			// Checking if the chat is a (super)group or a private chat
+			if ($chat['type'] != 'user' && $chat['type'] != 'supergroup' && $chat['type'] != 'chat') {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a bot or a channel.');
+				return;
+			}
+
 			// Checking if the message is a service message
 			if ($message['_'] === 'messageService') {
+				$answer = NULL;
+
 				// Retrieving the welcome message
 				$statement = $this -> DB -> prepare('SELECT `welcome` FROM `Chats` WHERE `id`=?;');
 
-				// Checking if the statement have errors
-				if ($statement == FALSE) {
-					$answer = 'Hello ${mentions} welcome to this chat !\n\n(Rest of the message to be sent when a user join the chat)';
+				// Checking if the statement haven't errors
+				if ($statement) {
+					// Completing the query
+					$statement -> bind_param('i', $chat['id']);
+
+					// Executing the query
+					$statement -> execute();
+
+					// Setting the output variables
+					$statement -> bind_result($answer);
+
+					// Retrieving the result
+					$statement -> fetch();
+
+					// Closing the statement
+					$statement -> close();
 				}
-
-				// Completing the query
-				$statement -> bind_param('i', $update['chat_id']);
-
-				// Executing the query
-				$statement -> execute();
-
-				// Setting the output variables
-				$statement -> bind_result($answer);
-
-				// Retrieving the result
-				$statement -> fetch();
-
-				// Closing the statement
-				$statement -> close();
 
 				// Checking if the service message is about new members
 				if ($message['action']['_'] === 'messageActionChatAddUser') {
@@ -692,15 +745,6 @@
 			$message['message'] = trim($message['message']);
 			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
 			$message['message'] = mysqli_real_escape_string($this -> DB, $message['message']);
-
-			// Retrieving the chat's data
-			$chat = yield $this -> getPwrChat($message['to_id']['_'] === 'peerUser' ? $message['from_id'] : ($message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id']));
-
-			// Checking if the chat is a (super)group or a private
-			if ($chat['type'] != 'user' && $chat['type'] != 'supergroup' && $chat['type'] == 'chat') {
-				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a bot or a channel.');
-				return;
-			}
 
 			// Retrieving the data of the sender
 			$sender = yield $this -> getInfo($message['from_id']);
@@ -1384,6 +1428,7 @@
 								case 'y':
 								case 'anno':
 								case 'year':
+									// $limit *= 60 * 60 * 24 * 30 * 12;
 									$limit *= 60 * 60 * 24 * 365;
 									break;
 								default:
@@ -2399,6 +2444,17 @@
 		'app_info' => [
 			'lang_code' => 'en'
 		],
+		'db' => [
+			'type' => 'mysql',
+			'dbType' => [
+				'host' => 'localhost',
+				'port' => 3306,
+				'user' => 'username',
+				'password' => 'password',
+				'database' => 'database_name',
+				'idle_timeout' => 60 * 60 * 24 * 30 * 12
+			]
+		]
 		'logger' => [
 			'logger' => danog\MadelineProto\Logger::FILE_LOGGER,
 			'logger_level' => danog\MadelineProto\Logger::ULTRA_VERBOSE,

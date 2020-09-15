@@ -6,7 +6,7 @@
 	*
 	* @author		Giulio Coa
 	* @copyright	2020- Giulio Coa <giuliocoa@gmail.com>
-	* @license		https://www.linux.it/scegli-una-licenza/licenses/mit/
+	* @license		https://choosealicense.com/licenses/mit/
 	*/
 
 	// Installing the MadelineProto library
@@ -21,6 +21,8 @@
 	// Creating the bot
 	class Bot extends danog\MadelineProto\EventHandler {
 		private $DB;
+		private $tmp;
+		private $button_InlineKeyboard;
 
 		/**
 		* Execute a web request to a URL
@@ -89,6 +91,8 @@
 		*/
 		public function onStart() : void {
 			$this -> DB = new mysqli('localhost', 'username', 'password', 'name', 3306);
+			$this -> tmp = [];
+			$this -> button_InlineKeyboard = 8;
 
 			// Checking if there si some connection error
 			if ($this -> DB -> connect_errno) {
@@ -108,8 +112,6 @@
 		* @return Generator
 		*/
 		public function onUpdateBotCallbackQuery(array $update) : Generator {
-			$callback_data = trim(base64_decode($update['data']));
-
 			// Retrieving the data of the user that pressed the button
 			$sender = yield $this -> getInfo($update['user_id']);
 			$sender = $sender['User'] ?? NULL;
@@ -152,6 +154,26 @@
 				return;
 			}
 
+			// Retrieving the callback data
+			$callback_data = trim(base64_decode($update['data']));
+
+			// Retrieving the command that have generated the CallbackQuery
+			$command = explode('/', $callback_data)[0];
+
+			// Retrieving the message associated to the CallbackQuery
+			$message = yield $this -> messages -> getMessages([
+				'id' => [
+					$update['msg_id']
+				]
+			]);
+
+			// Checking if the result is valid
+			if ($message['_'] === 'messages.messagesNotModified' || $message['messages'][0]['_'] !== 'message') {
+				$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because isn\'t associated to a message.');
+				return;
+			}
+
+			$message = $message['messages'][0];
 
 			// Retrieving the language of the user
 			$language = isset($sender['lang_code']) ? $sender['lang_code'] : 'en';
@@ -179,76 +201,423 @@
 			$statement -> close();
 
 			// Setting the new keyboard
-			$keyboard = [
-				'_' => 'replyKeyboardMarkup',
-				'resize' => FALSE,
-				'single_use' => FALSE,
-				'selective' => FALSE,
-				'rows' => [
-					[
-						'_' => 'keyboardButtonRow',
-						'buttons' => [
-							[
-								'_' => 'keyboardButton',
-								'text' => ''
-							]
-						]
-					],
-					[
-						'_' => 'keyboardButtonRow',
-						'buttons' => [
-							[
-								'_' => 'keyboardButton',
-								'text' => ''
-							],
-							[
-								'_' => 'keyboardButton',
-								'text' => ''
-							]
-						]
-					]
-				]
-			];
-			$keyboard = [
-				'_' => 'replyInlineMarkup',
-				'rows' => [
-					[
-						'_' => 'keyboardButtonRow',
-						'buttons' => [
-							[
-								'_' => 'keyboardButtonUrl',
-								'text' => '',
-								'url' => ''
-							]
-						]
-					],
-					[
-						'_' => 'keyboardButtonRow',
-						'buttons' => [
-							[
-								'_' => 'keyboardButtonCallback',
-								'text' => '',
-								'data' => base64_encode('')
-							],
-							[
-								'_' => 'keyboardButtonSwitchInline',
-								'text' => '',
-								'query' => '',
-								'same_peer' => FALSE
-							]
-						]
-					]
-				]
-			];
+			switch ($command) {
+				case 'staff_group':
+					// Checking if the sender is an admin
+					$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
 
-			yield $this -> messages -> editMessage([
-				'no_webpage' => TRUE,
-				'peer' => $update['peer'],
-				'id' => $update['msg_id'],
-				'message' => '',
-				'reply_markup' => $keyboard,
-				'parse_mode' => 'HTML'
-			]);
+					// Checking if the statement have errors
+					if ($statement == FALSE) {
+						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+						return;
+					}
+
+					// Completing the query
+					$statement -> bind_param('i', $sender['id']);
+
+					// Executing the query
+					$result = $statement -> execute();
+
+					// Closing the statement
+					$statement -> close();
+
+					if ($result == FALSE) {
+						$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
+						return;
+					}
+
+					// Retrieving the chats' list
+					$result = $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+
+					// Checking if the query is failed
+					if ($result == FALSE) {
+						$this -> logger('Failed to make the query, because ' . $this -> DB -> error, \danog\MadelineProto\Logger::ERROR);
+						return;
+					}
+
+					$chats = $result -> fetch_all(MYSQLI_ASSOC);
+
+					$result -> free();
+
+					// Retrieving the query
+					$query = explode('/', $callback_data)[1];
+
+					switch ($query) {
+						case 'page':
+							// Retrieving the page
+							$chats = array_slice($chats, (int) explode('/', $callback_data)[2] * $this -> button_InlineKeyboard,  $this -> button_InlineKeyboard);
+
+							/**
+							* Setting the Inline Keyboard
+							*
+							* array_map() convert each chat to a keyboardButtonCallback
+							*/
+							$chats = array_map(function ($n) {
+								return [
+									'_' => 'keyboardButtonCallback',
+									'text' => $n['title'],
+									'data' => base64_encode($command . '/' . $n['id'] . '/no')
+								];
+							}, $chats);
+
+							$row = [
+								'_' => 'keyboardButtonRow',
+								'buttons' => []
+							];
+							$keyboard = [
+								'_' => 'replyInlineMarkup',
+								'rows' => []
+							];
+
+							// Cycle on the buttons' list
+							foreach ($chats as $button) {
+								if (count($row['buttons']) == 2) {
+									// Saving the row
+									$keyboard['rows'] []= $row;
+
+									// Creating a new row
+									$row['buttons'] = [];
+								}
+								// Adding a button to the row
+								$row['buttons'] []= $button;
+							}
+
+							// Setting the page
+							$keyboard['rows'] []= [
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => (int) explode('/', $callback_data)[2] != 0 ? 'Previous page' : '',
+										'data' => base64_encode((int) explode('/', $callback_data)[2] != 0 ? $command . '/page/' . (int) explode('/', $callback_data)[2] - 1 : '')
+									],
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => ((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? 'Next page' : '',
+										'data' => base64_encode(((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? $command . '/page/' . (int) explode('/', $callback_data)[2] + 1 : '')
+									]
+								]
+							];
+
+							// Setting the confirm buttons
+							$keyboard['rows'] []= [
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => 'Reject',
+										'data' => base64_encode($command . '/reject')
+									],
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => 'Confirm',
+										'data' => base64_encode($command . '/confirm')
+									]
+								]
+							];
+							break;
+						case 'reject':
+							// Retrieving the reject message
+							$statement = $this -> DB -> prepare('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;');
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$answer = 'Operation deleted.';
+							}
+
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+
+							/**
+							* Checking if the reject message isn't setted
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($answer)) {
+								$answer = 'Operation deleted.';
+							}
+
+							// Checking if is an abort
+							if (array_key_exists('staff_group', $this -> tmp) && array_key_exists($update['peer'], $this -> tmp['staff_group'])) {
+								array_splice($this -> tmp, array_search($update['peer'], $this -> tmp['staff_group']), 1);
+
+								/**
+								* Checking if there isn't other request for the /staff_group command
+								*
+								* empty() check if the argument is empty
+								* 	''
+								* 	""
+								* 	'0'
+								* 	"0"
+								* 	0
+								* 	0.0
+								* 	NULL
+								* 	FALSE
+								* 	[]
+								* 	array()
+								*/
+								if (empty($this -> tmp['staff_group'])) {
+									array_splice($this -> tmp, array_search('staff_group', $this -> tmp), 1);
+								}
+							}
+
+							yield $this -> messages -> editMessage([
+								'no_webpage' => TRUE,
+								'peer' => $update['peer'],
+								'id' => $message['id'],
+								'message' => $answer,
+								'reply_markup' => [],
+								'parse_mode' => 'HTML'
+							]);
+							return;
+						case 'confirm':
+							if (array_key_exists('staff_group', $this -> tmp) == FALSE || array_key_exists($update['peer'], $this -> tmp['staff_group']) == FALSE) {
+								$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because the sender have pressed the wrong button (/' . $command . ' section).');
+								return;
+							}
+
+							$statement = $this -> DB -> prepare('UPDATE `Chats` SET `staff_group`=? WHERE `id`=?;');
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+								return;
+							}
+
+							// Cycle on the selected chats
+							foreach ($this -> tmp['staff_group'][$update['peer']] as $id) {
+								$statement -> bind_param('ii', $update['peer'], $id);
+
+								// Executing the query
+								$statement -> execute()
+							}
+
+							// Closing the statement
+							$statement -> close();
+
+							// Commit the change
+							$this -> DB -> commit();
+
+							array_splice($this -> tmp, array_search($update['peer'], $this -> tmp['staff_group']), 1);
+
+							/**
+							* Checking if there isn't other request for the /staff_group command
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($this -> tmp['staff_group'])) {
+								array_splice($this -> tmp, array_search('staff_group', $this -> tmp), 1);
+							}
+
+							// Retrieving the confirm message
+							$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$answer = 'Operation completed.';
+							}
+
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+
+							/**
+							* Checking if the confirm message isn't setted
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($answer)) {
+								$answer = 'Operation completed.';
+							}
+
+							yield $this -> messages -> editMessage([
+								'no_webpage' => TRUE,
+								'peer' => $update['peer'],
+								'id' => $message['id'],
+								'message' => $answer,
+								'reply_markup' => [],
+								'parse_mode' => 'HTML'
+							]);
+							break;
+						default:
+							$keyboard = $message['reply_markup'];
+
+							foreach ($keyboard['rows'] as $row) {
+								foreach ($row['buttons'] as $button) {
+									if ($button['data'] == $update['data']) {
+										// Commuting the button
+										$button['data'] = explode('/', $callback_data)[2] == 'yes' ? base64_encode($command . '/' . $query . '/no') : base64_encode($command . '/' . $query . '/yes');
+
+										$button['text'] = explode('/', $callback_data)[2] == 'yes' ? str_replace(' ✅', '', $button['text']) : $button['text'] . ' ✅';
+
+										// Checking if is a select request
+										if (explode('/', $callback_data)[2] == 'yes') {
+											// Checking if the first /staff_group request
+											if (array_key_exists('staff_group', $this -> tmp)) {
+												// Checking if the first /staff_group request for this staff group
+												if (array_key_exists($update['peer'], $this -> tmp['staff_group'])) {
+													$this -> tmp['staff_group'][$update['peer']] []= $query;
+												} else {
+													$this -> tmp['staff_group'] []= [
+														$update['peer'] => [
+															$query
+														];
+													];
+												}
+											} else {
+												$this -> tmp []= [
+													'staff_group' => [
+														$update['peer'] => [
+															$query
+														]
+													]
+												];
+											}
+										} else {
+											array_splice($this -> tmp['staff_group'], array_search($query, $this -> tmp['staff_group']), 1);
+										}
+										break;
+									}
+								}
+								if ($button['data'] == $update['data']) {
+									break;
+								}
+							}
+							break;
+					}
+
+					yield $this -> messages -> editMessage([
+						'peer' => $update['peer'],
+						'id' => $message['id'],
+						'reply_markup' => $keyboard
+					]);
+					break;
+				default:
+					$keyboard = [
+						'_' => 'replyKeyboardMarkup',
+						'resize' => FALSE,
+						'single_use' => FALSE,
+						'selective' => FALSE,
+						'rows' => [
+							[
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButton',
+										'text' => ''
+									]
+								]
+							],
+							[
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButton',
+										'text' => ''
+									],
+									[
+										'_' => 'keyboardButton',
+										'text' => ''
+									]
+								]
+							]
+						]
+					];
+					$keyboard = [
+						'_' => 'replyInlineMarkup',
+						'rows' => [
+							[
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButtonUrl',
+										'text' => '',
+										'url' => ''
+									]
+								]
+							],
+							[
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => '',
+										'data' => base64_encode('')
+									],
+									[
+										'_' => 'keyboardButtonSwitchInline',
+										'text' => '',
+										'query' => '',
+										'same_peer' => FALSE
+									]
+								]
+							]
+						]
+					];
+
+					yield $this -> messages -> editMessage([
+						'no_webpage' => TRUE,
+						'peer' => $update['peer'],
+						'id' => $message['id'],
+						'message' => '',
+						'reply_markup' => $keyboard,
+						'parse_mode' => 'HTML'
+					]);
+					break;
+			}
 		}
 
 		/**
@@ -1966,6 +2335,173 @@
 							]
 						]);
 						break;
+					case 'staff_group':
+						// Checking if the chat is a private chat
+						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
+							return;
+						}
+
+						// Checking if the sender is an admin
+						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Completing the query
+						$statement -> bind_param('i', $sender['id']);
+
+						// Executing the query
+						$result = $statement -> execute();
+
+						// Closing the statement
+						$statement -> close();
+
+						if ($result == FALSE) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
+							return;
+						}
+
+						// Retrieving the chats' list
+						$result = $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+
+						// Checking if the query is failed
+						if ($result == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $this -> DB -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						$chats = $result -> fetch_all(MYSQLI_ASSOC);
+
+						$result -> free();
+
+						$total = count($chats);
+
+						/**
+						* Setting the Inline Keyboard
+						*
+						* array_map() convert each chat to a keyboardButtonCallback
+						*/
+						$chats = array_slice($chats, 0,  $this -> button_InlineKeyboard);
+						$chats = array_map(function ($n) {
+							return [
+								'_' => 'keyboardButtonCallback',
+								'text' => $n['title'],
+								'data' => base64_encode($command . '/' . $n['id'] . '/no')
+							];
+						}, $chats);
+
+						$row = [
+							'_' => 'keyboardButtonRow',
+							'buttons' => []
+						];
+						$keyboard = [
+							'_' => 'replyInlineMarkup',
+							'rows' => []
+						];
+
+						// Cycle on the buttons' list
+						foreach ($chats as $button) {
+							if (count($row['buttons']) == 2) {
+								// Saving the row
+								$keyboard['rows'] []= $row;
+
+								// Creating a new row
+								$row['buttons'] = [];
+							}
+							// Adding a button to the row
+							$row['buttons'] []= $button;
+						}
+
+						// Setting the page
+						if ($total > count($chats)) {
+							$keyboard['rows'] []= [
+								'_' => 'keyboardButtonRow',
+								'buttons' => [
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => '',
+										'data' => base64_encode('')
+									],
+									[
+										'_' => 'keyboardButtonCallback',
+										'text' => 'Next page',
+										'data' => base64_encode($command . '/page/1')
+									]
+								]
+							];
+						}
+
+						// Setting the confirm buttons
+						$keyboard['rows'] []= [
+							'_' => 'keyboardButtonRow',
+							'buttons' => [
+								[
+									'_' => 'keyboardButtonCallback',
+									'text' => 'Reject',
+									'data' => base64_encode($command . '/reject')
+								],
+								[
+									'_' => 'keyboardButtonCallback',
+									'text' => 'Confirm',
+									'data' => base64_encode($command . '/confirm')
+								]
+							]
+						];
+
+						// Retrieving the staff_group message
+						$statement = $this -> DB -> prepare('SELECT `staff_group_message` FROM `Languages` WHERE `lang_code`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$answer = 'For what chats do you want set this staff group ?';
+						}
+
+						// Completing the query
+						$statement -> bind_param('s', $language);
+
+						// Executing the query
+						$statement -> execute();
+
+						// Setting the output variables
+						$statement -> bind_result($answer);
+
+						// Retrieving the result
+						$statement -> fetch();
+
+						// Closing the statement
+						$statement -> close();
+
+						/**
+						* Checking if the staff_group message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = 'For what chats do you want set this staff group ?';
+						}
+
+						yield $this -> messages -> sendMessage([
+							'no_webpage' => TRUE,
+							'peer' => $chat['id'],
+							'message' => $answer,
+							'reply_to_msg_id' => $message['id'],
+							'parse_mode' => 'HTML'
+						]);
+						break;
 					case 'start':
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
@@ -2029,6 +2565,29 @@
 						// Checking if the chat isn't a private chat
 						if ($message['to_id']['_'] !== 'peerUser') {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message from a private chat (/' . $command . ' section).');
+							return;
+						}
+
+						// Checking if the sender is an admin
+						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Completing the query
+						$statement -> bind_param('i', $sender['id']);
+
+						// Executing the query
+						$result = $statement -> execute();
+
+						// Closing the statement
+						$statement -> close();
+
+						if ($result == FALSE) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
 

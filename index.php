@@ -1342,7 +1342,7 @@
 
 							// Completing the query
 							if ($command == 'add') {
-								$statement -> bind_param('iss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite'], NULL, NULL);
+								$statement -> bind_param('issssss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite'], NULL, NULL);
 							} else {
 								$statement -> bind_param('i', $chat['id']);
 							}

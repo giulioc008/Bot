@@ -110,7 +110,7 @@
 			$sender = yield $this -> getInfo($update['user_id']);
 			$sender = $sender['User'] ?? NULL;
 
-			/*
+			/**
 			* Checking if the sender is a normal user
 			*
 			* empty() check if the argument is empty
@@ -128,7 +128,7 @@
 			if (empty($sender) || $sender['_'] !== 'user') {
 				$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because the sender isn\'t a normal user.');
 				return;
-			/*
+			/**
 			* Checking if the query is empty
 			*
 			* empty() check if the query is empty
@@ -263,7 +263,7 @@
 			$sender = yield $this -> getInfo($update['user_id']);
 			$sender = $sender['User'] ?? NULL;
 
-			/*
+			/**
 			* Checking if the user is a normal user
 			*
 			* empty() check if the argument is empty
@@ -281,7 +281,7 @@
 			if (empty($sender) || $sender['_'] !== 'user') {
 				$this -> logger('The InlineQuery ' . $update['query_id'] . ' wasn\'t managed because the sender isn\'t a normal user.');
 				return;
-			/*
+			/**
 			* Checking if the query is empty
 			*
 			* empty() check if the query is empty
@@ -488,7 +488,7 @@
 						'multiple' = TRUE
 					];
 
-					/*
+					/**
 					* Checking if the welcome message is setted
 					*
 					* empty() check if the argument is empty
@@ -517,7 +517,7 @@
 						$new_member = yield $this -> getInfo($new_member);
 						$new_member = $new_member['User'] ?? NULL;
 
-						/*
+						/**
 						* Checking if the user isn't a spammer, isn't a deleted account and is a normal user
 						*
 						* empty() check if the argument is empty
@@ -533,7 +533,7 @@
 						* 	array()
 						*/
 						if ($result['ok'] == FALSE && empty($new_member) && $new_member['_'] === 'user' && $new_member['scam'] == FALSE && $new_member['deleted'] == FALSE) {
-							/*
+							/**
 							* Checking if the welcome message is setted
 							*
 							* empty() check if the argument is empty
@@ -578,7 +578,7 @@
 
 					yield $this -> channels -> editBanned($banned);
 
-					/*
+					/**
 					* Checking if the welcome message is setted
 					*
 					* empty() check if the argument is empty
@@ -615,7 +615,7 @@
 					$new_member = yield $this -> getInfo($message['from_id']);
 					$new_member = $new_member['User'] ?? NULL;
 
-					/*
+					/**
 					* Checking if the user is a spammer, is a deleted account or isn't a normal user
 					*
 					* empty() check if the argument is empty
@@ -653,7 +653,7 @@
 						]);
 					}
 
-					/*
+					/**
 					* Checking if the welcome message is setted
 					*
 					* empty() check if the argument is empty
@@ -706,7 +706,7 @@
 			$sender = yield $this -> getInfo($message['from_id']);
 			$sender = $sender['User'] ?? NULL;
 
-			/*
+			/**
 			* Checking if the user is a normal user
 			*
 			* empty() check if the argument is empty
@@ -819,7 +819,7 @@
 				// Closing the statement
 				$statement -> close();
 
-				/*
+				/**
 				* Checking if the admin message isn't setted
 				*
 				* empty() check if the argument is empty
@@ -901,6 +901,61 @@
 							return;
 						}
 
+						/**
+						* Checking if the message isn't a message that replies to another message
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($message['reply_to_msg_id'] ?? NULL)) {
+							// Retrieving the query
+							$sql_query = $command == 'add' ? 'INSERT INTO `Chats` (`id`, `type`, `title`, `username`, `invite_link`, `welcome`, `staff_group`) VALUES (?, ?, ?, ?, ?, ?, ?);' : 'DELETE FROM `Chats` WHERE `id`=?;';
+							$statement = $this -> DB -> prepare($sql_query);
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+								return;
+							}
+
+							// Completing the query
+							if ($command == 'add') {
+								$statement -> bind_param('iss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite'], NULL, NULL);
+							} else {
+								$statement -> bind_param('i', $chat['id']);
+							}
+
+							// Executing the query
+							$statement -> execute()
+
+							// Closing the statement
+							$statement -> close();
+
+							// Commit the change
+							$this -> DB -> commit();
+
+							yield $this -> messages -> sendMessage([
+								'no_webpage' => TRUE,
+								'peer' => $chat['id'],
+								'message' => 'Chat ' . $command . ($command == 'add' ? 'e' : '' . 'd.'),
+								'reply_to_msg_id' => $message['id'],
+								'parse_mode' => 'HTML'
+							]);
+
+							// Sending the report to the channel
+							$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . ($command == 'add' ? 'e' : '') . 'd <a href=\"' . $chat['exported_invite'] . '\" >' . $chat['title'] . '</a> ' . ($command == 'add' ? 'into' : 'from') . ' the database.');
+							return;
+						}
+
 						// Retrieving the message this message replies to
 						$reply_message = yield $this -> messages -> getMessages([
 							'id' => [
@@ -920,7 +975,7 @@
 						$user = yield $this -> getInfo($reply_message['from_id']);
 						$user = $user['User'] ?? NULL;
 
-						/*
+						/**
 						* Checking if the user is a normal user
 						*
 						* empty() check if the argument is empty
@@ -984,7 +1039,7 @@
 							return;
 						}
 
-						/*
+						/**
 						* Checking if the command have arguments
 						*
 						* empty() check if the argument is empty
@@ -1154,7 +1209,7 @@
 								// Retrieving the result
 								$statement -> fetch();
 
-								/*
+								/**
 								* Checking if the command haven't arguments
 								*
 								* empty() check if the argument is empty
@@ -1189,7 +1244,7 @@
 								$user = yield $this -> getInfo($args);
 								$user = $user['User'] ?? NULL;
 
-								/*
+								/**
 								* Checking if the user isn't a normal user
 								*
 								* empty() check if the argument is empty
@@ -1223,7 +1278,7 @@
 									$sub_chat = yield $this -> getInfo($id);
 									$sub_chat = $sub_chat['Chat'] ?? NULL;
 
-									/*
+									/**
 									* Checking if the chat isn't setted
 									*
 									* empty() check if the argument is empty
@@ -1276,7 +1331,7 @@
 						// Setting limit to forever
 						$limit = 0;
 
-						/*
+						/**
 						* Checking if the command is /mute, if it has arguments and if the arguments are correct
 						*
 						* empty() check if the argument is empty
@@ -1366,6 +1421,26 @@
 							}
 						}
 
+						/**
+						* Checking if the message isn't a message that replies to another message
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($message['reply_to_msg_id'] ?? NULL)) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
+							return;
+						}
+
 						// Retrieving the message this message replies to
 						$reply_message = yield $this -> messages -> getMessages([
 							'id' => [
@@ -1385,7 +1460,7 @@
 						$user = yield $this -> getInfo($reply_message['from_id']);
 						$user = $user['User'] ?? NULL;
 
-						/*
+						/**
 						* Checking if the user is a normal user
 						*
 						* empty() check if the argument is empty
@@ -1518,6 +1593,26 @@
 							return;
 						}
 
+						/**
+						* Checking if the message isn't a message that replies to another message
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($message['reply_to_msg_id'] ?? NULL)) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
+							return;
+						}
+
 						// Retrieving the message this message replies to
 						$reply_message = yield $this -> messages -> getMessages([
 							'id' => [
@@ -1537,7 +1632,7 @@
 						$user = yield $this -> getInfo($reply_message['from_id']);
 						$user = $user['User'] ?? NULL;
 
-						/*
+						/**
 						* Checking if the user is a normal user
 						*
 						* empty() check if the argument is empty
@@ -1611,7 +1706,7 @@
 						// Closing the statement
 						$statement -> close();
 
-						/*
+						/**
 						* Checking if the help message is setted
 						*
 						* empty() check if the argument is empty
@@ -1667,7 +1762,7 @@
 						// Closing the statement
 						$statement -> close();
 
-						/*
+						/**
 						* Checking if the help message isn't setted
 						*
 						* empty() check if the argument is empty
@@ -1856,7 +1951,7 @@
 						// Closing the statement
 						$statement -> close();
 
-						/*
+						/**
 						* Checking if the start message isn't setted
 						*
 						* empty() check if the argument is empty
@@ -1923,7 +2018,7 @@
 							$DB_chat = yield $this -> getInfo($DB_chat['id']);
 							$DB_chat = $DB_chat['Chat'] ?? NULL;
 
-							/*
+							/**
 							* Checking if the chat is a group that is migrated to a supergroup
 							*
 							* empty() check if the argument is empty
@@ -2112,7 +2207,7 @@
 							$admin = yield $this -> getInfo($id);
 							$admin = $admin['User'] ?? NULL;
 
-							/*
+							/**
 							* Checking if the user is a normal user
 							*
 							* empty() check if the argument is empty
@@ -2203,7 +2298,7 @@
 						// Closing the statement
 						$statement -> close();
 
-						/*
+						/**
 						* Checking if the update message isn't setted
 						*
 						* empty() check if the argument is empty
@@ -2259,7 +2354,7 @@
 						// Closing the statement
 						$statement -> close();
 
-						/*
+						/**
 						* Checking if the unknown message isn't setted
 						*
 						* empty() check if the argument is empty

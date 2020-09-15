@@ -833,49 +833,27 @@
 			// Retrieving the chat's data
 			$chat = yield $this -> getPwrChat($message['to_id']['_'] === 'peerUser' ? $message['from_id'] : ($message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id']));
 
-			// Checking if the chat is an allowed chat
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Chats` WHERE `id`=?;');
+			// Retrieving the data of the sender
+			$sender = yield $this -> getInfo($message['from_id']);
+			$sender = $sender['User'] ?? NULL;
 
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
-				$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-				return;
-			}
-
-			// Completing the query
-			$statement -> bind_param('i', $chat['id']);
-
-			// Executing the query
-			$result = $statement -> execute();
-
-			// Closing the statement
-			$statement -> close();
-
-			// Checking if the query have product a result
-			if ($chat['type'] != 'user' && $chat['type'] != 'bot' && $result == FALSE) {
-				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
-
-				// Leaving the chat
-				if ($chat['type'] == 'chat') {
-					$bot = yield $this -> getSelf();
-
-					$this -> messages -> deleteChatUser([
-						'chat_id' => $chat['id'],
-						'user_id' => $bot['id']
-					]);
-				} else {
-					$this -> channels -> leaveChannel([
-						'channel' => $chat['id']
-					]);
-				}
-
-				$this -> logger('The bot have lefted the unauthorized chat.');
-				return;
-			}
-
-			// Checking if the chat is a (super)group or a private chat
-			if ($chat['type'] != 'user' && $chat['type'] != 'supergroup' && $chat['type'] != 'chat') {
-				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a bot or a channel.');
+			/**
+			* Checking if the user is a normal user
+			*
+			* empty() check if the argument is empty
+			* 	''
+			* 	""
+			* 	'0'
+			* 	"0"
+			* 	0
+			* 	0.0
+			* 	NULL
+			* 	FALSE
+			* 	[]
+			* 	array()
+			*/
+			if (empty($sender) || $sender['_'] !== 'user') {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the sender isn\'t a normal user.');
 				return;
 			}
 
@@ -927,6 +905,52 @@
 					*/
 					if (empty($answer) == FALSE) {
 						$members = [];
+					}
+
+					// Retrieving the bot's data
+					$bot = yield $this -> getSelf();
+
+					// Checking if the bot have joined the (super)group
+					if (in_array($bot['id'], $message['action']['users'])) {
+						array_splice($message['action']['users'], array_search($bot['id'], $message['action']['users']), 1);
+
+						// Checking if who added the bot is a bot's admin
+						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Completing the query
+						$statement -> bind_param('i', $sender['id']);
+
+						// Executing the query
+						$result = $statement -> execute();
+
+						// Closing the statement
+						$statement -> close();
+
+						// Checking if the query hasn't product a result
+						if ($result == FALSE) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
+
+							// Leaving the chat
+							if ($chat['type'] == 'chat') {
+								$this -> messages -> deleteChatUser([
+									'chat_id' => $chat['id'],
+									'user_id' => $bot['id']
+								]);
+							} else if ($chat['type'] == 'channel' || $chat['type'] == 'supergroup') {
+								$this -> channels -> leaveChannel([
+									'channel' => $chat['id']
+								]);
+							}
+
+							$this -> logger('The bot have lefted the unauthorized chat.');
+							return;
+						}
 					}
 
 					// Cycle on the list of the new member
@@ -1100,6 +1124,46 @@
 							'parse_mode' => 'HTML'
 						]);
 					}
+				} else if ($message['action']['_'] === 'messageActionChatMigrateTo') {
+					// Updating the chat's data
+					$statement = $this -> DB -> prepare('UPDATE `Chats` SET `id`=? WHERE `id`=?;');
+
+					// Checking if the statement have errors
+					if ($statement == FALSE) {
+						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+						return;
+					}
+
+					$statement -> bind_param('ii', $message['action']['channel_id'], $chat['id']);
+
+					// Executing the query
+					$statement -> execute()
+
+					// Closing the statement
+					$statement -> close();
+
+					// Commit the change
+					$this -> DB -> commit();
+				} else if ($message['action']['_'] === 'messageActionChannelMigrateFrom') {
+					// Updating the chat's data
+					$statement = $this -> DB -> prepare('UPDATE `Chats` SET `id`=? WHERE `id`=?;');
+
+					// Checking if the statement have errors
+					if ($statement == FALSE) {
+						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+						return;
+					}
+
+					$statement -> bind_param('ii', $chat['id'], $message['action']['chat_id']);
+
+					// Executing the query
+					$statement -> execute()
+
+					// Closing the statement
+					$statement -> close();
+
+					// Commit the change
+					$this -> DB -> commit();
 				}
 
 				yield $this -> channels -> deleteMessages([
@@ -1111,33 +1175,55 @@
 				return;
 			}
 
+			// Checking if the chat is an allowed chat
+			$statement = $this -> DB -> prepare('SELECT NULL FROM `Chats` WHERE `id`=?;');
+
+			// Checking if the statement have errors
+			if ($statement == FALSE) {
+				$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+				return;
+			}
+
+			// Completing the query
+			$statement -> bind_param('i', $chat['id']);
+
+			// Executing the query
+			$result = $statement -> execute();
+
+			// Closing the statement
+			$statement -> close();
+
+			// Checking if the query have product a result
+			if ($chat['type'] != 'user' && $chat['type'] != 'bot' && $result == FALSE) {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
+
+				// Leaving the chat
+				if ($chat['type'] == 'chat') {
+					$bot = yield $this -> getSelf();
+
+					$this -> messages -> deleteChatUser([
+						'chat_id' => $chat['id'],
+						'user_id' => $bot['id']
+					]);
+				} else {
+					$this -> channels -> leaveChannel([
+						'channel' => $chat['id']
+					]);
+				}
+
+				$this -> logger('The bot have lefted the unauthorized chat.');
+				return;
+			}
+
+			// Checking if the chat is a (super)group or a private chat
+			if ($chat['type'] != 'user' && $chat['type'] != 'supergroup' && $chat['type'] != 'chat') {
+				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a bot or a channel.');
+				return;
+			}
+
 			$message['message'] = trim($message['message']);
 			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
 			$message['message'] = mysqli_real_escape_string($this -> DB, $message['message']);
-
-			// Retrieving the data of the sender
-			$sender = yield $this -> getInfo($message['from_id']);
-			$sender = $sender['User'] ?? NULL;
-
-			/**
-			* Checking if the user is a normal user
-			*
-			* empty() check if the argument is empty
-			* 	''
-			* 	""
-			* 	'0'
-			* 	"0"
-			* 	0
-			* 	0.0
-			* 	NULL
-			* 	FALSE
-			* 	[]
-			* 	array()
-			*/
-			if (empty($sender) || $sender['_'] !== 'user') {
-				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the sender isn\'t a normal user.');
-				return;
-			}
 
 			// Checking if the user is in the bot's blacklist
 			$statement = $this -> DB -> prepare('SELECT NULL FROM `Blacklist` WHERE `id`=?;');
@@ -1284,12 +1370,6 @@
 				switch ($command) {
 					case 'add':
 					case 'remove':
-						// Checking if the chat is a private chat
-						if ($message['to_id']['_'] === 'peerUser') {
-							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
-							return;
-						}
-
 						// Checking if the sender is a bot's admin
 						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
 
@@ -1311,6 +1391,12 @@
 						// Checking if the statement have errors
 						if ($result == FALSE) {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
+							return;
+						}
+
+						// Checking if the chat is a private chat
+						if ($message['to_id']['_'] === 'peerUser') {
+							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
 							return;
 						}
 
@@ -1377,7 +1463,7 @@
 						]);
 
 						// Checking if the result is valid
-						if ($reply_message['_'] === 'messages.messagesNotModified') {
+						if ($reply_message['_'] === 'messages.messagesNotModified' || $reply_message['messages'][0]['_'] !== 'message') {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
@@ -1863,7 +1949,7 @@
 						]);
 
 						// Checking if the result is valid
-						if ($reply_message['_'] === 'messages.messagesNotModified') {
+						if ($reply_message['_'] === 'messages.messagesNotModified' || $reply_message['messages'][0]['_'] !== 'message') {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
@@ -2035,7 +2121,7 @@
 						]);
 
 						// Checking if the result is valid
-						if ($reply_message['_'] === 'messages.messagesNotModified') {
+						if ($reply_message['_'] === 'messages.messagesNotModified' || $reply_message['messages'][0]['_'] !== 'message') {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because wasn\'t a message that replies to another message (/' . $command . ' section).');
 							return;
 						}
@@ -2245,27 +2331,22 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'add',
-									'description' => 'Assign a user as bot\'s admin'
+									'description' => 'Assign a user as bot\'s admin or add a chat or a language to the database'
 								],
 								[
 									'_' => 'botCommand',
 									'command' => 'announce',
-									'description' => 'If it\'s used into the staff group, send an announce in all the groups, otherwise only in the group where it\'s used'
+									'description' => 'If it\'s used into the staff group, send an announce in all the (super)groups, otherwise only in the (super)group where it\'s used'
 								],
 								[
 									'_' => 'botCommand',
 									'command' => 'ban',
-									'description' => 'If it\'s used into the staff group, ban a user from all the groups, otherwise only from the group where it\'s used'
+									'description' => 'If it\'s used into the staff group, ban a user from all the (super)groups, otherwise only from the (super)group where it\'s used'
 								],
 								[
 									'_' => 'botCommand',
 									'command' => 'blacklist',
 									'description' => 'Insert a user in the bot\'s blacklist'
-								],
-								[
-									'_' => 'botCommand',
-									'command' => 'check',
-									'description' => 'Print the database for checking it'
 								],
 								[
 									'_' => 'botCommand',
@@ -2275,7 +2356,7 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'kick',
-									'description' => 'Kick a user from a group'
+									'description' => 'Kick a user from a (super)group'
 								],
 								[
 									'_' => 'botCommand',
@@ -2285,12 +2366,12 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'mute',
-									'description' => 'Mute a user in a group'
+									'description' => 'Mute a user in a (super)group'
 								],
 								[
 									'_' => 'botCommand',
 									'command' => 'remove',
-									'description' => 'Remove a user as bot\'s admin'
+									'description' => 'Remove a user as bot\'s admin or a chat or a language to the database'
 								],
 								[
 									'_' => 'botCommand',
@@ -2300,7 +2381,7 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'silence',
-									'description' => 'Mute a group, except the admins'
+									'description' => 'Mute a (super)group, except the admins'
 								],
 								[
 									'_' => 'botCommand',
@@ -2310,7 +2391,7 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'unban',
-									'description' => 'If it\'s used into the staff group, unban a user from all the groups, otherwise only from the group where it\'s used'
+									'description' => 'If it\'s used into the staff group, unban a user from all the (super)groups, otherwise only from the (super)group where it\'s used'
 								],
 								[
 									'_' => 'botCommand',
@@ -2320,12 +2401,12 @@
 								[
 									'_' => 'botCommand',
 									'command' => 'unmute',
-									'description' => 'Unmute a user from a group'
+									'description' => 'Unmute a user from a (super)group'
 								],
 								[
 									'_' => 'botCommand',
 									'command' => 'unsilence',
-									'description' => 'Unmute a group'
+									'description' => 'Unmute a (super)group'
 								],
 								[
 									'_' => 'botCommand',

@@ -289,11 +289,21 @@
 									[
 										'_' => 'keyboardButtonCallback',
 										'text' => (int) explode('/', $callback_data)[2] != 0 ? 'Previous page' : '',
+										/**
+										* Generating the keyboardButtonCallback data
+										*
+										* base64_encode() encode the string
+										*/
 										'data' => base64_encode((int) explode('/', $callback_data)[2] != 0 ? $command . '/page/' . (int) explode('/', $callback_data)[2] - 1 : '')
 									],
 									[
 										'_' => 'keyboardButtonCallback',
 										'text' => ((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? 'Next page' : '',
+										/**
+										* Generating the keyboardButtonCallback data
+										*
+										* base64_encode() encode the string
+										*/
 										'data' => base64_encode(((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? $command . '/page/' . (int) explode('/', $callback_data)[2] + 1 : '')
 									]
 								]
@@ -306,11 +316,21 @@
 									[
 										'_' => 'keyboardButtonCallback',
 										'text' => 'Reject',
+										/**
+										* Generating the keyboardButtonCallback data
+										*
+										* base64_encode() encode the string
+										*/
 										'data' => base64_encode($command . '/reject')
 									],
 									[
 										'_' => 'keyboardButtonCallback',
 										'text' => 'Confirm',
+										/**
+										* Generating the keyboardButtonCallback data
+										*
+										* base64_encode() encode the string
+										*/
 										'data' => base64_encode($command . '/confirm')
 									]
 								]
@@ -359,8 +379,18 @@
 								$answer = 'Operation deleted.';
 							}
 
-							// Checking if is an abort
+							/**
+							* Checking if is an abort
+							*
+							* array_key_exists() check if the key exists
+							*/
 							if (array_key_exists('staff_group', $this -> tmp) && array_key_exists($update['peer'], $this -> tmp['staff_group'])) {
+								/**
+								* Removing the id from the array
+								*
+								* array_search() search the id into the array
+								* array_splice() extract the sub-array from the main array
+								*/
 								array_splice($this -> tmp, array_search($update['peer'], $this -> tmp['staff_group']), 1);
 
 								/**
@@ -379,6 +409,12 @@
 								* 	array()
 								*/
 								if (empty($this -> tmp['staff_group'])) {
+									/**
+									* Removing the 'staff_group' key from the array
+									*
+									* array_search() search the 'staff_group' key into the array
+									* array_splice() extract the sub-array from the main array
+									*/
 									array_splice($this -> tmp, array_search('staff_group', $this -> tmp), 1);
 								}
 							}
@@ -393,6 +429,11 @@
 							]);
 							return;
 						case 'confirm':
+							/**
+							* Checking if the confirm is pressed for error
+							*
+							* array_key_exists() check if the key exists
+							*/
 							if (array_key_exists('staff_group', $this -> tmp) == FALSE || array_key_exists($update['peer'], $this -> tmp['staff_group']) == FALSE) {
 								$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because the sender have pressed the wrong button (/' . $command . ' section).');
 								return;
@@ -420,6 +461,12 @@
 							// Commit the change
 							$this -> DB -> commit();
 
+							/**
+							* Removing the id from the array
+							*
+							* array_search() search the id into the array
+							* array_splice() extract the sub-array from the main array
+							*/
 							array_splice($this -> tmp, array_search($update['peer'], $this -> tmp['staff_group']), 1);
 
 							/**
@@ -438,6 +485,12 @@
 							* 	array()
 							*/
 							if (empty($this -> tmp['staff_group'])) {
+								/**
+								* Removing the 'staff_group' key from the array
+								*
+								* array_search() search the 'staff_group' key into the array
+								* array_splice() extract the sub-array from the main array
+								*/
 								array_splice($this -> tmp, array_search('staff_group', $this -> tmp), 1);
 							}
 
@@ -498,16 +551,33 @@
 							foreach ($keyboard['rows'] as $row) {
 								foreach ($row['buttons'] as $button) {
 									if ($button['data'] == $update['data']) {
-										// Commuting the button
+										/**
+										* Commuting the button
+										*
+										* explode() convert a string into an array
+										* base64_encode() encode the string
+										*/
 										$button['data'] = explode('/', $callback_data)[2] == 'yes' ? base64_encode($command . '/' . $query . '/no') : base64_encode($command . '/' . $query . '/yes');
 
 										$button['text'] = explode('/', $callback_data)[2] == 'yes' ? str_replace(' ✅', '', $button['text']) : $button['text'] . ' ✅';
 
-										// Checking if is a select request
+										/**
+										* Checking if is a select request
+										*
+										* explode() convert a string into an array
+										*/
 										if (explode('/', $callback_data)[2] == 'yes') {
-											// Checking if the first /staff_group request
+											/**
+											* Checking if the first /staff_group request
+											*
+											* array_key_exists() check if the 'staff_group' key exists
+											*/
 											if (array_key_exists('staff_group', $this -> tmp)) {
-												// Checking if the first /staff_group request for this staff group
+												/**
+												* Checking if the first /staff_group request for this staff group
+												*
+												* array_key_exists() check if the id exists
+												*/
 												if (array_key_exists($update['peer'], $this -> tmp['staff_group'])) {
 													$this -> tmp['staff_group'][$update['peer']] []= $query;
 												} else {
@@ -527,6 +597,12 @@
 												];
 											}
 										} else {
+											/**
+											* Removing the query from the array
+											*
+											* array_search() search the query into the array
+											* array_splice() extract the sub-array from the main array
+											*/
 											array_splice($this -> tmp['staff_group'], array_search($query, $this -> tmp['staff_group']), 1);
 										}
 										break;
@@ -595,6 +671,11 @@
 									[
 										'_' => 'keyboardButtonCallback',
 										'text' => '',
+										/**
+										* Generating the keyboardButtonCallback data
+										*
+										* base64_encode() encode the string
+										*/
 										'data' => base64_encode('')
 									],
 									[
@@ -628,9 +709,15 @@
 		* @return Generator
 		*/
 		public function onUpdateBotInlineQuery(array $update) : Generator {
+			/**
+			* Encode the text
+			*
+			* trim() strip whitespaces from the begin and the end of the string
+			* htmlentities() convert all HTML character to its safe value
+			*/
 			$inline_query = trim($update['query']);
 			$inline_query = htmlentities($inline_query, ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
-			$inline_query = mysqli_real_escape_string($this -> DB, $inline_query);
+			$inline_query = $this -> DB -> real_escape_string($inline_query);
 
 			// Retrieving the data of the user that sent the query
 			$sender = yield $this -> getInfo($update['user_id']);
@@ -672,7 +759,11 @@
 			} else if (empty($inline_query)) {
 				$this -> logger('The InlineQuery ' . $update['query_id'] . ' wasn\'t managed because was empty.');
 				return;
-			// Checking if the query is long enough
+			/**
+			* Checking if the query is long enough
+			*
+			* strlen() return the length of the string
+			*/
 			} else if (strlen($inline_query) < 3) {
 				$this -> logger('The InlineQuery ' . $update['query_id'] . ' wasn\'t managed because was too short.');
 				return;
@@ -708,6 +799,11 @@
 			$answer = [
 				[
 					'_' => 'inputBotInlineResult',
+					/**
+					* Generating the inputBotInlineResult id
+					*
+					* uniqid() generate a random string
+					*/
 					'id' => uniqid(),
 					'type' => 'article',
 					'title' => '',
@@ -721,6 +817,11 @@
 				],
 				[
 					'_' => 'inputBotInlineResult',
+					/**
+					* Generating the inputBotInlineResult id
+					*
+					* uniqid() generate a random string
+					*/
 					'id' => uniqid(),
 					'type' => 'article',
 					'title' => '',
@@ -749,6 +850,11 @@
 										[
 											'_' => 'keyboardButtonCallback',
 											'text' => '',
+											/**
+											* Generating the keyboardButtonCallback data
+											*
+											* base64_encode() encode the string
+											*/
 											'data' => base64_encode('')
 										],
 										[
@@ -766,6 +872,11 @@
 			];
 
 			yield $this -> messages -> setInlineBotResults([
+				/**
+				* Generating the query id
+				*
+				* mt_rand() generate a random integer number
+				*/
 				'query_id' => mt_rand(),
 				'results' => $answer,
 				'cache_time' => 1,
@@ -910,8 +1021,18 @@
 					// Retrieving the bot's data
 					$bot = yield $this -> getSelf();
 
-					// Checking if the bot have joined the (super)group
+					/**
+					* Checking if the bot have joined the (super)group
+					*
+					* in_array() check if the bot id is into the array
+					*/
 					if (in_array($bot['id'], $message['action']['users'])) {
+						/**
+						* Removing the bot id from the new members list
+						*
+						* array_search() search the bot id into the array
+						* array_splice() extract the sub-array from the main array
+						*/
 						array_splice($message['action']['users'], array_search($bot['id'], $message['action']['users']), 1);
 
 						// Checking if who added the bot is a bot's admin
@@ -955,7 +1076,11 @@
 
 					// Cycle on the list of the new member
 					foreach ($message['action']['users'] as $new_member) {
-						// Downloading the user's informations from the Combot Anti-Spam API
+						/**
+						* Downloading the user's informations from the Combot Anti-Spam API
+						*
+						* json_decode() convert a JSON string into a PHP variables
+						*/
 						$result = execute_request('https://api.cas.chat/check?user_id=' . $new_member, TRUE);
 						$result = json_decode($result, TRUE);
 
@@ -1040,6 +1165,13 @@
 					* 	array()
 					*/
 					if (empty($answer) == FALSE) {
+						/**
+						* Personalizing the message
+						*
+						* array_map() convert each new member into it's tag
+						* implode() convert the array into a string
+						* str_replace() replace the 'mentions' tag with the string
+						*/
 						$members = array_map(function ($n) {
 							return '<a href=\"mention:' . $n['id'] . '\" >' . $n['first_name'] . '</a>';
 						}, $members);
@@ -1053,7 +1185,11 @@
 						]);
 					}
 				} else if ($message['action']['_'] === 'messageActionChatJoinedByLink') {
-					// Downloading the user's informations from the Combot Anti-Spam API
+					/**
+					* Downloading the user's informations from the Combot Anti-Spam API
+					*
+					* json_decode() convert a JSON string into a PHP variables
+					*/
 					$result = execute_request('https://api.cas.chat/check?user_id=' . $message['from_id'], TRUE);
 					$result = json_decode($result, TRUE);
 
@@ -1223,7 +1359,7 @@
 
 			$message['message'] = trim($message['message']);
 			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
-			$message['message'] = mysqli_real_escape_string($this -> DB, $message['message']);
+			$message['message'] = $this -> DB -> real_escape_string($message['message']);
 
 			// Checking if the user is in the bot's blacklist
 			$statement = $this -> DB -> prepare('SELECT NULL FROM `Blacklist` WHERE `id`=?;');
@@ -1275,7 +1411,7 @@
 			$statement -> close();
 
 			// Checking if is an @admin tag
-			if (preg_match('/^\@admin([[:blank:]\n]{1}((\n|.)*))?$/miu', $message['message'], $matches)) {
+			if (preg_match('/^\@admin([[:blank:]\n]{1}((\n|.)*))?$/miu', html_entity_decode($message['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
 				// Checking if the chat is a private chat
 				if ($message['to_id']['_'] === 'peerUser') {
 					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (@admin section).');
@@ -1683,7 +1819,7 @@
 						*/
 						if (empty($message['reply_to_msg_id'] ?? NULL)) {
 							// Retrieving the query
-							$sql_query = $command == 'add' ? 'INSERT INTO `Chats` (`id`, `type`, `title`, `username`, `invite_link`, `welcome`, `staff_group`) VALUES (?, ?, ?, ?, ?, ?, ?);' : 'DELETE FROM `Chats` WHERE `id`=?;';
+							$sql_query = $command == 'add' ? 'INSERT INTO `Chats` (`id`, `type`, `title`, `username`, `invite_link`) VALUES (?, ?, ?, ?, ?);' : 'DELETE FROM `Chats` WHERE `id`=?;';
 							$statement = $this -> DB -> prepare($sql_query);
 
 							// Checking if the statement have errors
@@ -1694,7 +1830,7 @@
 
 							// Completing the query
 							if ($command == 'add') {
-								$statement -> bind_param('issssss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite'], NULL, NULL);
+								$statement -> bind_param('issssss', $chat['id'], $chat['type'], $chat['title'], $chat['username'], $chat['invite']);
 							} else {
 								$statement -> bind_param('i', $chat['id']);
 							}
@@ -2954,6 +3090,7 @@
 						/**
 						* Setting the Inline Keyboard
 						*
+						* array_splice() extract the sub-array from the main array
 						* array_map() convert each chat to a keyboardButtonCallback
 						*/
 						$chats = array_slice($chats, 0,  $this -> button_InlineKeyboard);
@@ -3297,7 +3434,11 @@
 
 							// Cycle on the list of the members
 							foreach ($members as $member) {
-								// Downloading the user's informations from the Combot Anti-Spam API
+								/**
+								* Downloading the user's informations from the Combot Anti-Spam API
+								*
+								* json_decode() convert a JSON string into a PHP variables
+								*/
 								$result = execute_request('https://api.cas.chat/check?user_id=' . $member, TRUE);
 								$result = json_decode($result, TRUE);
 
@@ -3566,6 +3707,167 @@
 						]
 					]);
 				}
+			} else if (preg_match_all('/^(lang\_code|(add\_lang|admin|confirm|help|invalid\_parameter|invalid\_syntax|mute|mute\_advert|link|reject|staff\_group|start|unknown|update)\_message)\:[[:blank:]]?([[:alnum:][:blank:]\_\<\>\/\@]*)$/miu', html_entity_decode($message['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches, PREG_SET_ORDER)) {
+				// Checking if the sender is a bot's admin
+				$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
+
+				// Checking if the statement have errors
+				if ($statement == FALSE) {
+					$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					return;
+				}
+
+				// Completing the query
+				$statement -> bind_param('i', $sender['id']);
+
+				// Executing the query
+				$result = $statement -> execute();
+
+				// Closing the statement
+				$statement -> close();
+
+				// Checking if the statement have errors
+				if ($result == FALSE) {
+					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (add language section).');
+					return;
+				}
+
+				/**
+				* Retrieving the primary key
+				*
+				* array_filter() filters the array by the first group of the match
+				*/
+				$primary_key = array_filter($matches, function ($n) {
+					return $n[1] == 'lang_code';
+				});
+
+				/**
+				* Checking if the message doesn't contains the lang_code
+				*
+				* empty() check if the argument is empty
+				* 	''
+				* 	""
+				* 	'0'
+				* 	"0"
+				* 	0
+				* 	0.0
+				* 	NULL
+				* 	FALSE
+				* 	[]
+				* 	array()
+				*/
+				if (empty($primary_key)) {
+					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because have a wrong syntax (add language section).');
+					return;
+				}
+
+				/**
+				* Removing the primary key from the matches
+				*
+				* array_search() search the primary key into the array
+				* array_splice() extract the sub-array from the main array
+				*/
+				array_splice($matches, array_search($primary_key, $matches), 1);
+
+				$primary_key = $primary_key[0][3];
+
+				// Insert the language
+				$statement = $this -> DB -> prepare('INSERT INTO `Languages` (`lang_code`) VALUES (?);');
+
+				// Checking if the statement have errors
+				if ($statement == FALSE) {
+					$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					return;
+				}
+
+				// Completing the query
+				$statement -> bind_param('s', $primary_key);
+
+				// Executing the query
+				$statement -> execute()
+
+				// Closing the statement
+				$statement -> close();
+
+				// Commit the change
+				$this -> DB -> commit();
+
+				// Adding the messages
+				$statement = $this -> DB -> prepare('UPDATE `Languages` SET ?=? WHERE `lang_code`=?;');
+
+				// Checking if the statement have errors
+				if ($statement == FALSE) {
+					$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					return;
+				}
+
+				// Cycle on the matches
+				foreach ($matches as $match) {
+					// Completing the query
+					$statement -> bind_param('sss', $match[1], $match[3], $primary_key);
+
+					// Executing the query
+					$statement -> execute()
+				}
+
+				// Closing the statement
+				$statement -> close();
+
+				// Commit the change
+				$this -> DB -> commit();
+
+				// Retrieving the confirm message
+				$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
+
+				// Checking if the statement have errors
+				if ($statement == FALSE) {
+					$answer = 'Operation completed.';
+				}
+
+				// Completing the query
+				$statement -> bind_param('s', $language);
+
+				// Executing the query
+				$statement -> execute();
+
+				// Setting the output variables
+				$statement -> bind_result($answer);
+
+				// Retrieving the result
+				$statement -> fetch();
+
+				// Closing the statement
+				$statement -> close();
+
+				/**
+				* Checking if the confirm message isn't setted
+				*
+				* empty() check if the argument is empty
+				* 	''
+				* 	""
+				* 	'0'
+				* 	"0"
+				* 	0
+				* 	0.0
+				* 	NULL
+				* 	FALSE
+				* 	[]
+				* 	array()
+				*/
+				if (empty($answer)) {
+					$answer = 'Operation completed.';
+				}
+
+				yield $this -> messages -> sendMessage([
+					'no_webpage' => TRUE,
+					'peer' => $chat['id'],
+					'message' => $answer,
+					'reply_to_msg_id' => $message['id'],
+					'parse_mode' => 'HTML'
+				]);
+
+				// Sending the report to the channel
+				$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> added a language (<code>' . $primary_key . '</code>) to the database.');
 			}
 		}
 	}

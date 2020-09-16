@@ -1396,7 +1396,273 @@
 
 						// Checking if the chat is a private chat
 						if ($message['to_id']['_'] === 'peerUser') {
-							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (/' . $command . ' section).');
+							// Checking if is an add request
+							if ($command == 'add') {
+								// Retrieving the add_lang message
+								$statement = $this -> DB -> prepare('SELECT `add_lang_message` FROM `Languages` WHERE `lang_code`=?;');
+
+								// Checking if the statement have errors
+								if ($statement == FALSE) {
+									$answer = 'Send me a message with this format:' . "\n\n" . '<code>lang_code: &lt;insert here the lang_code of the language&gt;' . "\n" . 'add_lang_message: &lt;insert here the message for the /add command when a user want add a language&gt;' . "\n" . 'admin_message: &lt;insert here the message for the @admin tag&gt;' . "\n" . 'confirm_message: &lt;insert here a generic confirm message&gt;' . "\n" . 'help_message: &lt;insert here the message for the /help command&gt;' . "\n" . 'invalid_parameter_message: &lt;insert here the message that will be sent when a user insert an invalid parameter into a command&gt;' . "\n" . 'invalid_syntax_message: &lt;insert here the message that will be sent when a user send a command with an invalid syntax&gt;' . "\n" . 'mute_message: &lt;insert here the message for the /mute command&gt;' . "\n" . 'mute_advert_message: &lt;insert here the message for when the /mute command is used with time set to forever&gt;' . "\n" . 'link_message: &lt;insert here the message for the /link command&gt;' . "\n" . 'reject_message: &lt;insert here a generic reject message&gt;' . "\n" . 'staff_group_message: &lt;insert here the message for the /staff_group command&gt;' . "\n" . 'start_message: &lt;insert here the message for the /start command&gt;' . "\n" . 'unknown_message: &lt;insert here the message for the unknown commands&gt;' . "\n" . 'update_message: &lt;insert here the message for the /update command&gt;</code>' . "\n\n" . '<b>N.B.</b>: If you want insert a new line in the messages, you must codify it as <code>\n</code>.';
+								}
+
+								// Completing the query
+								$statement -> bind_param('s', $language);
+
+								// Executing the query
+								$statement -> execute();
+
+								// Setting the output variables
+								$statement -> bind_result($answer);
+
+								// Retrieving the result
+								$statement -> fetch();
+
+								// Closing the statement
+								$statement -> close();
+
+								/**
+								* Checking if the add_lang message is setted
+								*
+								* empty() check if the argument is empty
+								* 	''
+								* 	""
+								* 	'0'
+								* 	"0"
+								* 	0
+								* 	0.0
+								* 	NULL
+								* 	FALSE
+								* 	[]
+								* 	array()
+								*/
+								if (empty($answer)) {
+									$answer = 'Send me a message with this format:' . "\n\n" . '<code>lang_code: &lt;insert here the lang_code of the language&gt;' . "\n" . 'add_lang_message: &lt;insert here the message for the /add command when a user want add a language&gt;' . "\n" . 'admin_message: &lt;insert here the message for the @admin tag&gt;' . "\n" . 'confirm_message: &lt;insert here a generic confirm message&gt;' . "\n" . 'help_message: &lt;insert here the message for the /help command&gt;' . "\n" . 'invalid_parameter_message: &lt;insert here the message that will be sent when a user insert an invalid parameter into a command&gt;' . "\n" . 'invalid_syntax_message: &lt;insert here the message that will be sent when a user send a command with an invalid syntax&gt;' . "\n" . 'mute_message: &lt;insert here the message for the /mute command&gt;' . "\n" . 'mute_advert_message: &lt;insert here the message for when the /mute command is used with time set to forever&gt;' . "\n" . 'link_message: &lt;insert here the message for the /link command&gt;' . "\n" . 'reject_message: &lt;insert here a generic reject message&gt;' . "\n" . 'staff_group_message: &lt;insert here the message for the /staff_group command&gt;' . "\n" . 'start_message: &lt;insert here the message for the /start command&gt;' . "\n" . 'unknown_message: &lt;insert here the message for the unknown commands&gt;' . "\n" . 'update_message: &lt;insert here the message for the /update command&gt;</code>' . "\n\n" . '<b>N.B.</b>: If you want insert a new line in the messages, you must codify it as <code>\n</code>.';
+								}
+
+								yield $this -> messages -> sendMessage([
+									'no_webpage' => TRUE,
+									'peer' => $sender['id'],
+									'message' => $answer,
+									'reply_to_msg_id' => $message['id'],
+									'parse_mode' => 'HTML'
+								]);
+							} else {
+								/**
+								* Checking if the command have arguments
+								*
+								* empty() check if the argument is empty
+								* 	''
+								* 	""
+								* 	'0'
+								* 	"0"
+								* 	0
+								* 	0.0
+								* 	NULL
+								* 	FALSE
+								* 	[]
+								* 	array()
+								*/
+								if (empty($args) == FALSE) {
+									$args = html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+									// Retrieving the mute message
+									$statement = $this -> DB -> prepare('SELECT NULL FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+										return;
+									}
+
+									// Completing the query
+									$statement -> bind_param('s', $args);
+
+									// Executing the query
+									$result = $statement -> execute();
+
+									// Closing the statement
+									$statement -> close();
+
+									// Checking if the argument is correct
+									if ($result == FALSE) {
+										// Retrieving the invalid_parameter message
+										$statement = $this -> DB -> prepare('SELECT `invalid_parameter_message` FROM `Languages` WHERE `lang_code`=?;');
+
+										// Checking if the statement have errors
+										if ($statement == FALSE) {
+											$answer = 'The ${parameter} is invalid.';
+										}
+
+										// Completing the query
+										$statement -> bind_param('s', $language);
+
+										// Executing the query
+										$statement -> execute();
+
+										// Setting the output variables
+										$statement -> bind_result($answer);
+
+										// Retrieving the result
+										$statement -> fetch();
+
+										// Closing the statement
+										$statement -> close();
+
+										/**
+										* Checking if the invalid_parameter message isn't setted
+										*
+										* empty() check if the argument is empty
+										* 	''
+										* 	""
+										* 	'0'
+										* 	"0"
+										* 	0
+										* 	0.0
+										* 	NULL
+										* 	FALSE
+										* 	[]
+										* 	array()
+										*/
+										if (empty($answer)) {
+											$answer = 'The ${parameter} is invalid.';
+										}
+
+										yield $this -> messages -> sendMessage([
+											'no_webpage' => TRUE,
+											'peer' => $sender['id'],
+											'message' => str_replace('${parameter}', 'lang_code', $answer),
+											'reply_to_msg_id' => $message['id'],
+											'parse_mode' => 'HTML'
+										]);
+
+										$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the command have a wrong syntax (/' . $command . ' section).');
+										return;
+									}
+
+									// Removing the language
+									$statement = $this -> DB -> prepare('DELETE FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+										return;
+									}
+
+									$statement -> bind_param('s', $args);
+
+									// Executing the query
+									$statement -> execute()
+
+									// Closing the statement
+									$statement -> close();
+
+									// Commit the change
+									$this -> DB -> commit();
+
+									// Retrieving the confirm message
+									$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$answer = 'Operation completed.';
+									}
+
+									// Completing the query
+									$statement -> bind_param('s', $language);
+
+									// Executing the query
+									$statement -> execute();
+
+									// Setting the output variables
+									$statement -> bind_result($answer);
+
+									// Retrieving the result
+									$statement -> fetch();
+
+									// Closing the statement
+									$statement -> close();
+
+									/**
+									* Checking if the confirm message isn't setted
+									*
+									* empty() check if the argument is empty
+									* 	''
+									* 	""
+									* 	'0'
+									* 	"0"
+									* 	0
+									* 	0.0
+									* 	NULL
+									* 	FALSE
+									* 	[]
+									* 	array()
+									*/
+									if (empty($answer)) {
+										$answer = 'Operation completed.';
+									}
+
+									yield $this -> messages -> sendMessage([
+										'no_webpage' => TRUE,
+										'peer' => $sender['id'],
+										'message' => $answer,
+										'reply_to_msg_id' => $message['id'],
+										'parse_mode' => 'HTML'
+									]);
+								} else {
+									// Retrieving the invalid_syntax message
+									$statement = $this -> DB -> prepare('SELECT `invalid_syntax_message` FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
+									}
+
+									// Completing the query
+									$statement -> bind_param('s', $language);
+
+									// Executing the query
+									$statement -> execute();
+
+									// Setting the output variables
+									$statement -> bind_result($answer);
+
+									// Retrieving the result
+									$statement -> fetch();
+
+									// Closing the statement
+									$statement -> close();
+
+									/**
+									* Checking if the invalid_syntax message isn't setted
+									*
+									* empty() check if the argument is empty
+									* 	''
+									* 	""
+									* 	'0'
+									* 	"0"
+									* 	0
+									* 	0.0
+									* 	NULL
+									* 	FALSE
+									* 	[]
+									* 	array()
+									*/
+									if (empty($answer)) {
+										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
+									}
+
+									yield $this -> messages -> sendMessage([
+										'no_webpage' => TRUE,
+										'peer' => $sender['id'],
+										'message' => str_replace('${syntax}', '/' . $command . ' &lt;lang_code&gt;', $answer),
+										'reply_to_msg_id' => $message['id'],
+										'parse_mode' => 'HTML'
+									]);
+
+									$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the command have a wrong syntax (/' . $command . ' section).');
+								}
+							}
 							return;
 						}
 
@@ -1442,10 +1708,52 @@
 							// Commit the change
 							$this -> DB -> commit();
 
+							// Retrieving the confirm message
+							$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$answer = 'Operation completed.';
+							}
+
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+
+							/**
+							* Checking if the confirm message isn't setted
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($answer)) {
+								$answer = 'Operation completed.';
+							}
+
 							yield $this -> messages -> sendMessage([
 								'no_webpage' => TRUE,
 								'peer' => $chat['id'],
-								'message' => 'Chat ' . $command . ($command == 'add' ? 'e' : '' . 'd.'),
+								'message' => $answer,
 								'reply_to_msg_id' => $message['id'],
 								'parse_mode' => 'HTML'
 							]);
@@ -1520,10 +1828,52 @@
 						// Commit the change
 						$this -> DB -> commit();
 
+						// Retrieving the confirm message
+						$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
+
+						// Checking if the statement have errors
+						if ($statement == FALSE) {
+							$answer = 'Operation completed.';
+						}
+
+						// Completing the query
+						$statement -> bind_param('s', $language);
+
+						// Executing the query
+						$statement -> execute();
+
+						// Setting the output variables
+						$statement -> bind_result($answer);
+
+						// Retrieving the result
+						$statement -> fetch();
+
+						// Closing the statement
+						$statement -> close();
+
+						/**
+						* Checking if the confirm message isn't setted
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($answer)) {
+							$answer = 'Operation completed.';
+						}
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $chat['id'],
-							'message' => 'Admin ' . $command . ($command == 'add' ? 'e' : '' . 'd.'),
+							'message' => $answer,
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
 						]);
@@ -1724,16 +2074,55 @@
 								* 	array()
 								*/
 								if (empty($args) {
-									yield $this -> messages -> sendMessage([
-										'no_webpage' => TRUE,
-										'peer' => $chat['id'],
-										'message' => 'The syntax of the command is: <code>/' . $command . ' &lt;user_id|username&gt;</code>.',
-										'reply_to_msg_id' => $message['id'],
-										'parse_mode' => 'HTML'
-									]);
+									// Retrieving the invalid_syntax message
+									$statement = $this -> DB -> prepare('SELECT `invalid_syntax_message` FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
+									}
+
+									// Completing the query
+									$statement -> bind_param('s', $language);
+
+									// Executing the query
+									$statement -> execute();
+
+									// Setting the output variables
+									$statement -> bind_result($answer);
+
+									// Retrieving the result
+									$statement -> fetch();
 
 									// Closing the statement
 									$statement -> close();
+
+									/**
+									* Checking if the invalid_syntax message isn't setted
+									*
+									* empty() check if the argument is empty
+									* 	''
+									* 	""
+									* 	'0'
+									* 	"0"
+									* 	0
+									* 	0.0
+									* 	NULL
+									* 	FALSE
+									* 	[]
+									* 	array()
+									*/
+									if (empty($answer)) {
+										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
+									}
+
+									yield $this -> messages -> sendMessage([
+										'no_webpage' => TRUE,
+										'peer' => $sender['id'],
+										'message' => str_replace('${syntax}', '/' . $command . ' &lt;user_id|username&gt;', $answer),
+										'reply_to_msg_id' => $message['id'],
+										'parse_mode' => 'HTML'
+									]);
 
 									$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because the command have a wrong syntax (/' . $command . ' section).');
 									return;
@@ -1759,10 +2148,52 @@
 								* 	array()
 								*/
 								if (empty($user) || $user['_'] !== 'user') {
+									// Retrieving the invalid_parameter message
+									$statement = $this -> DB -> prepare('SELECT `invalid_parameter_message` FROM `Languages` WHERE `lang_code`=?;');
+
+									// Checking if the statement have errors
+									if ($statement == FALSE) {
+										$answer = 'The ${parameter} is invalid.';
+									}
+
+									// Completing the query
+									$statement -> bind_param('s', $language);
+
+									// Executing the query
+									$statement -> execute();
+
+									// Setting the output variables
+									$statement -> bind_result($answer);
+
+									// Retrieving the result
+									$statement -> fetch();
+
+									// Closing the statement
+									$statement -> close();
+
+									/**
+									* Checking if the invalid_parameter message isn't setted
+									*
+									* empty() check if the argument is empty
+									* 	''
+									* 	""
+									* 	'0'
+									* 	"0"
+									* 	0
+									* 	0.0
+									* 	NULL
+									* 	FALSE
+									* 	[]
+									* 	array()
+									*/
+									if (empty($answer)) {
+										$answer = 'The ${parameter} is invalid.';
+									}
+
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
-										'peer' => $chat['id'],
-										'message' => 'The username/id is invalid.',
+										'peer' => $sender['id'],
+										'message' => str_replace('${parameter}', 'username/id', $answer),
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
@@ -1888,7 +2319,7 @@
 									break;
 								default:
 									// Retrieving the mute message
-									$statement = $this -> DB -> prepare('SELECT `mute_message` Languages `Chats` WHERE `lang_code`=?;');
+									$statement = $this -> DB -> prepare('SELECT `mute_message` FROM `Languages` WHERE `lang_code`=?;');
 
 									// Checking if the statement have errors
 									if ($statement == FALSE) {
@@ -1909,6 +2340,25 @@
 
 									// Closing the statement
 									$statement -> close();
+
+									/**
+									* Checking if the mute message is setted
+									*
+									* empty() check if the argument is empty
+									* 	''
+									* 	""
+									* 	'0'
+									* 	"0"
+									* 	0
+									* 	0.0
+									* 	NULL
+									* 	FALSE
+									* 	[]
+									* 	array()
+									*/
+									if (empty($answer)) {
+										$answer = 'The syntax of the command is: <code>/mute [time]</code>.\nThe <code>time</code> option must be more then 30 seconds and less of 366 days.';
+									}
 
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
@@ -2038,10 +2488,52 @@
 
 						// Checking if is a permanent /mute command
 						if ($command == 'mute' && ($limit < 30 || $limit > 60 * 60 * 24 * 366)) {
+							// Retrieving the mute_advert message
+							$statement = $this -> DB -> prepare('SELECT `mute_advert_message` FROM `Languages` WHERE `lang_code`=?;');
+
+							// Checking if the statement have errors
+							if ($statement == FALSE) {
+								$answer = 'You have muted <a href=\"mention:${sender_id}\" >${sender_first_name}</a> forever.';
+							}
+
+							// Completing the query
+							$statement -> bind_param('s', $language);
+
+							// Executing the query
+							$statement -> execute();
+
+							// Setting the output variables
+							$statement -> bind_result($answer);
+
+							// Retrieving the result
+							$statement -> fetch();
+
+							// Closing the statement
+							$statement -> close();
+
+							/**
+							* Checking if the mute_advert message isn't setted
+							*
+							* empty() check if the argument is empty
+							* 	''
+							* 	""
+							* 	'0'
+							* 	"0"
+							* 	0
+							* 	0.0
+							* 	NULL
+							* 	FALSE
+							* 	[]
+							* 	array()
+							*/
+							if (empty($answer)) {
+								$answer = 'You have muted <a href=\"mention:${sender_id}\" >${sender_first_name}</a> forever.';
+							}
+
 							yield $this -> messages -> sendMessage([
 								'no_webpage' => TRUE,
 								'peer' => $chat['id'],
-								'message' => 'You have muted <a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> forever.',
+								'message' => str_replace('${sender_id}', $sender['id'], str_replace('${sender_first_name}', $sender['first_name'], $answer)),
 								'reply_to_msg_id' => $message['id'],
 								'parse_mode' => 'HTML'
 							]);
@@ -2315,13 +2807,6 @@
 						$statement -> close();
 
 						if ($result == FALSE) {
-							yield $this -> messages -> sendMessage([
-								'no_webpage' => TRUE,
-								'peer' => $sender['id'],
-								'message' => 'You can\'t use this command.',
-								'parse_mode' => 'HTML'
-							]);
-
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
@@ -2382,6 +2867,11 @@
 									'_' => 'botCommand',
 									'command' => 'silence',
 									'description' => 'Mute a (super)group, except the admins'
+								],
+								[
+									'_' => 'botCommand',
+									'command' => 'staff_group',
+									'description' => 'Set the staff group for one or more chats'
 								],
 								[
 									'_' => 'botCommand',

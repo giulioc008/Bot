@@ -3,18 +3,13 @@
 	"description": "PHP template for a Bot",
 	"type": "project",
 	"require": {
-		"danog/madelineproto": "^5.1"
+		"danog/madelineproto": "^5.1",
+		"amphp/mysql": "^2.0"
 	},
-	"license": "AGPL-3.0-only",
-	"authors": [
-		{
-			"name": "Daniil Gentili",
-			"email": "daniil.gentili.dg@gmail.com"
-		}
-	],
+	"license": "MIT",
 	"autoload": {
 		"psr-0": {
-			"/home/giuliocoa/Documents/gitHub/Bot/": "src/"
+			"path_to_the_bot_directory\\": "src/"
 		}
 	}
 }

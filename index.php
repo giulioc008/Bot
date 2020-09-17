@@ -9,13 +9,7 @@
 	* @license		https://choosealicense.com/licenses/mit/
 	*/
 
-	// Installing the MadelineProto library
-	/**
-	* if (file_exists('madeline.php') == FALSE) {
-	* 	copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
-	* }
-	* require_once 'madeline.php';
-	*/
+	// Installing the libraries
 	require_once 'vendor/autoload.php';
 
 	// Creating the bot
@@ -33,7 +27,11 @@
 		* @return string
 		*/
 		private function execute_request(string $url, bool $parameters = FALSE) : string {
-			// Replace the special character into the URL
+			/**
+			* Replace the special characters into the URL
+			*
+			* str_replace() replace the special characters with their code
+			*/
 			$url = str_replace("\t", '%09', $url);
 			$url = str_replace("\n", '%0A%0D', $url);
 			$url = str_replace(' ', '%20', $url);
@@ -90,18 +88,21 @@
 		* @return void
 		*/
 		public function onStart() : void {
-			$this -> DB = new mysqli('localhost', 'username', 'password', 'name', 3306);
-			$this -> tmp = [];
-			$this -> button_InlineKeyboard = 8;
-
-			// Checking if there si some connection error
-			if ($this -> DB -> connect_errno) {
-				$this -> logger('Failed to make a MySQL connection, because ' . $this -> DB -> connect_error, \danog\MadelineProto\Logger::FATAL_ERROR);
+			// Setting the database
+			try {
+				$this -> DB = yield Amp\Mysql\connect(Amp\Mysql\ConnectionConfig::fromString('host=localhost;user=username;pass=password;db=database_name'));
+			} catch (Amp\Sql\ConnectionException $e) {
+				$this -> logger('The connection with the MySQL database is failed for ' . $e -> getMessage() . '.', danog\MadelineProto\Logger::FATAL_ERROR);
 				exit(1);
 			}
 
-			// Set autocommit to FALSE
-			$this -> DB -> autocommit(FALSE);
+			// Set the character set
+			$this -> DB -> setCharset('utf8', 'utf8_general_ci');
+
+			$this -> tmp = [];
+
+			// Setting how many buttons an InlineKeyboard must contains (#row = button_InlineKeyboard / 2)
+			$this -> button_InlineKeyboard = 8;
 		}
 
 		/**
@@ -154,10 +155,19 @@
 				return;
 			}
 
-			// Retrieving the callback data
+			/**
+			* Retrieving the callback data
+			*
+			* trim() strip whitespaces from the begin and the end of the string
+			* base64_decode() decode the string
+			*/
 			$callback_data = trim(base64_decode($update['data']));
 
-			// Retrieving the command that have generated the CallbackQuery
+			/**
+			* Retrieving the command that have generated the CallbackQuery
+			*
+			* explode() convert a string into an array
+			*/
 			$command = explode('/', $callback_data)[0];
 
 			// Retrieving the message associated to the CallbackQuery
@@ -179,76 +189,73 @@
 			$language = isset($sender['lang_code']) ? $sender['lang_code'] : 'en';
 
 			// Checking if the language is supported
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Languages` WHERE `lang_code`=?;');
-
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
+			try {
+				yield $this -> DB -> execute('SELECT NULL FROM `Languages` WHERE `lang_code`=?;', [
+					$language
+				]);
+			} catch (Amp\Sql\QueryError $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+				$language = 'en';
+			} catch (Amp\Sql\FailureException $e) {
 				$language = 'en';
 			}
-
-			// Completing the query
-			$statement -> bind_param('s', $language);
-
-			// Executing the query
-			$result = $statement -> execute();
-
-			// Checking if the query has product a result
-			if ($result == FALSE) {
-				$language = 'en';
-			}
-
-			// Closing the statement
-			$statement -> close();
 
 			// Setting the new keyboard
 			switch ($command) {
 				case 'staff_group':
 					// Checking if the sender is an admin
-					$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
-
-					// Checking if the statement have errors
-					if ($statement == FALSE) {
-						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					try {
+						yield $this -> DB -> execute('SELECT NULL FROM `Admins` WHERE `id`=?;', [
+							$sender['id']
+						]);
+					} catch (Amp\Sql\QueryError $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
 						return;
-					}
-
-					// Completing the query
-					$statement -> bind_param('i', $sender['id']);
-
-					// Executing the query
-					$result = $statement -> execute();
-
-					// Closing the statement
-					$statement -> close();
-
-					if ($result == FALSE) {
+					} catch (Amp\Sql\FailureException $e) {
 						$this -> logger('The CallbackQuery ' . $update['query_id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 						return;
 					}
 
 					// Retrieving the chats' list
-					$result = $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
-
-					// Checking if the query is failed
-					if ($result == FALSE) {
-						$this -> logger('Failed to make the query, because ' . $this -> DB -> error, \danog\MadelineProto\Logger::ERROR);
+					try {
+						yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+					} catch (Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
 						return;
 					}
 
-					$chats = $result -> fetch_all(MYSQLI_ASSOC);
+					$chats = [];
 
-					$result -> free();
+					// Cycle on the result
+					while (yield $result -> advance()) {
+						$chats []= $result -> getCurrent();
+					}
 
-					// Retrieving the query
+					/**
+					* Retrieving the query
+					*
+					* explode() convert a string into an array
+					*/
 					$query = explode('/', $callback_data)[1];
 
 					switch ($query) {
 						case 'page':
-							// Retrieving the page
-							$chats = array_slice($chats, (int) explode('/', $callback_data)[2] * $this -> button_InlineKeyboard,  $this -> button_InlineKeyboard);
+							/**
+							* Retrieving the page
+							*
+							* explode() convert a string into an array
+							*/
+							$actual_page = (int) explode('/', $callback_data)[2];
 
 							/**
-							* Setting the Inline Keyboard
+							* Retrieving the button in the page
+							*
+							* array_splice() extract the sub-array from the main array
+							*/
+							$chats = array_slice($chats, $actual_page * $this -> button_InlineKeyboard,  $this -> button_InlineKeyboard);
+
+							/**
+							* Setting the InlineKeyboard
 							*
 							* array_map() convert each chat to a keyboardButtonCallback
 							*/
@@ -256,6 +263,11 @@
 								return [
 									'_' => 'keyboardButtonCallback',
 									'text' => $n['title'],
+									/**
+									* Generating the keyboardButtonCallback data
+									*
+									* base64_encode() encode the string
+									*/
 									'data' => base64_encode($command . '/' . $n['id'] . '/no')
 								];
 							}, $chats);
@@ -271,6 +283,11 @@
 
 							// Cycle on the buttons' list
 							foreach ($chats as $button) {
+								/**
+								* Retrieving the length of the row
+								*
+								* count() retrieve the length of the array
+								*/
 								if (count($row['buttons']) == 2) {
 									// Saving the row
 									$keyboard['rows'] []= $row;
@@ -288,23 +305,23 @@
 								'buttons' => [
 									[
 										'_' => 'keyboardButtonCallback',
-										'text' => (int) explode('/', $callback_data)[2] != 0 ? 'Previous page' : '',
+										'text' => $actual_page != 0 ? 'Previous page' : '',
 										/**
 										* Generating the keyboardButtonCallback data
 										*
 										* base64_encode() encode the string
 										*/
-										'data' => base64_encode((int) explode('/', $callback_data)[2] != 0 ? $command . '/page/' . (int) explode('/', $callback_data)[2] - 1 : '')
+										'data' => base64_encode($actual_page != 0 ? $command . '/page/' . $actual_page - 1 : '')
 									],
 									[
 										'_' => 'keyboardButtonCallback',
-										'text' => ((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? 'Next page' : '',
+										'text' => ($actual_page + 1) * $this -> button_InlineKeyboard > $total ? 'Next page' : '',
 										/**
 										* Generating the keyboardButtonCallback data
 										*
 										* base64_encode() encode the string
 										*/
-										'data' => base64_encode(((int) explode('/', $callback_data)[2] + 1) * $this -> button_InlineKeyboard > $total ? $command . '/page/' . (int) explode('/', $callback_data)[2] + 1 : '')
+										'data' => base64_encode(($actual_page + 1) * $this -> button_InlineKeyboard > $total ? $command . '/page/' . $actual_page + 1 : '')
 									]
 								]
 							];
@@ -338,27 +355,16 @@
 							break;
 						case 'reject':
 							// Retrieving the reject message
-							$statement = $this -> DB -> prepare('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;');
-
-							// Checking if the statement have errors
-							if ($statement == FALSE) {
+							try {
+								yield $this -> DB -> execute('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;', [
+									$language
+								]);
+							} catch (Amp\Sql\QueryError $e) {
+								$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+								$answer = 'Operation deleted.';
+							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation deleted.';
 							}
-
-							// Completing the query
-							$statement -> bind_param('s', $language);
-
-							// Executing the query
-							$statement -> execute();
-
-							// Setting the output variables
-							$statement -> bind_result($answer);
-
-							// Retrieving the result
-							$statement -> fetch();
-
-							// Closing the statement
-							$statement -> close();
 
 							/**
 							* Checking if the reject message isn't setted
@@ -423,7 +429,7 @@
 								'no_webpage' => TRUE,
 								'peer' => $update['peer'],
 								'id' => $message['id'],
-								'message' => $answer,
+								'message' => htmlspecialchars_decode($answer),
 								'reply_markup' => [],
 								'parse_mode' => 'HTML'
 							]);
@@ -439,27 +445,29 @@
 								return;
 							}
 
-							$statement = $this -> DB -> prepare('UPDATE `Chats` SET `staff_group`=? WHERE `id`=?;');
+							// Opening a transaction
+							$transaction = yield $this -> DB -> beginTransaction();
 
-							// Checking if the statement have errors
-							if ($statement == FALSE) {
-								$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
-								return;
-							}
+							// Updating the staff_group for the selected chats
+							$statement = yield $transaction -> prepare('UPDATE `Chats` SET `staff_group`=? WHERE `id`=?;');
 
 							// Cycle on the selected chats
 							foreach ($this -> tmp['staff_group'][$update['peer']] as $id) {
-								$statement -> bind_param('ii', $update['peer'], $id);
-
-								// Executing the query
-								$statement -> execute()
+								try {
+									yield $statement -> execute([
+										$update['peer'],
+										$id
+									]);
+								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+									$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+								}
 							}
 
-							// Closing the statement
-							$statement -> close();
-
 							// Commit the change
-							$this -> DB -> commit();
+							yield $transaction -> commit();
+
+							// Closing the transaction
+							yield $transaction -> close();
 
 							/**
 							* Removing the id from the array
@@ -495,27 +503,16 @@
 							}
 
 							// Retrieving the confirm message
-							$statement = $this -> DB -> prepare('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;');
-
-							// Checking if the statement have errors
-							if ($statement == FALSE) {
+							try {
+								yield $this -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
+									$language
+								]);
+							} catch (Amp\Sql\QueryError $e) {
+								$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+								$answer = 'Operation completed.';
+							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation completed.';
 							}
-
-							// Completing the query
-							$statement -> bind_param('s', $language);
-
-							// Executing the query
-							$statement -> execute();
-
-							// Setting the output variables
-							$statement -> bind_result($answer);
-
-							// Retrieving the result
-							$statement -> fetch();
-
-							// Closing the statement
-							$statement -> close();
 
 							/**
 							* Checking if the confirm message isn't setted
@@ -540,33 +537,44 @@
 								'no_webpage' => TRUE,
 								'peer' => $update['peer'],
 								'id' => $message['id'],
-								'message' => $answer,
+								'message' => htmlspecialchars_decode($answer),
 								'reply_markup' => [],
 								'parse_mode' => 'HTML'
 							]);
 							break;
 						default:
+							// Retrieving the InlineKeyboard
 							$keyboard = $message['reply_markup'];
 
+							/**
+							* Retrieving the type of the request
+							*
+							* explode() convert a string into an array
+							*/
+							$type = explode('/', $callback_data)[2];
+
+							// Cycle on the rows
 							foreach ($keyboard['rows'] as $row) {
+								// Cycle on the buttons
 								foreach ($row['buttons'] as $button) {
+									// Checking if the button is what is pressed
 									if ($button['data'] == $update['data']) {
 										/**
 										* Commuting the button
 										*
-										* explode() convert a string into an array
 										* base64_encode() encode the string
+										* str_replace() replace the special characters with their code
 										*/
-										$button['data'] = explode('/', $callback_data)[2] == 'yes' ? base64_encode($command . '/' . $query . '/no') : base64_encode($command . '/' . $query . '/yes');
+										$button['data'] = base64_encode($type == 'yes' ? $command . '/' . $query . '/no' : $command . '/' . $query . '/yes');
 
-										$button['text'] = explode('/', $callback_data)[2] == 'yes' ? str_replace(' ✅', '', $button['text']) : $button['text'] . ' ✅';
+										$button['text'] = $type == 'yes' ? str_replace(' ✅', '', $button['text']) : $button['text'] . ' ✅';
 
 										/**
 										* Checking if is a select request
 										*
 										* explode() convert a string into an array
 										*/
-										if (explode('/', $callback_data)[2] == 'yes') {
+										if ($type == 'yes') {
 											/**
 											* Checking if the first /staff_group request
 											*
@@ -603,7 +611,7 @@
 											* array_search() search the query into the array
 											* array_splice() extract the sub-array from the main array
 											*/
-											array_splice($this -> tmp['staff_group'], array_search($query, $this -> tmp['staff_group']), 1);
+											array_splice($this -> tmp['staff_group'][$update['peer']], array_search($query, $this -> tmp['staff_group'][$update['peer']]), 1);
 										}
 										break;
 									}
@@ -622,81 +630,6 @@
 					]);
 					break;
 				default:
-					$keyboard = [
-						'_' => 'replyKeyboardMarkup',
-						'resize' => FALSE,
-						'single_use' => FALSE,
-						'selective' => FALSE,
-						'rows' => [
-							[
-								'_' => 'keyboardButtonRow',
-								'buttons' => [
-									[
-										'_' => 'keyboardButton',
-										'text' => ''
-									]
-								]
-							],
-							[
-								'_' => 'keyboardButtonRow',
-								'buttons' => [
-									[
-										'_' => 'keyboardButton',
-										'text' => ''
-									],
-									[
-										'_' => 'keyboardButton',
-										'text' => ''
-									]
-								]
-							]
-						]
-					];
-					$keyboard = [
-						'_' => 'replyInlineMarkup',
-						'rows' => [
-							[
-								'_' => 'keyboardButtonRow',
-								'buttons' => [
-									[
-										'_' => 'keyboardButtonUrl',
-										'text' => '',
-										'url' => ''
-									]
-								]
-							],
-							[
-								'_' => 'keyboardButtonRow',
-								'buttons' => [
-									[
-										'_' => 'keyboardButtonCallback',
-										'text' => '',
-										/**
-										* Generating the keyboardButtonCallback data
-										*
-										* base64_encode() encode the string
-										*/
-										'data' => base64_encode('')
-									],
-									[
-										'_' => 'keyboardButtonSwitchInline',
-										'text' => '',
-										'query' => '',
-										'same_peer' => FALSE
-									]
-								]
-							]
-						]
-					];
-
-					yield $this -> messages -> editMessage([
-						'no_webpage' => TRUE,
-						'peer' => $update['peer'],
-						'id' => $message['id'],
-						'message' => '',
-						'reply_markup' => $keyboard,
-						'parse_mode' => 'HTML'
-					]);
 					break;
 			}
 		}
@@ -713,11 +646,10 @@
 			* Encode the text
 			*
 			* trim() strip whitespaces from the begin and the end of the string
-			* htmlentities() convert all HTML character to its safe value
+			* htmlspecialchars() convert all HTML character to its safe value
 			*/
 			$inline_query = trim($update['query']);
-			$inline_query = htmlentities($inline_query, ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
-			$inline_query = $this -> DB -> real_escape_string($inline_query);
+			$inline_query = htmlspecialchars($inline_query, ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5, 'UTF-8');
 
 			// Retrieving the data of the user that sent the query
 			$sender = yield $this -> getInfo($update['user_id']);
@@ -774,26 +706,16 @@
 			$language = isset($sender['lang_code']) ? $sender['lang_code'] : 'en';
 
 			// Checking if the language is supported
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Languages` WHERE `lang_code`=?;');
-
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
+			try {
+				yield $this -> DB -> execute('SELECT NULL FROM `Languages` WHERE `lang_code`=?;', [
+					$language
+				]);
+			} catch (Amp\Sql\QueryError $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+				$language = 'en';
+			} catch (Amp\Sql\FailureException $e) {
 				$language = 'en';
 			}
-
-			// Completing the query
-			$statement -> bind_param('s', $language);
-
-			// Executing the query
-			$result = $statement -> execute();
-
-			// Checking if the query has product a result
-			if ($result == FALSE) {
-				$language = 'en';
-			}
-
-			// Closing the statement
-			$statement -> close();
 
 			//Setting the answer
 			$answer = [
@@ -812,61 +734,8 @@
 					'send_message' => [
 						'_' => 'inputBotInlineMessageText',
 						'no_webpage' => TRUE,
-						'message' => ''
-					]
-				],
-				[
-					'_' => 'inputBotInlineResult',
-					/**
-					* Generating the inputBotInlineResult id
-					*
-					* uniqid() generate a random string
-					*/
-					'id' => uniqid(),
-					'type' => 'article',
-					'title' => '',
-					'description' => '',
-					'url' => '',
-					'send_message' => [
-						'_' => 'inputBotInlineMessageText',
-						'no_webpage' => TRUE,
 						'message' => '',
-						'reply_markup' => [
-							'_' => 'replyInlineMarkup',
-							'rows' => [
-								[
-									'_' => 'keyboardButtonRow',
-									'buttons' => [
-										[
-											'_' => 'keyboardButtonUrl',
-											'text' => '',
-											'url' => ''
-										]
-									]
-								],
-								[
-									'_' => 'keyboardButtonRow',
-									'buttons' => [
-										[
-											'_' => 'keyboardButtonCallback',
-											'text' => '',
-											/**
-											* Generating the keyboardButtonCallback data
-											*
-											* base64_encode() encode the string
-											*/
-											'data' => base64_encode('')
-										],
-										[
-											'_' => 'keyboardButtonSwitchInline',
-											'text' => '',
-											'query' => '',
-											'same_peer' => FALSE
-										]
-									]
-								]
-							]
-						]
+						'reply_markup' => []
 					]
 				]
 			];
@@ -973,24 +842,13 @@
 				$answer = NULL;
 
 				// Retrieving the welcome message
-				$statement = $this -> DB -> prepare('SELECT `welcome` FROM `Chats` WHERE `id`=?;');
-
-				// Checking if the statement haven't errors
-				if ($statement) {
-					// Completing the query
-					$statement -> bind_param('i', $chat['id']);
-
-					// Executing the query
-					$statement -> execute();
-
-					// Setting the output variables
-					$statement -> bind_result($answer);
-
-					// Retrieving the result
-					$statement -> fetch();
-
-					// Closing the statement
-					$statement -> close();
+				try {
+					$answer = yield $this -> DB -> execute('SELECT `welcome` FROM `Chats` WHERE `id`=?;', [
+						$chat['id']
+					]);
+				} catch (Amp\Sql\QueryError $e) {
+					$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+				} catch (Amp\Sql\FailureException $e) {
 				}
 
 				// Checking if the service message is about new members
@@ -1036,25 +894,14 @@
 						array_splice($message['action']['users'], array_search($bot['id'], $message['action']['users']), 1);
 
 						// Checking if who added the bot is a bot's admin
-						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
-
-						// Checking if the statement have errors
-						if ($statement == FALSE) {
-							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+						try {
+							yield $this -> DB -> execute('SELECT NULL FROM `Admins` WHERE `id`=?;', [
+								$sender['id']
+							]);
+						} catch (Amp\Sql\QueryError $e) {
+							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 							return;
-						}
-
-						// Completing the query
-						$statement -> bind_param('i', $sender['id']);
-
-						// Executing the query
-						$result = $statement -> execute();
-
-						// Closing the statement
-						$statement -> close();
-
-						// Checking if the query hasn't product a result
-						if ($result == FALSE) {
+						} catch (Amp\Sql\FailureException $e) {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
 
 							// Leaving the chat
@@ -1180,7 +1027,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $update['chat_id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 					}
@@ -1251,55 +1098,66 @@
 					* 	array()
 					*/
 					if (empty($answer) == FALSE) {
+						/**
+						* Personalizing the message
+						*
+						* str_replace() replace the 'mentions' tag with the string
+						*/
 						$answer = str_replace('${mentions}', '<a href=\"mention:' . $new_member['id'] . '\" >' . $new_member['first_name'] . '</a>', $answer);
 
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $update['chat_id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 					}
 				} else if ($message['action']['_'] === 'messageActionChatMigrateTo') {
-					// Updating the chat's data
-					$statement = $this -> DB -> prepare('UPDATE `Chats` SET `id`=? WHERE `id`=?;');
+					// Opening a transaction
+					$transaction = yield $this -> DB -> beginTransaction();
 
-					// Checking if the statement have errors
-					if ($statement == FALSE) {
-						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					// Updating the chat's data
+					try {
+						yield $transaction -> execute('UPDATE `Chats` SET `id`=? WHERE `id`=?;', [
+							$message['action']['channel_id'],
+							$chat['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+						// Closing the transaction
+						yield $transaction -> close();
 						return;
 					}
 
-					$statement -> bind_param('ii', $message['action']['channel_id'], $chat['id']);
-
-					// Executing the query
-					$statement -> execute()
-
-					// Closing the statement
-					$statement -> close();
-
 					// Commit the change
-					$this -> DB -> commit();
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
 				} else if ($message['action']['_'] === 'messageActionChannelMigrateFrom') {
-					// Updating the chat's data
-					$statement = $this -> DB -> prepare('UPDATE `Chats` SET `id`=? WHERE `id`=?;');
+					// Opening a transaction
+					$transaction = yield $this -> DB -> beginTransaction();
 
-					// Checking if the statement have errors
-					if ($statement == FALSE) {
-						$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+					// Updating the chat's data
+					try {
+						yield $transaction -> execute('UPDATE `Chats` SET `id`=? WHERE `id`=?;', [
+							$chat['id'],
+							$message['action']['chat_id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+						// Closing the transaction
+						yield $transaction -> close();
 						return;
 					}
 
-					$statement -> bind_param('ii', $chat['id'], $message['action']['chat_id']);
-
-					// Executing the query
-					$statement -> execute()
-
-					// Closing the statement
-					$statement -> close();
-
 					// Commit the change
-					$this -> DB -> commit();
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
 				}
 
 				yield $this -> channels -> deleteMessages([
@@ -1312,42 +1170,36 @@
 			}
 
 			// Checking if the chat is an allowed chat
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Chats` WHERE `id`=?;');
-
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
-				$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+			try {
+				yield $this -> DB -> execute('SELECT NULL FROM `Chats` WHERE `id`=?;', [
+					$chat['id']
+				]);
+			} catch (Amp\Sql\QueryError $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 				return;
-			}
+			} catch (Amp\Sql\FailureException $e) {
+				// Checking if the chat is a (super)group or a channel
+				if ($chat['type'] != 'user' && $chat['type'] != 'bot') {
+					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
 
-			// Completing the query
-			$statement -> bind_param('i', $chat['id']);
+					// Leaving the chat
+					if ($chat['type'] == 'chat') {
+						$bot = yield $this -> getSelf();
 
-			// Executing the query
-			$result = $statement -> execute();
+						$this -> messages -> deleteChatUser([
+							'chat_id' => $chat['id'],
+							'user_id' => $bot['id']
+						]);
+					} else {
+						$this -> channels -> leaveChannel([
+							'channel' => $chat['id']
+						]);
+					}
 
-			// Closing the statement
-			$statement -> close();
-
-			// Checking if the query have product a result
-			if ($chat['type'] != 'user' && $chat['type'] != 'bot' && $result == FALSE) {
-				$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized chat.');
-
-				// Leaving the chat
-				if ($chat['type'] == 'chat') {
-					$bot = yield $this -> getSelf();
-
-					$this -> messages -> deleteChatUser([
-						'chat_id' => $chat['id'],
-						'user_id' => $bot['id']
-					]);
-				} else {
-					$this -> channels -> leaveChannel([
-						'channel' => $chat['id']
-					]);
+					$this -> logger('The bot have lefted the unauthorized chat.');
 				}
 
-				$this -> logger('The bot have lefted the unauthorized chat.');
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 				return;
 			}
 
@@ -1357,27 +1209,28 @@
 				return;
 			}
 
+			/**
+			* Encode the text
+			*
+			* trim() strip whitespaces from the begin and the end of the string
+			* htmlspecialchars() convert all HTML character to its safe value
+			*/
 			$message['message'] = trim($message['message']);
-			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5);
-			$message['message'] = $this -> DB -> real_escape_string($message['message']);
+			$message['message'] = htmlspecialchars($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5, 'UTF-8');
+
+			$result = TRUE;
 
 			// Checking if the user is in the bot's blacklist
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Blacklist` WHERE `id`=?;');
-
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
-				$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+			try {
+				yield $this -> DB -> execute('SELECT NULL FROM `Blacklist` WHERE `id`=?;', [
+					$sender['id']
+				]);
+			} catch (Amp\Sql\QueryError $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 				return;
+			} catch (Amp\Sql\FailureException $e) {
+				$result = FALSE;
 			}
-
-			// Completing the query
-			$statement -> bind_param('i', $sender['id']);
-
-			// Executing the query
-			$result = $statement -> execute();
-
-			// Closing the statement
-			$statement -> close();
 
 			// Checking if the query has product a result
 			if ($result) {
@@ -1389,29 +1242,23 @@
 			$language = isset($sender['lang_code']) ? $sender['lang_code'] : 'en';
 
 			// Checking if the language is supported
-			$statement = $this -> DB -> prepare('SELECT NULL FROM `Languages` WHERE `lang_code`=?;');
-
-			// Checking if the statement have errors
-			if ($statement == FALSE) {
+			try {
+				yield $this -> DB -> execute('SELECT NULL FROM `Languages` WHERE `lang_code`=?;', [
+					$language
+				]);
+			} catch (Amp\Sql\QueryError $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+				$language = 'en';
+			} catch (Amp\Sql\FailureException $e) {
 				$language = 'en';
 			}
 
-			// Completing the query
-			$statement -> bind_param('s', $language);
-
-			// Executing the query
-			$result = $statement -> execute();
-
-			// Checking if the query hasn't product a result
-			if ($result == FALSE) {
-				$language = 'en';
-			}
-
-			// Closing the statement
-			$statement -> close();
-
-			// Checking if is an @admin tag
-			if (preg_match('/^\@admin([[:blank:]\n]{1}((\n|.)*))?$/miu', html_entity_decode($message['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
+			/**
+			* Checking if is an @admin tag
+			*
+			* preg_match() perform a RegEx match
+			*/
+			if (preg_match('/^\@admin([[:blank:]\n]{1}((\n|.)*))?$/miu', $message['message'], $matches)) {
 				// Checking if the chat is a private chat
 				if ($message['to_id']['_'] === 'peerUser') {
 					$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from a private chat (@admin section).');
@@ -1432,27 +1279,16 @@
 				}, $admins);
 
 				// Retrieving the admin message
-				$statement = $this -> DB -> prepare('SELECT `admin_message` FROM `Languages` WHERE `lang_code`=?;');
-
-				// Checking if the statement have errors
-				if ($statement == FALSE) {
+				try {
+					$answer = yield $this -> DB -> execute('SELECT `admin_message` FROM `Languages` WHERE `lang_code`=?;', [
+						$language
+					]);
+				} catch (Amp\Sql\QueryError $e) {
+					$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
+				} catch (Amp\Sql\FailureException $e) {
 					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
 				}
-
-				// Completing the query
-				$statement -> bind_param('s', $language);
-
-				// Executing the query
-				$statement -> execute();
-
-				// Setting the output variables
-				$statement -> bind_result($answer);
-
-				// Retrieving the result
-				$statement -> fetch();
-
-				// Closing the statement
-				$statement -> close();
 
 				/**
 				* Checking if the admin message isn't setted
@@ -1473,7 +1309,11 @@
 					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
 				}
 
-				// Creating the message to send to the admins
+				/**
+				* Personalizing the admin message
+				*
+				* str_replace() replace the tags with their value
+				*/
 				$answer = str_replace('${sender_id}', $sender['id'], $answer)
 				$answer = str_replace('${sender_first_name}', $sender['first_name'], $answer)
 				$answer = str_replace('${motive}', ($matches[2] ?? FALSE) ? ' for ' . $matches[2] : '', $answer)
@@ -1488,6 +1328,11 @@
 					$message []= [
 						'no_webpage' => TRUE,
 						'peer' => $user['id'],
+						/**
+						* Personalizing the admin message
+						*
+						* str_replace() replace the tags with their value
+						*/
 						'message' => str_replace('${admin_id}', $user['id'], str_replace('${admin_first_name}', $user['first_name'], $answer)),
 						'parse_mode' => 'HTML'
 					];
@@ -1497,9 +1342,17 @@
 
 				// Sending the report to the channel
 				$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> has sent an @admin request into <a href=\"' . $chat['exported_invite'] . '\" >' . $chat['title'] . '</a>.');
-			// Checking if is a bot command
+			/**
+			* Checking if is a bot command
+			*
+			* preg_match() perform a RegEx match
+			*/
 			} else if (preg_match('/^\/([[:alnum:]\@]+)[[:blank:]]?([[:alnum:]]|[^\n]+)?$/miu', $message['message'], $matches)) {
-				// Retrieving the command
+				/**
+				* Retrieving the command
+				*
+				* explode() convert a string into an array
+				*/
 				$command = explode('@', $matches[1])[0];
 				$args = $matches[2] ?? NULL;
 
@@ -1507,25 +1360,14 @@
 					case 'add':
 					case 'remove':
 						// Checking if the sender is a bot's admin
-						$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
-
-						// Checking if the statement have errors
-						if ($statement == FALSE) {
-							$this -> logger('Failed to make the query, because ' . $statement -> error, \danog\MadelineProto\Logger::ERROR);
+						try {
+							yield $this -> DB -> execute('SELECT NULL FROM `Admins` WHERE `id`=?;', [
+								$sender['id']
+							]);
+						} catch (Amp\Sql\QueryError $e) {
+							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 							return;
-						}
-
-						// Completing the query
-						$statement -> bind_param('i', $sender['id']);
-
-						// Executing the query
-						$result = $statement -> execute();
-
-						// Closing the statement
-						$statement -> close();
-
-						// Checking if the statement have errors
-						if ($result == FALSE) {
+						} catch (Amp\Sql\FailureException $e) {
 							$this -> logger('The Message ' . $update['id'] . ' wasn\'t managed because was a message from an unauthorized user (/' . $command . ' section).');
 							return;
 						}
@@ -1579,7 +1421,7 @@
 								yield $this -> messages -> sendMessage([
 									'no_webpage' => TRUE,
 									'peer' => $sender['id'],
-									'message' => $answer,
+									'message' => htmlspecialchars_decode($answer),
 									'reply_to_msg_id' => $message['id'],
 									'parse_mode' => 'HTML'
 								]);
@@ -1600,7 +1442,7 @@
 								* 	array()
 								*/
 								if (empty($args) == FALSE) {
-									$args = html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+									$args = htmlspecialchars_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 									// Retrieving the mute message
 									$statement = $this -> DB -> prepare('SELECT NULL FROM `Languages` WHERE `lang_code`=?;');
@@ -1741,7 +1583,7 @@
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
 										'peer' => $sender['id'],
-										'message' => $answer,
+										'message' => htmlspecialchars_decode($answer),
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
@@ -1889,7 +1731,7 @@
 							yield $this -> messages -> sendMessage([
 								'no_webpage' => TRUE,
 								'peer' => $chat['id'],
-								'message' => $answer,
+								'message' => htmlspecialchars_decode($answer),
 								'reply_to_msg_id' => $message['id'],
 								'parse_mode' => 'HTML'
 							]);
@@ -2009,7 +1851,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $chat['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
 						]);
@@ -2040,7 +1882,7 @@
 						* 	array()
 						*/
 						if (empty($args) == FALSE) {
-							$args = html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+							$args = htmlspecialchars_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 							// Checking if the sender is a bot's admin
 							$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
@@ -2412,7 +2254,7 @@
 						* 	[]s
 						* 	array()
 						*/
-						if ($command == 'mute' && empty($args) == FALSE && preg_match('/^([[:digit:]]+)[[:blank:]]?([[:alpha:]]+)$/miu', html_entity_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
+						if ($command == 'mute' && empty($args) == FALSE && preg_match('/^([[:digit:]]+)[[:blank:]]?([[:alpha:]]+)$/miu', htmlspecialchars_decode($args, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches)) {
 							$limit = $matches[1];
 
 							// Converting the units to seconds
@@ -2499,7 +2341,7 @@
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
 										'peer' => $chat['id'],
-										'message' => $answer,
+										'message' => htmlspecialchars_decode($answer),
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
@@ -2856,7 +2698,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 						break;
@@ -3205,7 +3047,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $chat['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
 						]);
@@ -3265,7 +3107,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 						break;
@@ -3636,7 +3478,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 						break;
@@ -3692,7 +3534,7 @@
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							'message' => $answer,
+							'message' => htmlspecialchars_decode($answer),
 							'parse_mode' => 'HTML'
 						]);
 						break;
@@ -3707,7 +3549,12 @@
 						]
 					]);
 				}
-			} else if (preg_match_all('/^(lang\_code|(add\_lang|admin|confirm|help|invalid\_parameter|invalid\_syntax|mute|mute\_advert|link|reject|staff\_group|start|unknown|update)\_message)\:[[:blank:]]?([[:alnum:][:blank:]\_\<\>\/\@]*)$/miu', html_entity_decode($message['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches, PREG_SET_ORDER)) {
+			/**
+			* Checking if is the add_lang message
+			*
+			* preg_match() perform a RegEx match
+			*/
+			} else if (preg_match_all('/^(lang\_code|(add\_lang|admin|confirm|help|invalid\_parameter|invalid\_syntax|mute|mute\_advert|link|reject|staff\_group|start|unknown|update)\_message)\:[[:blank:]]?([[:alnum:][:blank:]\_\<\>\/\@]*)$/miu', htmlspecialchars_decode($message['message'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), $matches, PREG_SET_ORDER)) {
 				// Checking if the sender is a bot's admin
 				$statement = $this -> DB -> prepare('SELECT NULL FROM `Admins` WHERE `id`=?;');
 
@@ -3861,7 +3708,7 @@
 				yield $this -> messages -> sendMessage([
 					'no_webpage' => TRUE,
 					'peer' => $chat['id'],
-					'message' => $answer,
+					'message' => htmlspecialchars_decode($answer),
 					'reply_to_msg_id' => $message['id'],
 					'parse_mode' => 'HTML'
 				]);
@@ -3883,8 +3730,7 @@
 				'port' => 3306,
 				'user' => 'username',
 				'password' => 'password',
-				'database' => 'database_name',
-				'idle_timeout' => 60 * 60 * 24 * 30 * 12
+				'database' => 'database_name'
 			]
 		]
 		'logger' => [

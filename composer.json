@@ -3,8 +3,8 @@
 	"description": "PHP template for a Bot",
 	"type": "project",
 	"require": {
-		"danog/madelineproto": "^5.1",
-		"amphp/mysql": "^2.0"
+		"amphp/mysql": "^2.0",
+		"danog/madelineproto": "dev-master"
 	},
 	"license": "MIT",
 	"autoload": {

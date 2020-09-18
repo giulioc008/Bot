@@ -6,12 +6,23 @@
 
 ## Modules
 
+### amphp/mysql
+
+Module used to create the connection to the database
+
+* Module name: **Amp\Mysql**
+* Website: https://amphp.org/
+
+
+
 ### MadelineProto
 
 Module used to create the Bot
 
 * Documentation: https://docs.madelineproto.xyz/
 * Module name: **\danog\MadelineProto**
+* Requirements:
+	- PHP >= 7.4
 
 
 

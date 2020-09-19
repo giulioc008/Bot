@@ -53,19 +53,35 @@
 				$url = str_replace('?', '%3F', $url);
 			}
 
-			// Opening the connection
+			/**
+			* Opening the connection
+			*
+			* curl_init() initialize the cURL session
+			*/
 			$curl = curl_init($url);
 
-			// Setting the connection
+			/**
+			* Setting the connection
+			*
+			* curl_setopt_array() set the options for the cURL transfer
+			*/
 			curl_setopt_array($curl, [
 				CURLOPT_HEADER => FALSE,
 				CURLOPT_RETURNTRANSFER => TRUE
 			]);
 
-			// Executing the web request
+			/**
+			* Executing the web request
+			*
+			* curl_exec() perform the cURL session
+			*/
 			$result = curl_exec($curl);
 
-			// Closing the connection
+			/**
+			* Closing the connection
+			*
+			* curl_close() close the cURL session
+			*/
 			curl_close($curl);
 
 			return $result;
@@ -218,7 +234,7 @@
 
 					// Retrieving the chats' list
 					try {
-						yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+						$result = yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
 					} catch (Amp\Sql\FailureException $e) {
 						$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
 						return;
@@ -356,7 +372,7 @@
 						case 'reject':
 							// Retrieving the reject message
 							try {
-								yield $this -> DB -> execute('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;', [
+								$answer = yield $this -> DB -> execute('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;', [
 									$language
 								]);
 							} catch (Amp\Sql\QueryError $e) {
@@ -364,6 +380,13 @@
 								$answer = 'Operation deleted.';
 							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation deleted.';
+							}
+
+							// Checking if the query has product a result
+							if ($answer instanceof Amp\Mysql\ResultSet) {
+								yield $answer -> advance();
+								$answer = $answer -> getCurrent();
+								$answer = $answer['reject_message'];
 							}
 
 							/**
@@ -512,7 +535,7 @@
 
 							// Retrieving the confirm message
 							try {
-								yield $this -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
+								$answer = yield $this -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
 									$language
 								]);
 							} catch (Amp\Sql\QueryError $e) {
@@ -520,6 +543,13 @@
 								$answer = 'Operation completed.';
 							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation completed.';
+							}
+
+							// Checking if the query has product a result
+							if ($answer instanceof Amp\Mysql\ResultSet) {
+								yield $answer -> advance();
+								$answer = $answer -> getCurrent();
+								$answer = $answer['confirm_message'];
 							}
 
 							/**
@@ -577,11 +607,7 @@
 
 										$button['text'] = $type == 'yes' ? str_replace(' ✅', '', $button['text']) : $button['text'] . ' ✅';
 
-										/**
-										* Checking if is a select request
-										*
-										* explode() convert a string into an array
-										*/
+										// Checking if is a select request
 										if ($type == 'yes') {
 											/**
 											* Checking if the first /staff_group request
@@ -857,6 +883,13 @@
 				} catch (Amp\Sql\QueryError $e) {
 					$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 				} catch (Amp\Sql\FailureException $e) {
+				}
+
+				// Checking if the query has product a result
+				if ($answer instanceof Amp\Mysql\ResultSet) {
+					yield $answer -> advance();
+					$answer = $answer -> getCurrent();
+					$answer = $answer['reject_message'];
 				}
 
 				// Checking if the service message is about new members
@@ -1226,22 +1259,21 @@
 			$message['message'] = trim($message['message']);
 			$message['message'] = htmlentities($message['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_DISALLOWED | ENT_HTML5, 'UTF-8');
 
-			$result = TRUE;
+			$result = NULL;
 
 			// Checking if the user is in the bot's blacklist
 			try {
-				yield $this -> DB -> execute('SELECT NULL FROM `Blacklist` WHERE `id`=?;', [
+				$result = yield $this -> DB -> execute('SELECT NULL FROM `Blacklist` WHERE `id`=?;', [
 					$sender['id']
 				]);
 			} catch (Amp\Sql\QueryError $e) {
 				$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 				return;
 			} catch (Amp\Sql\FailureException $e) {
-				$result = FALSE;
 			}
 
 			// Checking if the query has product a result
-			if ($result) {
+			if ($result instanceof Amp\Mysql\ResultSet) {
 				$this -> logger('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> tried to use the bot.');
 				return;
 			}
@@ -1298,6 +1330,13 @@
 					$answer = '<a href=\"mention:${admin_id}\" >${admin_first_name}</a>,\n<a href=\"mention:${sender_id}\" >${sender_first_name}</a> needs your help${motive} into <a href=\"${chat_invite}\" >${chat_title}</a>.';
 				}
 
+				// Checking if the query has product a result
+				if ($answer instanceof Amp\Mysql\ResultSet) {
+					yield $answer -> advance();
+					$answer = $answer -> getCurrent();
+					$answer = $answer['admin_message'];
+				}
+
 				/**
 				* Checking if the admin message isn't setted
 				*
@@ -1336,11 +1375,6 @@
 					$message []= [
 						'no_webpage' => TRUE,
 						'peer' => $user['id'],
-						/**
-						* Personalizing the admin message
-						*
-						* str_replace() replace the tags with their value
-						*/
 						'message' => str_replace('${admin_id}', $user['id'], str_replace('${admin_first_name}', $user['first_name'], $answer)),
 						'parse_mode' => 'HTML'
 					];
@@ -1394,6 +1428,13 @@
 									$answer = 'Send me a message with this format:' . "\n\n" . '<code>lang_code: &lt;insert here the lang_code of the language&gt;' . "\n" . 'add_lang_message: &lt;insert here the message for the /add command when a user want add a language&gt;' . "\n" . 'admin_message: &lt;insert here the message for the @admin tag&gt;' . "\n" . 'confirm_message: &lt;insert here a generic confirm message&gt;' . "\n" . 'help_message: &lt;insert here the message for the /help command&gt;' . "\n" . 'invalid_parameter_message: &lt;insert here the message that will be sent when a user insert an invalid parameter into a command&gt;' . "\n" . 'invalid_syntax_message: &lt;insert here the message that will be sent when a user send a command with an invalid syntax&gt;' . "\n" . 'mute_message: &lt;insert here the message for the /mute command&gt;' . "\n" . 'mute_advert_message: &lt;insert here the message for when the /mute command is used with time set to forever&gt;' . "\n" . 'link_message: &lt;insert here the message for the /link command&gt;' . "\n" . 'reject_message: &lt;insert here a generic reject message&gt;' . "\n" . 'staff_group_message: &lt;insert here the message for the /staff_group command&gt;' . "\n" . 'start_message: &lt;insert here the message for the /start command&gt;' . "\n" . 'unknown_message: &lt;insert here the message for the unknown commands&gt;' . "\n" . 'update_message: &lt;insert here the message for the /update command&gt;</code>' . "\n\n" . '<b>N.B.</b>: If you want insert a new line in the messages, you must codify it as <code>\n</code>.';
 								} catch (Amp\Sql\FailureException $e) {
 									$answer = 'Send me a message with this format:' . "\n\n" . '<code>lang_code: &lt;insert here the lang_code of the language&gt;' . "\n" . 'add_lang_message: &lt;insert here the message for the /add command when a user want add a language&gt;' . "\n" . 'admin_message: &lt;insert here the message for the @admin tag&gt;' . "\n" . 'confirm_message: &lt;insert here a generic confirm message&gt;' . "\n" . 'help_message: &lt;insert here the message for the /help command&gt;' . "\n" . 'invalid_parameter_message: &lt;insert here the message that will be sent when a user insert an invalid parameter into a command&gt;' . "\n" . 'invalid_syntax_message: &lt;insert here the message that will be sent when a user send a command with an invalid syntax&gt;' . "\n" . 'mute_message: &lt;insert here the message for the /mute command&gt;' . "\n" . 'mute_advert_message: &lt;insert here the message for when the /mute command is used with time set to forever&gt;' . "\n" . 'link_message: &lt;insert here the message for the /link command&gt;' . "\n" . 'reject_message: &lt;insert here a generic reject message&gt;' . "\n" . 'staff_group_message: &lt;insert here the message for the /staff_group command&gt;' . "\n" . 'start_message: &lt;insert here the message for the /start command&gt;' . "\n" . 'unknown_message: &lt;insert here the message for the unknown commands&gt;' . "\n" . 'update_message: &lt;insert here the message for the /update command&gt;</code>' . "\n\n" . '<b>N.B.</b>: If you want insert a new line in the messages, you must codify it as <code>\n</code>.';
+								}
+
+								// Checking if the query has product a result
+								if ($answer instanceof Amp\Mysql\ResultSet) {
+									yield $answer -> advance();
+									$answer = $answer -> getCurrent();
+									$answer = $answer['add_lang_message'];
 								}
 
 								/**
@@ -1460,6 +1501,13 @@
 											$answer = 'The ${parameter} is invalid.';
 										}
 
+										// Checking if the query has product a result
+										if ($answer instanceof Amp\Mysql\ResultSet) {
+											yield $answer -> advance();
+											$answer = $answer -> getCurrent();
+											$answer = $answer['invalid_parameter_message'];
+										}
+
 										/**
 										* Checking if the invalid_parameter message isn't setted
 										*
@@ -1479,15 +1527,17 @@
 											$answer = 'The ${parameter} is invalid.';
 										}
 
+										/**
+										* Personalizing the invalid_parameter message
+										*
+										* str_replace() replace the tags with their value
+										*/
+										$answer = str_replace('${parameter}', 'lang_code', $answer);
+
 										yield $this -> messages -> sendMessage([
 											'no_webpage' => TRUE,
 											'peer' => $sender['id'],
-											/**
-											* Personalizing the admin message
-											*
-											* str_replace() replace the tags with their value
-											*/
-											'message' => str_replace('${parameter}', 'lang_code', $answer),
+											'message' => $answer,
 											'reply_to_msg_id' => $message['id'],
 											'parse_mode' => 'HTML'
 										]);
@@ -1507,20 +1557,27 @@
 									} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 										$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
-										// Retrieving the invalid_parameter message
+										// Retrieving the reject message
 										try {
-											$answer = yield $this -> DB -> execute('SELECT `invalid_parameter_message` FROM `Languages` WHERE `lang_code`=?;', [
+											$answer = yield $this -> DB -> execute('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;', [
 												$language
 											]);
 										} catch (Amp\Sql\QueryError $e) {
 											$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-											$answer = 'The ${parameter} is invalid.';
+											$answer = 'Operation deleted.';
 										} catch (Amp\Sql\FailureException $e) {
-											$answer = 'The ${parameter} is invalid.';
+											$answer = 'Operation deleted.';
+										}
+
+										// Checking if the query has product a result
+										if ($answer instanceof Amp\Mysql\ResultSet) {
+											yield $answer -> advance();
+											$answer = $answer -> getCurrent();
+											$answer = $answer['reject_message'];
 										}
 
 										/**
-										* Checking if the invalid_parameter message isn't setted
+										* Checking if the reject message isn't setted
 										*
 										* empty() check if the argument is empty
 										* 	''
@@ -1535,18 +1592,13 @@
 										* 	array()
 										*/
 										if (empty($answer)) {
-											$answer = 'The ${parameter} is invalid.';
+											$answer = 'Operation deleted.';
 										}
 
 										yield $this -> messages -> sendMessage([
 											'no_webpage' => TRUE,
 											'peer' => $sender['id'],
-											/**
-											* Personalizing the admin message
-											*
-											* str_replace() replace the tags with their value
-											*/
-											'message' => str_replace('${parameter}', 'lang_code', $answer),
+											'message' => $answer,
 											'reply_to_msg_id' => $message['id'],
 											'parse_mode' => 'HTML'
 										]);
@@ -1570,6 +1622,13 @@
 										$answer = 'Operation completed.';
 									} catch (Amp\Sql\FailureException $e) {
 										$answer = 'Operation completed.';
+									}
+
+									// Checking if the query has product a result
+									if ($answer instanceof Amp\Mysql\ResultSet) {
+										yield $answer -> advance();
+										$answer = $answer -> getCurrent();
+										$answer = $answer['confirm_message'];
 									}
 
 									/**
@@ -1611,6 +1670,13 @@
 										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
 									}
 
+									// Checking if the query has product a result
+									if ($answer instanceof Amp\Mysql\ResultSet) {
+										yield $answer -> advance();
+										$answer = $answer -> getCurrent();
+										$answer = $answer['invalid_syntax_message'];
+									}
+
 									/**
 									* Checking if the invalid_syntax message isn't setted
 									*
@@ -1630,15 +1696,17 @@
 										$answer = 'The syntax of the command is: <code>${syntax}</code>.';
 									}
 
+									/**
+									* Personalizing the invalid_syntax message
+									*
+									* str_replace() replace the tags with their value
+									*/
+									$answer = str_replace('${syntax}', '/' . $command . ' &lt;lang_code&gt;', $answer),
+
 									yield $this -> messages -> sendMessage([
 										'no_webpage' => TRUE,
 										'peer' => $sender['id'],
-										/**
-										* Personalizing the admin message
-										*
-										* str_replace() replace the tags with their value
-										*/
-										'message' => str_replace('${syntax}', '/' . $command . ' &lt;lang_code&gt;', $answer),
+										'message' => $answer,
 										'reply_to_msg_id' => $message['id'],
 										'parse_mode' => 'HTML'
 									]);
@@ -1696,6 +1764,13 @@
 									$answer = 'Operation deleted.';
 								}
 
+								// Checking if the query has product a result
+								if ($answer instanceof Amp\Mysql\ResultSet) {
+									yield $answer -> advance();
+									$answer = $answer -> getCurrent();
+									$answer = $answer['reject_message'];
+								}
+
 								/**
 								* Checking if the reject message isn't setted
 								*
@@ -1741,6 +1816,13 @@
 								$answer = 'Operation completed.';
 							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation completed.';
+							}
+
+							// Checking if the query has product a result
+							if ($answer instanceof Amp\Mysql\ResultSet) {
+								yield $answer -> advance();
+								$answer = $answer -> getCurrent();
+								$answer = $answer['confirm_message'];
 							}
 
 							/**
@@ -1843,6 +1925,13 @@
 								$answer = 'Operation deleted.';
 							}
 
+							// Checking if the query has product a result
+							if ($answer instanceof Amp\Mysql\ResultSet) {
+								yield $answer -> advance();
+								$answer = $answer -> getCurrent();
+								$answer = $answer['reject_message'];
+							}
+
 							/**
 							* Checking if the reject message isn't setted
 							*
@@ -1888,6 +1977,13 @@
 							$answer = 'Operation completed.';
 						} catch (Amp\Sql\FailureException $e) {
 							$answer = 'Operation completed.';
+						}
+
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['confirm_message'];
 						}
 
 						/**
@@ -2029,11 +2125,18 @@
 								'multiple' => true
 							];
 
+							$chats = [];
+
+							// Cycle on the result
+							while (yield $result -> advance()) {
+								$chats []= $result -> getCurrent();
+							}
+
 							// Cycle on the chats that have this staff group
-							foreach ($result as $id) {
+							foreach ($chats as $sub_chat) {
 								$messages []= [
 									'no_webpage' => TRUE,
-									'peer' => $id,
+									'peer' => $sub_chat['id'],
 									'message' => $args,
 									'parse_mode' => 'HTML'
 								];
@@ -2135,6 +2238,13 @@
 											$answer = 'The syntax of the command is: <code>/mute [time]</code>.\nThe <code>time</code> option must be more then 30 seconds and less of 366 days.';
 										} catch (Amp\Sql\FailureException $e) {
 											$answer = 'The syntax of the command is: <code>/mute [time]</code>.\nThe <code>time</code> option must be more then 30 seconds and less of 366 days.';
+										}
+
+										// Checking if the query has product a result
+										if ($answer instanceof Amp\Mysql\ResultSet) {
+											yield $answer -> advance();
+											$answer = $answer -> getCurrent();
+											$answer = $answer['mute_message'];
 										}
 
 										/**
@@ -2300,6 +2410,13 @@
 									$answer = 'You have muted <a href=\"mention:${sender_id}\" >${sender_first_name}</a> forever.';
 								}
 
+								// Checking if the query has product a result
+								if ($answer instanceof Amp\Mysql\ResultSet) {
+									yield $answer -> advance();
+									$answer = $answer -> getCurrent();
+									$answer = $answer['mute_advert_message'];
+								}
+
 								/**
 								* Checking if the mute_advert message isn't setted
 								*
@@ -2319,15 +2436,18 @@
 									$answer = 'You have muted <a href=\"mention:${sender_id}\" >${sender_first_name}</a> forever.';
 								}
 
+								/**
+								* Personalizing the message
+								*
+								* str_replace() replace the tags with their value
+								*/
+								$answer = str_replace('${sender_first_name}', $sender['first_name'], $answer);
+								$answer = str_replace('${sender_id}', $sender['id'], $answer);
+
 								yield $this -> messages -> sendMessage([
 									'no_webpage' => TRUE,
 									'peer' => $chat['id'],
-									/**
-									* Personalizing the message
-									*
-									* str_replace() replace the tags with their value
-									*/
-									'message' => str_replace('${sender_id}', $sender['id'], str_replace('${sender_first_name}', $sender['first_name'], $answer)),
+									'message' => $answer,
 									'reply_to_msg_id' => $message['id'],
 									'parse_mode' => 'HTML'
 								]);
@@ -2401,6 +2521,13 @@
 									$answer = 'The syntax of the command is: <code>${syntax}</code>.';
 								}
 
+								// Checking if the query has product a result
+								if ($answer instanceof Amp\Mysql\ResultSet) {
+									yield $answer -> advance();
+									$answer = $answer -> getCurrent();
+									$answer = $answer['invalid_syntax_message'];
+								}
+
 								/**
 								* Checking if the invalid_syntax message isn't setted
 								*
@@ -2420,15 +2547,17 @@
 									$answer = 'The syntax of the command is: <code>${syntax}</code>.';
 								}
 
+								/**
+								* Personalizing the message
+								*
+								* str_replace() replace the tag with its value
+								*/
+								$answer = str_replace('${syntax}', '/' . $command . ' &lt;user_id|username&gt;', $answer);
+
 								yield $this -> messages -> sendMessage([
 									'no_webpage' => TRUE,
 									'peer' => $sender['id'],
-									/**
-									* Personalizing the message
-									*
-									* str_replace() replace the tag with its value
-									*/
-									'message' => str_replace('${syntax}', '/' . $command . ' &lt;user_id|username&gt;', $answer),
+									'message' => $answer,
 									'reply_to_msg_id' => $message['id'],
 									'parse_mode' => 'HTML'
 								]);
@@ -2469,6 +2598,13 @@
 									$answer = 'The ${parameter} is invalid.';
 								}
 
+								// Checking if the query has product a result
+								if ($answer instanceof Amp\Mysql\ResultSet) {
+									yield $answer -> advance();
+									$answer = $answer -> getCurrent();
+									$answer = $answer['invalid_parameter_message'];
+								}
+
 								/**
 								* Checking if the invalid_parameter message isn't setted
 								*
@@ -2488,15 +2624,17 @@
 									$answer = 'The ${parameter} is invalid.';
 								}
 
+								/**
+								* Personalizing the message
+								*
+								* str_replace() replace the tag with its value
+								*/
+								$answer = str_replace('${parameter}', 'username/id', $answer);
+
 								yield $this -> messages -> sendMessage([
 									'no_webpage' => TRUE,
 									'peer' => $sender['id'],
-									/**
-									* Personalizing the message
-									*
-									* str_replace() replace the tag with its value
-									*/
-									'message' => str_replace('${parameter}', 'username/id', $answer),
+									'message' => $answer,
 									'reply_to_msg_id' => $message['id'],
 									'parse_mode' => 'HTML'
 								]);
@@ -2505,10 +2643,17 @@
 								return;
 							}
 
+							$chats = [];
+
+							// Cycle on the result
+							while (yield $result -> advance()) {
+								$chats []= $result -> getCurrent();
+							}
+
 							// Cycle on the chats that have this staff group
-							foreach ($result as $id) {
+							foreach ($chats as $sub_chat) {
 								// Retrieving the data of the chat
-								$sub_chat = yield $this -> getInfo($id);
+								$sub_chat = yield $this -> getInfo($sub_chat['id']);
 								$sub_chat = $sub_chat['Chat'] ?? NULL;
 
 								/**
@@ -2645,6 +2790,9 @@
 								$user['id']
 							]);
 						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							// Closing the transaction
+							yield $transaction -> close();
+
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 							// Retrieving the reject message
@@ -2657,6 +2805,13 @@
 								$answer = 'Operation deleted.';
 							} catch (Amp\Sql\FailureException $e) {
 								$answer = 'Operation deleted.';
+							}
+
+							// Checking if the query has product a result
+							if ($answer instanceof Amp\Mysql\ResultSet) {
+								yield $answer -> advance();
+								$answer = $answer -> getCurrent();
+								$answer = $answer['reject_message'];
 							}
 
 							/**
@@ -2685,6 +2840,7 @@
 								'reply_to_msg_id' => $message['id'],
 								'parse_mode' => 'HTML'
 							]);
+							return;
 						}
 
 						// Commit the change
@@ -2703,6 +2859,13 @@
 							$answer = 'Operation completed.';
 						} catch (Amp\Sql\FailureException $e) {
 							$answer = 'Operation completed.';
+						}
+
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['confirm_message'];
 						}
 
 						/**
@@ -2754,6 +2917,13 @@
 							$answer = '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description)';
 						}
 
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['help_message'];
+						}
+
 						/**
 						* Checking if the help message is setted
 						*
@@ -2799,6 +2969,13 @@
 							$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
 						}
 
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['link_message'];
+						}
+
 						/**
 						* Checking if the link message isn't setted
 						*
@@ -2818,15 +2995,17 @@
 							$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
 						}
 
+						/**
+						* Personalizing the message
+						*
+						* str_replace() replace the tag with its value
+						*/
+						$answer = str_replace('${invite_link}', $chat['invite'], $answer);
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $chat['id'],
-							/**
-							* Personalizing the message
-							*
-							* str_replace() replace the tag with its value
-							*/
-							'message' => str_replace('${invite_link}', $chat['invite'], $answer),
+							'message' => $answer,
 							'reply_to_msg_id' => $message['id'],
 							'parse_mode' => 'HTML'
 						]);
@@ -2956,6 +3135,13 @@
 							$answer = 'Operation completed.';
 						} catch (Amp\Sql\FailureException $e) {
 							$answer = 'Operation completed.';
+						}
+
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['confirm_message'];
 						}
 
 						/**
@@ -3142,6 +3328,13 @@
 							$answer = 'For what chats do you want set this staff group ?';
 						}
 
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['staff_group_message'];
+						}
+
 						/**
 						* Checking if the staff_group message isn't setted
 						*
@@ -3188,6 +3381,13 @@
 							$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
 						}
 
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['start_message'];
+						}
+
 						/**
 						* Checking if the start message isn't setted
 						*
@@ -3207,15 +3407,18 @@
 							$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
 						}
 
+						/**
+						* Personalizing the message
+						*
+						* str_replace() replace the tags with their value
+						*/
+						$answer = str_replace('${sender_first_name}', $sender['first_name'], $answer);
+						$answer = str_replace('${sender_id}', $sender['id'], $answer);
+
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
 							'peer' => $sender['id'],
-							/**
-							* Personalizing the message
-							*
-							* str_replace() replace the tags with their value
-							*/
-							'message' => str_replace('${sender_id}', $sender['id'], str_replace('${sender_first_name}', $sender['first_name'], $answer)),
+							'message' => $answer,
 							'parse_mode' => 'HTML'
 						]);
 						break;
@@ -3245,7 +3448,7 @@
 
 						// Retrieving the chats' list
 						try {
-							yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+							yield $this -> DB -> query('SELECT `id` FROM `Chats`;');
 						} catch (Amp\Sql\FailureException $e) {
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 							return;
@@ -3261,10 +3464,14 @@
 						// Opening a transaction
 						$transaction = yield $this -> DB -> beginTransaction();
 
+						// Updating the chats' data
 						try {
 							$statement = yield $transaction -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
 						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+							// Closing the transaction
+							yield $transaction -> close();
 							return;
 						}
 
@@ -3312,6 +3519,9 @@
 										$statement = yield $transaction -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
 									} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 										$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+										// Closing the transaction
+										yield $transaction -> close();
 										return;
 									}
 									continue;
@@ -3324,6 +3534,9 @@
 									$statement = yield $transaction -> prepare('UPDATE `Chats` SET `type`=?, `title`=?, `username`=?, `invite_link`=? WHERE `id`=?;');
 								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+									// Closing the transaction
+									yield $transaction -> close();
 									return;
 								}
 								continue;
@@ -3446,7 +3659,7 @@
 						* array_map() convert admin to its id
 						*/
 						try {
-							yield $this -> DB -> query('SELECT `id` FROM `Admins`;');
+ 							$result = yield $this -> DB -> query('SELECT `id` FROM `Admins`;');
 						} catch (Amp\Sql\FailureException $e) {
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 							return;
@@ -3463,10 +3676,17 @@
 							return $n['id'];
 						}, $admins);
 
+						// Opening a transaction
+						$transaction = yield $this -> DB -> beginTransaction();
+
+						// Updating the admins' data
 						try {
 							$statement = yield $transaction -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
 						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+							// Closing the transaction
+							yield $transaction -> close();
 							return;
 						}
 
@@ -3505,6 +3725,9 @@
 										$statement = yield $transaction -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
 									} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 										$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+										// Closing the transaction
+										yield $transaction -> close();
 										return;
 									}
 									continue;
@@ -3520,6 +3743,9 @@
 									$statement = yield $transaction -> prepare('UPDATE `Admins` SET `first_name`=?, `last_name`=? WHERE `id`=?;');
 								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+									// Closing the transaction
+									yield $transaction -> close();
 									return;
 								}
 								continue;
@@ -3555,6 +3781,13 @@
 							$answer = 'Database updated.';
 						} catch (Amp\Sql\FailureException $e) {
 							$answer = 'Database updated.';
+						}
+
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['update_message'];
 						}
 
 						/**
@@ -3600,6 +3833,13 @@
 							$answer = 'This command isn\'t supported.';
 						} catch (Amp\Sql\FailureException $e) {
 							$answer = 'This command isn\'t supported.';
+						}
+
+						// Checking if the query has product a result
+						if ($answer instanceof Amp\Mysql\ResultSet) {
+							yield $answer -> advance();
+							$answer = $answer -> getCurrent();
+							$answer = $answer['unknown_message'];
 						}
 
 						/**
@@ -3754,6 +3994,13 @@
 					$answer = 'Operation completed.';
 				} catch (Amp\Sql\FailureException $e) {
 					$answer = 'Operation completed.';
+				}
+
+				// Checking if the query has product a result
+				if ($answer instanceof Amp\Mysql\ResultSet) {
+					yield $answer -> advance();
+					$answer = $answer -> getCurrent();
+					$answer = $answer['confirm_message'];
 				}
 
 				/**

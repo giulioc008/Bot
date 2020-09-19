@@ -57,3 +57,6 @@ tags
 ## Personal ##
 *.session
 *.session-journal
+
+### Log files ###
+log/

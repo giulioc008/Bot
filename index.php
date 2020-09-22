@@ -2,11 +2,11 @@
 	/**
 	* Template for creating a Telegram bot in PHP.
 	*
-	* This template can be reused in accordance with the MIT license.
+	* This template can be reused in accordance with the GPL-3.0 License.
 	*
 	* @author		Giulio Coa
-	* @copyright	2020- Giulio Coa <giuliocoa@gmail.com>
-	* @license		https://choosealicense.com/licenses/mit/
+	* @copyright		2020- Giulio Coa <giuliocoa@gmail.com>
+	* @license		https://choosealicense.com/licenses/gpl-3.0/#
 	*/
 
 	// Installing the libraries

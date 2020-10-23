@@ -49,8 +49,576 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 		$this -> tmp = [];
 
-		// Setting how many buttons an InlineKeyboard must contains (#row = button_InlineKeyboard / 2)
-		$this -> button_InlineKeyboard = 8;
+		// Setting how many buttons an InlineKeyboard must contains (button_InlineKeyboard = #row * 2)
+		$this -> button_InlineKeyboard = 2 * 4;
+
+		Amp\Loop::run(function () {
+			// Executing, every minute, the check of the TTL of Messages_to_delete
+			Amp\Loop::repeat(1000 * 60, function () use ($this) {
+				try {
+					$result = yield $this -> DB -> execute('SELECT `id` FROM `Messages_to_delete` WHERE `ttl`=?;', [
+						/**
+						* Retrieving the actual datetime
+						*
+						* date() return the actual datetime with the given format
+						*/
+						date('Y-m-d H:i:s')
+					]);
+				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					return;
+				}
+
+				// Checking if the query has product a result
+				if ($result instanceof Amp\Mysql\ResultSet) {
+					$messages = [];
+
+					// Cycle on the result
+					while (yield $result -> advance()) {
+						$messages []= $result -> getCurrent();
+					}
+
+					/**
+					* Converting the messages to its id
+					*
+					* array_map() convert each message to a its id
+					*/
+					$messages = array_map(function ($n) {
+						return $n['id'];
+					}, $messages);
+
+					// Opening a transaction
+					$transaction = yield $this -> DB -> beginTransaction();
+
+					try {
+						$statement = yield $transaction -> prepare('DELETE FROM `Messages_to_delete` WHERE `id`=?;');
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						// Closing the transaction
+						yield $transaction -> close();
+						return;
+					}
+
+					yield $this -> channels -> deleteMessages([
+						'revoke' => TRUE,
+						'id' => $messages
+					]);
+
+					// Cycle on the list of the messages
+					foreach ($messages as $message) {
+						try {
+							yield $statement -> execute([
+								$message
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						}
+					}
+
+					// Closing the statement
+					$statement -> close();
+
+					// Commit the change
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
+				}
+			});
+		});
+
+		Amp\Loop::run(function () {
+			// Executing, every day, the check of the TTL of Chats_data
+			Amp\Loop::repeat(1000 * 60 * 60 * 24, function ($database) {
+				try {
+					$result = yield $database -> execute('SELECT `chat_id`, `user_id` FROM `Chats_data` WHERE `ttl`=?;', [
+						/**
+						* Retrieving the actual datetime
+						*
+						* date() return the actual datetime with the given format
+						*/
+						date('Y-m-d H:i:s')
+					]);
+				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					return;
+				}
+
+				// Checking if the query has product a result
+				if ($result instanceof Amp\Mysql\ResultSet) {
+					$data = [];
+
+					// Cycle on the result
+					while (yield $result -> advance()) {
+						$data []= $result -> getCurrent();
+					}
+
+					// Opening a transaction
+					$transaction = yield $database -> beginTransaction();
+
+					try {
+						$statement = yield $transaction -> prepare('DELETE FROM `Chats_data` WHERE `chat_id`=? AND `user_id`=?;');
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						// Closing the transaction
+						yield $transaction -> close();
+						return;
+					}
+
+					// Cycle on the list of the data
+					foreach ($data as $single_data) {
+						try {
+							yield $statement -> execute([
+								$single_data['chat_id'],
+								$single_data['user_id']
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						}
+					}
+
+					// Closing the statement
+					$statement -> close();
+
+					// Commit the change
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
+				}
+			}, $this -> DB);
+		});
+
+		Amp\Loop::run(function () {
+			// Executing, every two days, the update the database
+			Amp\Loop::repeat(1000 * 60 * 60 * 24 * 2, function () use ($this) {
+				$banned = [
+					'multiple' = TRUE
+				];
+
+				// Retrieving the chats' list
+				try {
+					yield $this -> DB -> query('SELECT `id` FROM `Chats`;');
+				} catch (Amp\Sql\FailureException $e) {
+					return;
+				}
+
+				$chats = [];
+
+				// Cycle on the result
+				while (yield $result -> advance()) {
+					$sub_chat = $result -> getCurrent();
+
+					// Retrieving the data of the chat
+					$sub_chat = yield $this -> getInfo($sub_chat['id']);
+					$sub_chat = $sub_chat['Chat'] ?? NULL;
+
+					/**
+					* Checking if the chat isn't setted
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]s
+					* 	array()
+					*/
+					if (empty($sub_chat) || ($sub_chat['_'] !== 'chat' && $sub_chat['_'] !== 'channel')) {
+						continue;
+					}
+
+					$chats []= $sub_chat;
+				}
+
+				// Opening a transaction
+				$transaction = yield $this -> DB -> beginTransaction();
+
+				// Updating the chats' data
+				try {
+					$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
+				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					// Closing the transaction
+					yield $transaction -> close();
+					return;
+				}
+
+				// Cycle on the list of the chats
+				foreach ($chats as $sub_chat) {
+					$bitmask = 0;
+
+					if ($sub_chat['_'] === 'chat' && $sub_chat['migrated_to']['_'] !== 'inputChannelEmpty') {
+						$old_id = $sub_chat['id'];
+
+						$sub_chat = yield $this -> getPwrChat($sub_chat['migrated_to']['channel_id']);
+
+						$permissions = yield $this -> getInfo($sub_chat['id']);
+						$permissions = $permissions['Chat'] ?? NULL;
+
+						/**
+						* Checking if the chat is a normal chat
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($permissions) || ($permissions['_'] !== 'chat' && $permissions['_'] !== 'channel')) {
+							continue;
+						}
+
+						// Closing the statement
+						$statement -> close();
+
+						$permissions = $permissions['default_banned_rights'];
+
+						/**
+						* Creating the bitmask
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						$bitmask |= empty($permissions['send_messages']) === FALSE && $permissions['send_messages'] ? 0: 1 << 10;
+						$bitmask |= empty($permissions['send_media']) === FALSE && $permissions['send_media'] ? 0: 1 << 9;
+						$bitmask |= empty($permissions['send_stickers']) === FALSE && $permissions['send_stickers'] ? 0: 1 << 8;
+						$bitmask |= empty($permissions['send_gifs']) === FALSE && $permissions['send_gifs'] ? 0: 1 << 7;
+						$bitmask |= empty($permissions['send_games']) === FALSE && $permissions['send_games'] ? 0: 1 << 6;
+						$bitmask |= empty($permissions['send_inline']) === FALSE && $permissions['send_inline'] ? 0: 1 << 5;
+						$bitmask |= empty($permissions['embed_links']) === FALSE && $permissions['embed_links'] ? 0: 1 << 4;
+						$bitmask |= empty($permissions['send_polls']) === FALSE && $permissions['send_polls'] ? 0: 1 << 3;
+						$bitmask |= empty($permissions['change_info']) === FALSE && $permissions['change_info'] ? 0: 1 << 2;
+						$bitmask |= empty($permissions['invite_users']) === FALSE && $permissions['invite_users'] ? 0: 1 << 1;
+						$bitmask |= empty($permissions['pin_messages']) === FALSE && $permissions['pin_messages'] ? 0: 1 << 0;
+
+						try {
+							yield $transaction -> execute('UPDATE `Chats` SET `id`=?, `type`=?, `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;', [
+								$sub_chat['id'],
+								$sub_chat['type'],
+								$sub_chat['title'],
+								$sub_chat['username'],
+								$sub_chat['invite'],
+								$bitmask,
+								$old_id
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							try {
+								$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
+							} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+								// Closing the transaction
+								yield $transaction -> close();
+								return;
+							}
+							continue;
+						}
+
+						// Commit the change
+						$transaction -> commit();
+
+						$sub_chat = [
+							'id' => $sub_chat['id'],
+							'type' => $sub_chat['type'],
+							'title' => $sub_chat['title'],
+							'username' => $sub_chat['username'],
+							'invite_link' => $sub_chat['invite'],
+							'permissions' => $bitmask
+						];
+
+						try {
+							$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							// Closing the transaction
+							yield $transaction -> close();
+							return;
+						}
+						continue;
+					}
+
+					$link = yield $this -> getPwrChat($sub_chat['id']);
+					$link = $link['invite'];
+
+					/**
+					* Creating the bitmask
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_messages']) === FALSE && $sub_chat['default_banned_rights']['send_messages'] ? 0: 1 << 10;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_media']) === FALSE && $sub_chat['default_banned_rights']['send_media'] ? 0: 1 << 9;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_stickers']) === FALSE && $sub_chat['default_banned_rights']['send_stickers'] ? 0: 1 << 8;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_gifs']) === FALSE && $sub_chat['default_banned_rights']['send_gifs'] ? 0: 1 << 7;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_games']) === FALSE && $sub_chat['default_banned_rights']['send_games'] ? 0: 1 << 6;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_inline']) === FALSE && $sub_chat['default_banned_rights']['send_inline'] ? 0: 1 << 5;
+					$bitmask |= empty($sub_chat['default_banned_rights']['embed_links']) === FALSE && $sub_chat['default_banned_rights']['embed_links'] ? 0: 1 << 4;
+					$bitmask |= empty($sub_chat['default_banned_rights']['send_polls']) === FALSE && $sub_chat['default_banned_rights']['send_polls'] ? 0: 1 << 3;
+					$bitmask |= empty($sub_chat['default_banned_rights']['change_info']) === FALSE && $sub_chat['default_banned_rights']['change_info'] ? 0: 1 << 2;
+					$bitmask |= empty($sub_chat['default_banned_rights']['invite_users']) === FALSE && $sub_chat['default_banned_rights']['invite_users'] ? 0: 1 << 1;
+					$bitmask |= empty($sub_chat['default_banned_rights']['pin_messages']) === FALSE && $sub_chat['default_banned_rights']['pin_messages'] ? 0: 1 << 0;
+
+					try {
+						yield $statement -> execute([
+							$sub_chat['title'],
+							$sub_chat['username'],
+							$link,
+							$bitmask,
+							$sub_chat['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					}
+
+					$sub_chat['invite_link'] = $link;
+					$sub_chat['permissions'] = $bitmask;
+				}
+
+				// Closing the statement
+				$statement -> close();
+
+				// Commit the change
+				yield $transaction -> commit();
+
+				// Closing the transaction
+				yield $transaction -> close();
+
+				/**
+				* Retrieving the (super)groups/channels list
+				*
+				* array_filter() filters the array by the type of each chat
+				* array_map() convert each chat to its id
+				*/
+				$chats = array_filter($chats, function ($n) {
+					return $n['type'] !== 'bot' && $n['type'] !== 'user';
+				});
+				$chats = array_map(function ($n) {
+					return $n['id'];
+				}, $chats);
+
+				// Cycle on the list of the (super)groups/channels
+				foreach ($chats as $sub_chat) {
+					// Retrieving the data of the chat
+					$sub_chat = yield $this -> getPwrChat($sub_chat);
+
+					/**
+					* Retrieving the members' list of the chat
+					*
+					* array_filter() filters the array by the type of each member
+					* array_map() convert each member to its id
+					*/
+					$members = array_filter($sub_chat['participants'], function ($n) {
+						return $n['role'] === 'user';
+					});
+					$members = array_map(function ($n) {
+						return $n['user']['id'];
+					}, $members);
+
+					// Cycle on the list of the members
+					foreach ($members as $member) {
+						/**
+						* Downloading the user's informations from the Combot Anti-Spam API
+						*
+						* json_decode() convert a JSON string into a PHP variables
+						*/
+						$result = yield $this -> getHttpClient() -> request(new Amp\Http\Client\Request('https://api.cas.chat/check?user_id=' . $member));
+
+						// Retrieving the result
+						$result = yield $result -> getBody() -> buffer();
+
+						$result = json_decode($result, TRUE);
+
+						// Retrieving the data of the new member
+						$member = yield $this -> getInfo($member);
+						$member = $member['User'] ?? NULL;
+
+						/**
+						* Checking if the user isn't a spammer, isn't a deleted account and is a normal user
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if ($result['ok'] === FALSE && empty($member) && $member['_'] === 'user' && $member['scam'] === FALSE && $member['deleted'] === FALSE) {
+							continue;
+						}
+
+						$banned []= [
+							'channel' => $sub_chat['id'],
+							'user_id' => $member['id'],
+							'banned_rights' => [
+								'_' => 'chatBannedRights',
+								'view_messages' => TRUE,
+								'send_messages' => TRUE,
+								'send_media' => TRUE,
+								'send_stickers' => TRUE,
+								'send_gifs' => TRUE,
+								'send_games' => TRUE,
+								'send_inline' => TRUE,
+								'embed_links' => TRUE,
+								'send_polls' => TRUE,
+								'change_info' => TRUE,
+								'invite_users' => TRUE,
+								'pin_messages' => TRUE,
+								'until_date' => 0
+							]
+						];
+
+						// Opening a transaction
+						$transaction = yield $this -> DB -> beginTransaction();
+
+						// Removing the data of the user
+						try {
+							yield $transaction -> execute('DELETE FROM `Chats_data` WHERE `user_id`=?;', [
+								$member['id']
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							return;
+						}
+						try {
+							yield $transaction -> execute('DELETE FROM `Penalty` WHERE `user_id`=?;', [
+								$member['id']
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							return;
+						}
+
+						// Commit the change
+						yield $transaction -> commit();
+
+						// Closing the transaction
+						yield $transaction -> close();
+					}
+				}
+
+				yield $this -> channels -> editBanned($banned);
+
+				/**
+				* Retrieving the admins' list
+				*
+				* array_map() convert admin to its id
+				*/
+				try {
+					$result = yield $this -> DB -> query('SELECT `id` FROM `Admins`;');
+				} catch (Amp\Sql\FailureException $e) {
+					return;
+				}
+
+				$admins = [];
+
+				// Cycle on the result
+				while (yield $result -> advance()) {
+					$admins []= $result -> getCurrent();
+				}
+
+				$admins = array_map(function ($n) {
+					return $n['id'];
+				}, $admins);
+
+				// Opening a transaction
+				$transaction = yield $this -> DB -> beginTransaction();
+
+				// Updating the admins' data
+				try {
+					$statement = yield $transaction -> prepare('DELETE FROM `Admins` WHERE `id`=?;');
+				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					// Closing the transaction
+					yield $transaction -> close();
+					return;
+				}
+
+
+				// Cycle on the list of the admins
+				foreach ($admins as $id) {
+					$admin = yield $this -> getInfo($id);
+					$admin = $admin['User'] ?? NULL;
+
+					/**
+					* Checking if the user is a normal user
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($admin) === FALSE && $admin['_'] === 'user' && $admin['deleted'] === FALSE) {
+						continue;
+					}
+
+					try {
+						yield $statement -> execute([
+							$admin['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					}
+
+					// Removing the data of the user
+					try {
+						yield $transaction -> execute('DELETE FROM `Chats_data` WHERE `user_id`=?;', [
+							$admin['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						return;
+					}
+					try {
+						yield $transaction -> execute('DELETE FROM `Penalty` WHERE `user_id`=?;', [
+							$admin['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						return;
+					}
+					try {
+						yield $transaction -> execute('DELETE FROM `Penalty` WHERE `execute_by`=?;', [
+							$admin['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						return;
+					}
+				}
+
+				// Closing the statement
+				$statement -> close();
+
+				// Commit the change
+				yield $transaction -> commit();
+
+				// Closing the transaction
+				yield $transaction -> close();
+			});
+		});
 	}
 
 	/**
@@ -1121,8 +1689,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 					// Insert the message
 					try {
-						yield $transaction -> execute('INSERT INTO `Messages_to_delete` (`chat_id`, `message_id`, `ttl`) VALUES (?, ?, ?);', [
-							$message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id'],
+						yield $transaction -> execute('INSERT INTO `Messages_to_delete` (`id`, `ttl`) VALUES (?, ?);', [
 							$welcome['id'],
 							/**
 							* Retrieving the TTL (5 minutes in the future)
@@ -1325,8 +1892,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 					// Insert the message
 					try {
-						yield $transaction -> execute('INSERT INTO `Messages_to_delete` (`chat_id`, `message_id`, `ttl`) VALUES (?, ?, ?);', [
-							$message['to_id']['_'] === 'peerChat' ? $message['to_id']['chat_id'] : $message['to_id']['channel_id'],
+						yield $transaction -> execute('INSERT INTO `Messages_to_delete` (`id`, `ttl`) VALUES (?, ?);', [
 							$welcome['id'],
 							/**
 							* Retrieving the TTL (5 minutes in the future)

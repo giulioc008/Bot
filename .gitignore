@@ -60,3 +60,7 @@ tags
 
 ### Log files ###
 log/
+
+### Libraries ###
+vendor/
+composer.lock

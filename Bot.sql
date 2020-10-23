@@ -103,15 +103,9 @@ CREATE TABLE `Chats_data` (
 ) ENGINE = InnoDB DEFAULT CHARACTER SET utf8mb4_bin COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `Messages_to_delete` (
-	`chat_id` BIGINT,
-	`message_id` BIGINT,
+	`id` BIGINT,
 	`ttl` DATETIME NOT NULL,
-	PRIMARY KEY (`chat_id`, `message_id`),
-	FOREIGN KEY (`chat_id`)
-		REFERENCES `Chats`(`id`)
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION,
-	CHECK(`ttl` >= `insert_date`)
+	PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARACTER SET utf8mb4_bin COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `Penalty` (

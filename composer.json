@@ -3,8 +3,12 @@
 	"description": "PHP template for a Bot",
 	"type": "project",
 	"require": {
+		"amphp/amp": "^2.5",
+		"amphp/http-client": "^4.5",
 		"amphp/mysql": "^2.0",
-		"danog/madelineproto": "dev-master"
+		"danog/loop": "^0.1",
+		"danog/madelineproto": "dev-master",
+		"danog/tg-file-decoder": "^0.1"
 	},
 	"license": "LGPL-3.0-or-later",
 	"autoload": {

@@ -25,8 +25,58 @@ require_once 'vendor/autoload.php';
 function bitmask(array $permissions) : int {
 	$bitmask = 0;
 
+	// Checking if is a correct use of the function
+	if ($permissions['_'] === 'chatBannedRights') {
+		/**
+		* Creating the bitmask
+		*
+		* empty() check if the argument is empty
+		* 	''
+		* 	""
+		* 	'0'
+		* 	"0"
+		* 	0
+		* 	0.0
+		* 	NULL
+		* 	FALSE
+		* 	[]
+		* 	array()
+		*/
+		$bitmask |= empty($permissions['send_messages']) === FALSE && $permissions['send_messages'] ? 0: 1 << 10;
+		$bitmask |= empty($permissions['send_media']) === FALSE && $permissions['send_media'] ? 0: 1 << 9;
+		$bitmask |= empty($permissions['send_stickers']) === FALSE && $permissions['send_stickers'] ? 0: 1 << 8;
+		$bitmask |= empty($permissions['send_gifs']) === FALSE && $permissions['send_gifs'] ? 0: 1 << 7;
+		$bitmask |= empty($permissions['send_games']) === FALSE && $permissions['send_games'] ? 0: 1 << 6;
+		$bitmask |= empty($permissions['send_inline']) === FALSE && $permissions['send_inline'] ? 0: 1 << 5;
+		$bitmask |= empty($permissions['embed_links']) === FALSE && $permissions['embed_links'] ? 0: 1 << 4;
+		$bitmask |= empty($permissions['send_polls']) === FALSE && $permissions['send_polls'] ? 0: 1 << 3;
+		$bitmask |= empty($permissions['change_info']) === FALSE && $permissions['change_info'] ? 0: 1 << 2;
+		$bitmask |= empty($permissions['invite_users']) === FALSE && $permissions['invite_users'] ? 0: 1 << 1;
+		$bitmask |= empty($permissions['pin_messages']) === FALSE && $permissions['pin_messages'] ? 0: 1 << 0;
+	}
+
+	return $bitmask;
+}
+
+/**
+* Retrieve the info about a chat/channel/user.
+*
+* @param mixed $bot The bot.
+* @param int $id The id of the chat/channel/user that we want retrieve the info.
+*
+* @return mixed The info about the chat/channel/user.
+*/
+function getInfo($bot, int $id) {
+	// Checking if is a correct use of the function
+	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
+		return NULL;
+	}
+
+	// Retrieving the data of the user
+	$user = yield $bot -> getInfo($id);
+
 	/**
-	* Creating the bitmask
+	* Checking if the user is a normal user
 	*
 	* empty() check if the argument is empty
 	* 	''
@@ -40,33 +90,271 @@ function bitmask(array $permissions) : int {
 	* 	[]
 	* 	array()
 	*/
-	$bitmask |= empty($permissions['send_messages']) === FALSE && $permissions['send_messages'] ? 0: 1 << 10;
-	$bitmask |= empty($permissions['send_media']) === FALSE && $permissions['send_media'] ? 0: 1 << 9;
-	$bitmask |= empty($permissions['send_stickers']) === FALSE && $permissions['send_stickers'] ? 0: 1 << 8;
-	$bitmask |= empty($permissions['send_gifs']) === FALSE && $permissions['send_gifs'] ? 0: 1 << 7;
-	$bitmask |= empty($permissions['send_games']) === FALSE && $permissions['send_games'] ? 0: 1 << 6;
-	$bitmask |= empty($permissions['send_inline']) === FALSE && $permissions['send_inline'] ? 0: 1 << 5;
-	$bitmask |= empty($permissions['embed_links']) === FALSE && $permissions['embed_links'] ? 0: 1 << 4;
-	$bitmask |= empty($permissions['send_polls']) === FALSE && $permissions['send_polls'] ? 0: 1 << 3;
-	$bitmask |= empty($permissions['change_info']) === FALSE && $permissions['change_info'] ? 0: 1 << 2;
-	$bitmask |= empty($permissions['invite_users']) === FALSE && $permissions['invite_users'] ? 0: 1 << 1;
-	$bitmask |= empty($permissions['pin_messages']) === FALSE && $permissions['pin_messages'] ? 0: 1 << 0;
+	if (empty($user['User'] ?? NULL) || $user['User']['_'] !== 'user') {
+		$user = $user['Chat'] ?? NULL;
 
-	return $bitmask;
+		/**
+		* Checking if the chat is a normal chat
+		*
+		* empty() check if the argument is empty
+		* 	''
+		* 	""
+		* 	'0'
+		* 	"0"
+		* 	0
+		* 	0.0
+		* 	NULL
+		* 	FALSE
+		* 	[]
+		* 	array()
+		*/
+		if (empty($user) || ($user['_'] !== 'chat' && $user['_'] !== 'channel')) {
+			$bot -> logger('The retrieval was unsuccessful (' . $id . ').');
+			return NULL;
+		}
+	} else {
+		$user = $user['User'];
+	}
+
+	return $user;
+}
+
+/**
+* Retrieve the a message.
+*
+* @param mixed $bot The bot.
+* @param array $input_messages An array composed by the id of the messages that we want retrieve.
+*
+* @return array An array composed by the retrieved messages.
+*/
+function getMessages($bot, array $input_messages) : ?array {
+	// Checking if is a correct use of the function
+	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
+		return NULL;
+	}
+
+	$messages = yield $bot -> messages -> getMessages([
+		'id' => $input_messages
+	]);
+
+	// Checking if the result is valid
+	if ($messages['_'] === 'messages.messagesNotModified') {
+		/**
+		* Encode the messages
+		*
+		* json_encode() Convert the PHP object to a JSON string
+		*/
+		$messages = json_encode($input_messages);
+
+		$bot -> logger('Message retrieval was unsuccessful (' . $messages . ').');
+		return NULL;
+	}
+
+	/**
+	* Retrieving the messages
+	*
+	* array_filter() filters the array by the type of each message
+	*/
+	$admins = array_filter($message['messages'], function ($n) {
+		return $n['_'] === 'message';
+	});
+
+	return $message['messages'];
+}
+
+/**
+* Retrieve the language of the user and check if the bot supports it.
+*
+* @param mixed $bot The bot.
+* @param string $language The language of the user.
+*
+* @return string The language of the user.
+*/
+function getLanguage($bot, string $language) : ?string {
+	// Checking if is a correct use of the function
+	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
+		return NULL;
+	}
+
+	/**
+	* Retrieving the language of the user
+	*
+	* empty() check if the argument is empty
+	* 	''
+	* 	""
+	* 	'0'
+	* 	"0"
+	* 	0
+	* 	0.0
+	* 	NULL
+	* 	FALSE
+	* 	[]
+	* 	array()
+	*/
+	$language = empty($language) === FALSE ? $language : 'en';
+
+	// Checking if the language is supported
+	try {
+		yield $bot -> DB -> execute('SELECT NULL FROM `Languages` WHERE `lang_code`=?;', [
+			$language
+		]);
+	} catch (Amp\Sql\QueryError $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+		$language = 'en';
+	} catch (Amp\Sql\FailureException $e) {
+		$language = 'en';
+	}
+
+	return $language;
+}
+
+/**
+* Retrieve an output message from the database.
+*
+* @param mixed $bot The bot.
+* @param string $language The language of the user.
+* @param string $message_name The name of the message.
+* @param string $default_message The default message.
+*
+* @return string The output message.
+*/
+function getOutputMessage($bot, string $language, string $message_name, string $default_message) : string {
+	// Retrieving the message
+	try {
+		$answer = yield $bot -> DB -> execute('SELECT ? FROM `Languages` WHERE `lang_code`=?;', [
+			$message_name,
+			$language
+		]);
+	} catch (Amp\Sql\QueryError $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+		$answer = $default_message;
+	} catch (Amp\Sql\FailureException $e) {
+		$answer = $default_message;
+	}
+
+	// Checking if the query has product a result
+	if ($answer instanceof Amp\Mysql\ResultSet) {
+		yield $answer -> advance();
+		$answer = $answer -> getCurrent();
+		$answer = $answer[$message_name];
+	}
+
+	/**
+	* Checking if the message isn't setted
+	*
+	* empty() check if the argument is empty
+	* 	''
+	* 	""
+	* 	'0'
+	* 	"0"
+	* 	0
+	* 	0.0
+	* 	NULL
+	* 	FALSE
+	* 	[]
+	* 	array()
+	*/
+	if (empty($answer)) {
+		$answer = $default_message;
+	}
+
+	return $answer;
+}
+
+/**
+* Check if a user is already into the database (Chats_data section) and modify its data.
+* In case the user isn't into the database, adds it.
+*
+* @param mixed $bot The bot.
+* @param int $chat_id The id of the chat/channel that the user joined.
+* @param int $user_id The id of the user.
+*
+* @return void
+*/
+function insertChatsData($bot, int $chat_id, int $user_id) {
+	// Checking if is a correct use of the function
+	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
+		return;
+	}
+
+	// Checking if the user was be a member
+	try {
+		$result = yield $bot -> DB -> execute('SELECT `entrances` FROM `Chats_data` WHERE `user_id`=? AND `chat_id`=?;', [
+			$user_id,
+			$chat_id
+		]);
+	} catch (Amp\Sql\QueryError $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+		return;
+	} catch (Amp\Sql\FailureException $e) {
+		// Opening a transaction
+		$transaction = yield $bot -> DB -> beginTransaction();
+
+		try {
+			yield $transaction -> execute('INSERT INTO `Chats_data` (`chat_id`, `user_id`) VALUES (?, ?);', [
+				$chat_id,
+				$user_id
+			]);
+		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+			return;
+		}
+
+		// Commit the change
+		yield $transaction -> commit();
+
+		// Closing the transaction
+		yield $transaction -> close();
+	}
+
+	// Checking if the query hasn't product a result
+	if ($result instanceof Amp\Mysql\ResultSet === FALSE) {
+		return;
+	}
+
+	yield $result -> advance();
+	$result = $result -> getCurrent();
+	$result = $result['entrances'] + 1;
+
+	// Opening a transaction
+	$transaction = yield $bot -> DB -> beginTransaction();
+
+	// Insert the data of the user
+	try {
+		yield $transaction -> execute('UPDATE `Chats_data` SET `ttl`=\"NULL\",  `entrances`=?, `last_join`=? WHERE `user_id`=? AND `chat_id`=?;', [
+			$result,
+			/**
+			* Retrieving the actual time
+			*
+			* date() return the actual datetime with the given format
+			*/
+			date('Y-m-d H:i:s'),
+			$user_id,
+			$chat_id
+		]);
+	} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+		return;
+	}
+
+	// Commit the change
+	yield $transaction -> commit();
+
+	// Closing the transaction
+	yield $transaction -> close();
 }
 
 /**
 * Updates the database.
 *
 * @param mixed $bot The bot.
-* @param bool $log [Optional] The flag that tells if the function must log or not.
 * @param bool $print [Optional] The flag that tells if the function must print an output or not.
 * @param string $language [Optional] The language of the user that send the /update command.
 * @param int $sender [Optional] The id of the user that send the /update command.
 *
 * @return void
 */
-function update($bot, bool $log = FALSE, bool $print = FALSE, string $language = '', int $sender = 0) {
+function update($bot, bool $print = FALSE, string $language = '', int $sender = 0) {
 	// Checking if is a correct use of the function
 	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
 		return;
@@ -78,12 +366,9 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 
 	// Retrieving the chats' list
 	try {
-		yield $bot -> DB -> query('SELECT `id` FROM `Chats`;');
+		$result = yield $bot -> DB -> query('SELECT `id` FROM `Chats`;');
 	} catch (Amp\Sql\FailureException $e) {
-		// Checking if the function must log
-		if ($log) {
-			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-		}
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		return;
 	}
 
@@ -94,8 +379,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 		$sub_chat = $result -> getCurrent();
 
 		// Retrieving the data of the chat
-		$sub_chat = yield $bot -> getInfo($sub_chat['id']);
-		$sub_chat = $sub_chat['Chat'] ?? NULL;
+		$sub_chat = getInfo($bot, $sub_chat['id']);
 
 		/**
 		* Checking if the chat isn't setted
@@ -112,7 +396,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 		* 	[]s
 		* 	array()
 		*/
-		if (empty($sub_chat) || ($sub_chat['_'] !== 'chat' && $sub_chat['_'] !== 'channel')) {
+		if (empty($sub_chat)) {
 			continue;
 		}
 
@@ -126,10 +410,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 	try {
 		$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
 	} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-		// Checking if the function must log
-		if ($log) {
-			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-		}
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 		// Closing the transaction
 		yield $transaction -> close();
@@ -143,8 +424,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 
 			$sub_chat = yield $bot -> getPwrChat($sub_chat['migrated_to']['channel_id']);
 
-			$permissions = yield $bot -> getInfo($sub_chat['id']);
-			$permissions = $permissions['Chat'] ?? NULL;
+			$permissions = getInfo($bot, $sub_chat['id']);
 
 			/**
 			* Checking if the chat is a normal chat
@@ -161,12 +441,8 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 			* 	[]
 			* 	array()
 			*/
-			if (empty($permissions) || ($permissions['_'] !== 'chat' && $permissions['_'] !== 'channel')) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the retrieve process of the default permissions of the chat failed (/' . $command . ' section).');
-				}
-				continue;
+			if (empty($permissions)) {
+				$bot -> logger('The update ' . $sub_chat['id'] . ' of wasn&apos;t complete because the retrieve process of the default permissions of the chat failed.');
 			}
 
 			// Closing the statement
@@ -185,18 +461,12 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 					$old_id
 				]);
 			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-				}
+				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 				try {
 					$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
 				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-					// Checking if the function must log
-					if ($log) {
-						$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-					}
+					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 					// Closing the transaction
 					yield $transaction -> close();
@@ -220,10 +490,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 			try {
 				$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
 			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-				}
+				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 				// Closing the transaction
 				yield $transaction -> close();
@@ -246,10 +513,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 				$sub_chat['id']
 			]);
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-			// Checking if the function must log
-			if ($log) {
-				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-			}
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		}
 
 		$sub_chat['invite_link'] = $link;
@@ -311,11 +575,10 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 			$result = json_decode($result, TRUE);
 
 			// Retrieving the data of the new member
-			$member = yield $bot -> getInfo($member);
-			$member = $member['User'] ?? NULL;
+			$member = getInfo($bot, $member);
 
 			/**
-			* Checking if the user isn't a spammer, isn't a deleted account and is a normal user
+			* Checking if the user isn't a spammer and isn't a deleted account
 			*
 			* empty() check if the argument is empty
 			* 	''
@@ -329,7 +592,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 			* 	[]
 			* 	array()
 			*/
-			if ($result['ok'] === FALSE && empty($member) && $member['_'] === 'user' && $member['scam'] === FALSE && $member['deleted'] === FALSE) {
+			if ($result['ok'] === FALSE && empty($member) && $member['scam'] === FALSE && $member['deleted'] === FALSE) {
 				continue;
 			}
 
@@ -363,20 +626,14 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 					$member['id']
 				]);
 			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-				}
+				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 			}
 			try {
 				yield $transaction -> execute('DELETE FROM `Penalty` WHERE `user_id`=?;', [
 					$member['id']
 				]);
 			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-				}
+				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 			}
 
 			// Commit the change
@@ -397,10 +654,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 	try {
 		$result = yield $bot -> DB -> query('SELECT `id` FROM `Admins`;');
 	} catch (Amp\Sql\FailureException $e) {
-		// Checking if the function must log
-		if ($log) {
-			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-		}
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		return;
 	}
 
@@ -422,10 +676,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 	try {
 		$statement = yield $transaction -> prepare('DELETE FROM `Admins` WHERE `id`=?;');
 	} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-		// Checking if the function must log
-		if ($log) {
-			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-		}
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 		// Closing the transaction
 		yield $transaction -> close();
@@ -434,11 +685,10 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 
 	// Cycle on the list of the admins
 	foreach ($admins as $id) {
-		$admin = yield $bot -> getInfo($id);
-		$admin = $admin['User'] ?? NULL;
+		$admin = getInfo($bot, $id);
 
 		/**
-		* Checking if the user is a normal user
+		* Checking if the admin isn't a deleted account
 		*
 		* empty() check if the argument is empty
 		* 	''
@@ -452,7 +702,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 		* 	[]
 		* 	array()
 		*/
-		if (empty($admin) === FALSE && $admin['_'] === 'user' && $admin['deleted'] === FALSE) {
+		if (empty($admin) === FALSE && $admin['deleted'] === FALSE) {
 			continue;
 		}
 
@@ -461,10 +711,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 				$admin['id']
 			]);
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-			// Checking if the function must log
-			if ($log) {
-				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-			}
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 			continue;
 		}
 
@@ -474,30 +721,21 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 				$admin['id']
 			]);
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-			// Checking if the function must log
-			if ($log) {
-				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-			}
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		}
 		try {
 			yield $transaction -> execute('DELETE FROM `Penalty` WHERE `user_id`=?;', [
 				$admin['id']
 			]);
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-			// Checking if the function must log
-			if ($log) {
-				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-			}
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		}
 		try {
 			yield $transaction -> execute('DELETE FROM `Penalty` WHERE `execute_by`=?;', [
 				$admin['id']
 			]);
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-			// Checking if the function must log
-			if ($log) {
-				$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-			}
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		}
 	}
 
@@ -531,45 +769,7 @@ function update($bot, bool $log = FALSE, bool $print = FALSE, string $language =
 		*/
 		if (empty($language) === FALSE) {
 			// Retrieving the confirm message
-			try {
-				$answer = yield $bot -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
-					$language
-				]);
-			} catch (Amp\Sql\QueryError $e) {
-				// Checking if the function must log
-				if ($log) {
-					$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-				}
-				$answer = 'Operation completed.';
-			} catch (Amp\Sql\FailureException $e) {
-				$answer = 'Operation completed.';
-			}
-
-			// Checking if the query has product a result
-			if ($answer instanceof Amp\Mysql\ResultSet) {
-				yield $answer -> advance();
-				$answer = $answer -> getCurrent();
-				$answer = $answer['confirm_message'];
-			}
-
-			/**
-			* Checking if the confirm message isn't setted
-			*
-			* empty() check if the argument is empty
-			* 	''
-			* 	""
-			* 	'0'
-			* 	"0"
-			* 	0
-			* 	0.0
-			* 	NULL
-			* 	FALSE
-			* 	[]
-			* 	array()
-			*/
-			if (empty($answer)) {
-				$answer = 'Operation completed.';
-			}
+			$answer = getOutputMessage($bot, $language, 'confirm_message', 'Operation completed.');
 		}
 
 

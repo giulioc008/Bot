@@ -185,7 +185,249 @@ class Bot extends danog\MadelineProto\EventHandler {
 		Amp\Loop::repeat(1000 * 60 * 60 * 24 * 2, update($this));
 
 		$experience_loop = new danog\Loop\Generic\GenericLoop(function () {
-			;
+			/**
+			* Setting the experience bonus/malus
+			*
+			* random_int() generate a random integer number
+			*/
+			$experience = random_int(-50, 100);
+
+			// Checking if is an empty turn
+			if ($experience === 0) {
+				/**
+				* Generating the delay for the next execution
+				*
+				* random_int() generate a random integer number
+				*/
+				return random_int(1000,  PHP_INT_MAX);
+			}
+
+			$positive_text = [
+				''
+			];
+			$negative_text = [
+				''
+			];
+
+			// Retrieving the list of chat members
+			try {
+				$result = yield $this -> DB -> query('SELECT `id` FROM `Chats`;');
+			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+
+				/**
+				* Generating the delay for the next execution
+				*
+				* random_int() generate a random integer number
+				*/
+				return random_int(1000,  PHP_INT_MAX);
+			}
+
+			$chats = [];
+
+			// Cycle on the result
+			while (yield $result -> advance()) {
+				$sub_chat = $result -> getCurrent();
+
+				// Retrieving the data of the chat
+				$sub_chat = getInfo($this, $sub_chat['id']);
+
+				/**
+				* Checking if the chat isn't setted
+				*
+				* empty() check if the argument is empty
+				* 	''
+				* 	""
+				* 	'0'
+				* 	"0"
+				* 	0
+				* 	0.0
+				* 	NULL
+				* 	FALSE
+				* 	[]s
+				* 	array()
+				*/
+				if (empty($sub_chat)) {
+					continue;
+				}
+
+				$chats []= yield $this -> getPwrChat($sub_chat['id']);
+			}
+
+			/**
+			* Extract the chat
+			*
+			* random_int() generate a random integer number
+			* count() retrieve the length of the array
+			*/
+			$chat = $chats[random_int(0, count($chats) - 1)];
+
+			/**
+			* Retrieving the members' list of the chat
+			*
+			* array_filter() filters the array by the type of each member
+			* array_map() convert each member to its id
+			* empty() check if the argument is empty
+			* 	''
+			* 	""
+			* 	'0'
+			* 	"0"
+			* 	0
+			* 	0.0
+			* 	NULL
+			* 	FALSE
+			* 	[]s
+			* 	array()
+			*/
+			$members = array_filter($chat['participants'], function ($n) {
+				return $n['role'] === 'user';
+			});
+			$members = array_map(function ($n) {
+				return getInfo($this, $n['user']['id']);
+			}, $members);
+			$members = array_filter($members, function ($n) {
+				return empty($n) === FALSE && $n['deleted'] === FALSE && $n['scam'] === FALSE;
+			});
+
+			/**
+			* Extract the fortunate user
+			*
+			* random_int() generate a random integer number
+			* count() retrieve the length of the array
+			*/
+			$user = $members[random_int(0, count($members) - 1)];
+
+			// Retrieving the old experience
+			try {
+				$result = yield $this -> DB -> execute('SELECT `experience` FROM `Chats_data` WHERE `chat_id`=? AND `user_id`=?;', [
+					$chat['id'],
+					$user['id']
+				]);
+			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+
+				// Opening a transaction
+				$transaction = yield $this -> DB -> beginTransaction();
+
+				// Improving the experience
+				try {
+					$result = yield $transaction -> execute('INSERT INTO `Chats_data` (`chat_id`, `user_id`, `experience`) VALUES (?, ?, ?);', [
+						$chat['id'],
+						$user['id'],
+						$new_experience > 0 ? $new_experience : 0
+					]);
+				} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+					$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+
+					// Closing the transaction
+					yield $transaction -> close();
+
+					/**
+					* Generating the delay for the next execution
+					*
+					* random_int() generate a random integer number
+					*/
+					return random_int(1000,  PHP_INT_MAX);
+				}
+
+				// Commit the change
+				yield $transaction -> commit();
+
+				// Closing the transaction
+				yield $transaction -> close();
+
+				/**
+				* Generating the delay for the next execution
+				*
+				* random_int() generate a random integer number
+				*/
+				return random_int(1000,  PHP_INT_MAX);
+			}
+
+			yield $result -> advance();
+			$new_experience = $result -> getCurrent();
+			$new_experience = $new_experience['experience'] + $experience;
+
+			// Checking if the experience must be resetted
+			if ($new_experience < 0) {
+				$new_experience = 0;
+			}
+
+			// Opening a transaction
+			$transaction = yield $this -> DB -> beginTransaction();
+
+			// Improving the experience
+			try {
+				$result = yield $transaction -> execute('UPDATE `Chats_data` SET `experience`=? WHERE `chat_id`=? AND `user_id`=?;', [
+					$new_experience,
+					$chat['id'],
+					$user['id']
+				]);
+			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+				$this -> logger('Failed to make the query, because ' . $e -> getMessage(), \danog\MadelineProto\Logger::ERROR);
+
+				// Closing the transaction
+				yield $transaction -> close();
+
+				/**
+				* Generating the delay for the next execution
+				*
+				* random_int() generate a random integer number
+				*/
+				return random_int(1000,  PHP_INT_MAX);
+			}
+
+			// Commit the change
+			yield $transaction -> commit();
+
+			// Closing the transaction
+			yield $transaction -> close();
+
+			// Retrieve the history of the chat
+			/**
+			* @todo Complete the function with the code retrieves the entire history of a chat/channel.
+			*/
+			$messages = [];
+
+			$text_list = $positive_text;
+			if ($experience < 0){
+				$text_list = $negative_text;
+			}
+
+			/**
+			* Extract the text
+			*
+			* random_int() generate a random integer number
+			* count() retrieve the length of the array
+			*/
+			$text = $text_list[random_int(0, count($text_list) - 1)];
+
+			/**
+			* Personalizing the message
+			*
+			* str_replace() replace the tags with their value
+			* abs() convert the argument to its absolute value
+			*/
+			$text = str_replace('${name}', '<a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a>', $text);
+			$text = str_replace('${experience}', abs($experience), $text);
+
+			// Searching the last message sent by the user
+			/**
+			* @todo Complete the function with the code retrieves the entire history of a chat/channel.
+			*/
+			foreach ($messages as $message) {
+				if ($message['from_id'] == $user['id']) {
+					yield $this -> messages -> sendMessage([
+						'no_webpage' => TRUE,
+						'peer' => $chat['id'],
+						'message' => $answer,
+						'reply_to_msg_id' => $message['id'],
+						'clear_draft' => TRUE,
+						'parse_mode' => 'HTML'
+					]);
+					break;
+				}
+			}
 
 			/**
 			* Generating the delay for the next execution
@@ -959,6 +1201,18 @@ class Bot extends danog\MadelineProto\EventHandler {
 						$this -> logger('The bot have lefted the unauthorized chat.');
 						return;
 					}
+
+					// Retrieving the welcome message
+					$result = getOutputMessage($this, $language, 'welcome_message', 'Thank you for adding me to the group.' . "\n" . 'If you want to set up a welcome message, use the /welcome command' . "\n\n" . '<b>N.B.</b>: If you want to insert a newline in messages, you must encode it as <code>\n</code>.');
+
+					yield $this -> messages -> sendMessage([
+						'no_webpage' => TRUE,
+						'peer' => $chat['id'],
+						'message' => $result,
+						'reply_to_msg_id' => $message['id'],
+						'clear_draft' => TRUE,
+						'parse_mode' => 'HTML'
+					]);
 				}
 
 				// Cycle on the list of the new member
@@ -1540,6 +1794,18 @@ class Bot extends danog\MadelineProto\EventHandler {
 			$this -> logger('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> has sent an @admin request into <a href=\"' . $chat['invite'] . '\" >' . $chat['title'] . '</a>.');
 			$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> has sent an @admin request into <a href=\"' . $chat['invite'] . '\" >' . $chat['title'] . '</a>.');
 		/**
+		* Checking if the message contains a Whatsapp link
+		*
+		* preg_match() perform a RegEx match
+		*/
+		} else if (preg_match('/^.*(https?:\/\/)?chat\.whatsapp\.com\/?.*$/miu', $message['message'])) {
+			yield $this -> channels -> deleteMessages([
+				'revoke' => TRUE,
+				'id' => [
+					$message['id']
+				]
+			]);
+		/**
 		* Checking if is a bot command
 		*
 		* preg_match() perform a RegEx match
@@ -1643,19 +1909,6 @@ class Bot extends danog\MadelineProto\EventHandler {
 									]);
 								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-
-									// Retrieving the reject message
-									$answer = getOutputMessage($this, $language, 'reject_message', 'Operation deleted.');
-
-									yield $this -> messages -> sendMessage([
-										'no_webpage' => TRUE,
-										'peer' => $sender['id'],
-										'message' => $answer,
-										'reply_to_msg_id' => $message['id'],
-										'clear_draft' => TRUE,
-										'parse_mode' => 'HTML'
-									]);
-
 									return;
 								}
 
@@ -1762,18 +2015,6 @@ class Bot extends danog\MadelineProto\EventHandler {
 							]);
 						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-
-							// Retrieving the reject message
-							$answer = getOutputMessage($this, $language, 'reject_message', 'Operation deleted.');
-
-							yield $this -> messages -> sendMessage([
-								'no_webpage' => TRUE,
-								'peer' => $chat['id'],
-								'message' => $answer,
-								'reply_to_msg_id' => $message['id'],
-								'clear_draft' => TRUE,
-								'parse_mode' => 'HTML'
-							]);
 							return;
 						}
 
@@ -1866,18 +2107,6 @@ class Bot extends danog\MadelineProto\EventHandler {
 						]);
 					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-
-						// Retrieving the reject message
-						$answer = getOutputMessage($this, $language, 'reject_message', 'Operation deleted.');
-
-						yield $this -> messages -> sendMessage([
-							'no_webpage' => TRUE,
-							'peer' => $chat['id'],
-							'message' => $answer,
-							'reply_to_msg_id' => $message['id'],
-							'clear_draft' => TRUE,
-							'parse_mode' => 'HTML'
-						]);
 						return;
 					}
 
@@ -1886,6 +2115,10 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 					// Closing the transaction
 					yield $transaction -> close();
+
+					/**
+					* @todo Complete the function with code that makes the user admin in all groups in common with the bot.
+					*/
 
 					// Retrieving the confirm message
 					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
@@ -1902,6 +2135,61 @@ class Bot extends danog\MadelineProto\EventHandler {
 					// Sending the report to the channel
 					$this -> logger('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command == 'add' ? 'assigned' : 'removed' . ' <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a> as bot&apos;s admin.');
 					$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command == 'add' ? 'assigned' : 'removed' . ' <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a> as bot&apos;s admin.');
+					break;
+				case 'administer':
+					// Checking if the chat is a private chat
+					if ($chat['type'] === 'user') {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because was a message from a private chat (/' . $command . ' section).');
+						return;
+					}
+
+					try {
+						$result = yield $transaction -> execute('SELECT `to_administer` FROM `Chats` WHERE `id`=?;', [
+							$chat['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+						return;
+					}
+
+					yield $result -> advance();
+					$result = $result -> getCurrent();
+					$result = bool($result['to_administer']);
+					$result = ~ $result;
+
+					// Opening a transaction
+					$transaction = yield $this -> DB -> beginTransaction();
+
+					// Commuting the 'to_administer' flag of the chat
+					try {
+						yield $transaction -> execute('UPDATE `Chats` SET `to_administer`=? WHERE `id`=?;', [
+							$result,
+							$chat['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+						// Closing the transaction
+						yield $transaction -> close();
+						return;
+					}
+
+					// Commit the change
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
+
+					// Retrieving the confirm message
+					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
+
+					yield $this -> messages -> sendMessage([
+						'no_webpage' => TRUE,
+						'peer' => $chat['id'],
+						'message' => $answer,
+						'clear_draft' => TRUE,
+						'parse_mode' => 'HTML'
+					]);
 					break;
 				case 'announce':
 					// Checking if the chat is a private chat
@@ -1949,7 +2237,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 							}, $admins);
 
 							/**
-							* Checking if the user is an admin and if the command has arguments
+							* Checking if the user is an admin
 							*
 							* in_array() check if the array contains an item that match the element
 							*/
@@ -2718,18 +3006,6 @@ class Bot extends danog\MadelineProto\EventHandler {
 						yield $transaction -> close();
 
 						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-
-						// Retrieving the reject message
-						$answer = getOutputMessage($this, $language, 'reject_message', 'Operation deleted.');
-
-						yield $this -> messages -> sendMessage([
-							'no_webpage' => TRUE,
-							'peer' => $sender['id'],
-							'message' => $answer,
-							'reply_to_msg_id' => $message['id'],
-							'clear_draft' => TRUE,
-							'parse_mode' => 'HTML'
-						]);
 						return;
 					}
 
@@ -2754,6 +3030,57 @@ class Bot extends danog\MadelineProto\EventHandler {
 					// Sending the report to the channel
 					$this -> logger('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . 'ed <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a>.');
 					$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . 'ed <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a>.');
+					break;
+				case 'export_invite_link':
+					// Checking if the chat is a private chat
+					if ($chat['type'] === 'user') {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because was a message from a private chat (/' . $command . ' section).');
+						return;
+					}
+
+					$result = yield $this -> messages -> exportChatInvite([
+						'peer' => $chat['id']
+					]);
+
+					// Checking if the method has product a result
+					if ($result['_'] === 'chatInviteEmpty') {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the retrieve process of the new invite link of the chat failed (/' . $command . ' section).');
+						return;
+					}
+
+					// Opening a transaction
+					$transaction = yield $this -> DB -> beginTransaction();
+
+					// Updating the invite link
+					try {
+						yield $transaction -> execute('UPDATE `Chats` SET `invite_link`=? WHERE `id`=?;', [
+							$result['link'],
+							$chat['id']
+						]);
+					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+						// Closing the transaction
+						yield $transaction -> close();
+						return;
+					}
+
+					// Commit the change
+					yield $transaction -> commit();
+
+					// Closing the transaction
+					yield $transaction -> close();
+
+					// Retrieving the confirm message
+					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
+
+					yield $this -> messages -> sendMessage([
+						'no_webpage' => TRUE,
+						'peer' => $chat['id'],
+						'message' => $answer,
+						'clear_draft' => TRUE,
+						'parse_mode' => 'HTML'
+					]);
 					break;
 				case 'help':
 					// Checking if the chat isn't a private chat
@@ -2824,22 +3151,32 @@ class Bot extends danog\MadelineProto\EventHandler {
 							[
 								'_' => 'botCommand',
 								'command' => 'add',
-								'description' => 'Assign a user as bot&apos;s admin or add a chat or a language to the database'
+								'description' => "Assign a user as bot's admin or add a chat or a language to the database"
+							],
+							[
+								'_' => 'botCommand',
+								'command' => 'administer',
+								'description' => "Commmute the 'to_administer' flag of a chat"
 							],
 							[
 								'_' => 'botCommand',
 								'command' => 'announce',
-								'description' => 'If it&apos;s used into the staff group, send an announce in all the (super)groups, otherwise only in the (super)group where it&apos;s used'
+								'description' => "If it's used into the staff group, send an announce in all the (super)groups, otherwise only in the (super)group where it's used"
 							],
 							[
 								'_' => 'botCommand',
 								'command' => 'ban',
-								'description' => 'If it&apos;s used into the staff group, ban a user from all the (super)groups, otherwise only from the (super)group where it&apos;s used'
+								'description' => "If it's used into the staff group, ban a user from all the (super)groups, otherwise only from the (super)group where it's used"
 							],
 							[
 								'_' => 'botCommand',
 								'command' => 'blacklist',
-								'description' => 'Insert a user in the bot&apos;s blacklist'
+								'description' => "Insert a user in the bot's blacklist"
+							],
+							[
+								'_' => 'botCommand',
+								'command' => 'export_invite_link',
+								'description' => 'Change the invite link of the chat'
 							],
 							[
 								'_' => 'botCommand',
@@ -2864,7 +3201,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 							[
 								'_' => 'botCommand',
 								'command' => 'remove',
-								'description' => 'Remove a user as bot&apos;s admin or a chat or a language to the database'
+								'description' => "Remove a user as bot's admin or a chat or a language to the database"
 							],
 							[
 								'_' => 'botCommand',
@@ -2889,12 +3226,12 @@ class Bot extends danog\MadelineProto\EventHandler {
 							[
 								'_' => 'botCommand',
 								'command' => 'unban',
-								'description' => 'If it&apos;s used into the staff group, unban a user from all the (super)groups, otherwise only from the (super)group where it&apos;s used'
+								'description' => "If it's used into the staff group, unban a user from all the (super)groups, otherwise only from the (super)group where it's used"
 							],
 							[
 								'_' => 'botCommand',
 								'command' => 'unblacklist',
-								'description' => 'Remove a user from the bot&apos;s blacklist'
+								'description' => "Remove a user from the bot's blacklist"
 							],
 							[
 								'_' => 'botCommand',
@@ -2910,6 +3247,11 @@ class Bot extends danog\MadelineProto\EventHandler {
 								'_' => 'botCommand',
 								'command' => 'update',
 								'description' => 'Update the database'
+							],
+							[
+								'_' => 'botCommand',
+								'command' => 'welcome',
+								'description' => 'Set the welcome message for a chat'
 							]
 						]
 					]);
@@ -3143,6 +3485,88 @@ class Bot extends danog\MadelineProto\EventHandler {
 						'parse_mode' => 'HTML'
 					]);
 					break;
+				case 'welcome':
+					// Checking if the chat is a private chat
+					if ($chat['type'] === 'user') {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because was a message from a private chat (/' . $command . ' section).');
+						return;
+					}
+
+					/**
+					* Checking if the command have arguments
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($args) === FALSE) {
+						/**
+						* Retrieving the admins list
+						*
+						* array_filter() filters the array by the role of each member
+						* array_map() convert each admins to its id
+						*/
+						$admins = array_filter($chat['participants'], function ($n) {
+							return $n['role'] === 'admin' || $n['role'] === 'creator';
+						});
+						$admins = array_map(function ($n) {
+							return $n['user']['id'];
+						}, $admins);
+
+						/**
+						* Checking if the user is an admin
+						*
+						* in_array() check if the array contains an item that match the element
+						*/
+						if (in_array($sender['id'], $admins) === FALSE) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the sender isn&apos;t an admin of the chat (/' . $command . ' section).');
+							return;
+						}
+
+						// Opening a transaction
+						$transaction = yield $this -> DB -> beginTransaction();
+
+						// Insert the user into the blacklist
+						try {
+							yield $transaction -> execute('UPDATE `Chats` SET `welcome`=? WHERE `id`=?;', [
+								$args,
+								$chat['id']
+							]);
+						} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+							// Closing the transaction
+							yield $transaction -> close();
+
+							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+							return;
+						}
+
+						// Commit the change
+						yield $transaction -> commit();
+
+						// Closing the transaction
+						yield $transaction -> close();
+
+						// Retrieving the confirm message
+						$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
+
+						yield $this -> messages -> sendMessage([
+							'no_webpage' => TRUE,
+							'peer' => $chat['id'],
+							'message' => $answer,
+							'reply_to_msg_id' => $message['id'],
+							'clear_draft' => TRUE,
+							'parse_mode' => 'HTML'
+						]);
+					}
+					break;
 				default:
 					// Checking if the chat isn't a private chat
 					if ($chat['type'] !== 'user') {
@@ -3347,7 +3771,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 			// Opening a transaction
 			$transaction = yield $this -> DB -> beginTransaction();
 
-			// Insert the user
+			// Improving the reputation of the user
 			try {
 				yield $transaction -> execute('UPDATE `Chats_data` SET `reputation`=? WHERE `user_id`=? AND `chat_id`=?;', [
 					$reputation,

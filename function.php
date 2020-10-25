@@ -12,8 +12,19 @@
 * @license		https://choosealicense.com/licenses/lgpl-3.0/
 */
 
-// Adding the libraries
-require_once 'vendor/autoload.php';
+/**
+* Adding the libraries
+*
+* file_exists() checks if a file, or directory, exists
+* copy() copies a file
+*/
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+	include 'vendor/autoload.php';
+} else {
+	copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
+	include 'madeline.php';
+}
+
 
 /**
 * Create the bitmask for the chat permissions.
@@ -361,6 +372,82 @@ function update($bot) {
 		'multiple' = TRUE
 	];
 
+	// Retrieving the users' list
+	try {
+		$result = yield $bot -> DB -> query('SELECT `id` FROM `Users`;');
+	} catch (Amp\Sql\FailureException $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+		return;
+	}
+
+	$users = [];
+
+	// Cycle on the result
+	while (yield $result -> advance()) {
+		$sub_user = $result -> getCurrent();
+
+		// Retrieving the data of the user
+		$sub_user = getInfo($bot, $sub_user['id']);
+
+		/**
+		* Checking if the user is empty
+		*
+		* empty() check if the argument is empty
+		* 	''
+		* 	""
+		* 	'0'
+		* 	"0"
+		* 	0
+		* 	0.0
+		* 	NULL
+		* 	FALSE
+		* 	[]s
+		* 	array()
+		*/
+		if (empty($sub_user)) {
+			continue;
+		}
+
+		$users []= $sub_user;
+	}
+
+	// Opening a transaction
+	$transaction = yield $bot -> DB -> beginTransaction();
+
+	// Updating the chats' data
+	try {
+		$statement = yield $transaction -> prepare('UPDATE `Users` SET `first_name`=?, `last_name`=?, `lang_code`=? WHERE `id`=?;');
+	} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+		$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+
+		// Closing the transaction
+		yield $transaction -> close();
+		return;
+	}
+
+	// Cycle on the list of the chats
+	foreach ($users as $sub_user) {
+		try {
+			yield $statement -> execute([
+				$sub_user['first_name'],
+				$sub_user['first_name'],
+				getLanguage($bot, $sub_user['lang_code']),
+				$sub_user['id']
+			]);
+		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
+			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+		}
+	}
+
+	// Closing the statement
+	$statement -> close();
+
+	// Commit the change
+	yield $transaction -> commit();
+
+	// Closing the transaction
+	yield $transaction -> close();
+
 	// Retrieving the chats' list
 	try {
 		$result = yield $bot -> DB -> query('SELECT `id` FROM `Chats`;');
@@ -475,15 +562,6 @@ function update($bot) {
 			// Commit the change
 			$transaction -> commit();
 
-			$sub_chat = [
-				'id' => $sub_chat['id'],
-				'type' => $sub_chat['type'],
-				'title' => $sub_chat['title'],
-				'username' => $sub_chat['username'],
-				'invite_link' => $sub_chat['invite'],
-				'permissions' => $bitmask
-			];
-
 			try {
 				$statement = yield $transaction -> prepare('UPDATE `Chats` SET `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;');
 			} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
@@ -496,16 +574,15 @@ function update($bot) {
 			continue;
 		}
 
-		$link = yield $bot -> getPwrChat($sub_chat['id']);
-		$link = $link['invite'];
-
 		$bitmask = bitmask($sub_chat['default_banned_rights']);
+
+		$sub_chat = yield $bot -> getPwrChat($sub_chat['id']);
 
 		try {
 			yield $statement -> execute([
 				$sub_chat['title'],
 				$sub_chat['username'],
-				$link,
+				$sub_chat['invite'],
 				$bitmask,
 				$sub_chat['id']
 			]);
@@ -538,9 +615,6 @@ function update($bot) {
 
 	// Cycle on the list of the (super)groups/channels
 	foreach ($chats as $sub_chat) {
-		// Retrieving the data of the chat
-		$sub_chat = yield $bot -> getPwrChat($sub_chat);
-
 		/**
 		* Retrieving the members' list of the chat
 		*

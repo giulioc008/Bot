@@ -4,7 +4,8 @@
 
 | Version          | Description                             | Supported          |
 | :--------------: | :-------------------------------------: | :----------------: |
-| master           | The PHP version                         | :white_check_mark: |
+| master           | The disambiguation page                 | :white_check_mark: |
+| php              | The PHP version                         | :white_check_mark: |
 | php_no_libraries | The PHP version without using libraries | :white_check_mark: |
 | python           | The Python version                      | :white_check_mark: |
 

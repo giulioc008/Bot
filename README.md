@@ -2,10 +2,7 @@
 
 **Python template** for building a **Bot**
 
-
-
 ## Modules
-
 ### Aiofile
 
 Modules used to do asynchronous file operations
@@ -14,8 +11,6 @@ Modules used to do asynchronous file operations
 * Documentation: https://github.com/mosquito/aiofile
 * Modules name: **aiofile**
 * Installing: `pip install --upgrade --no-cache-dir aiofile`
-
-
 
 ### APScheduler
 
@@ -30,8 +25,6 @@ Library that lets you schedule your Python code to be executed later, either jus
 	- Python 3.3: **asyncio**
 	- Python <= 3.2: **trollius**
 * Installing: `pip install --upgrade --no-cache-dir APScheduler`
-
-
 
 ### PyMySQL
 
@@ -50,8 +43,6 @@ Module used to connect to a MySQL Server
 		+ [MariaDB](https://mariadb.org/) >= 5.5
 * Installing: `pip install --upgrade --no-cache-dir PyMySQL`
 
-
-
 ### Pyrogram
 
 Module used to create the UserBot
@@ -63,8 +54,6 @@ Module used to create the UserBot
 * Requirements: **TgCrypto**
 * Installing: `pip install --upgrade --no-cache-dir https://github.com/pyrogram/pyrogram/archive/asyncio.zip; pip install --upgrade --no-cache-dir TgCrypto`
 
-
-
 ### Requests
 
 HTTP library for Python, built for human beings
@@ -74,8 +63,6 @@ HTTP library for Python, built for human beings
 * Documentation: https://requests.readthedocs.io/en/master/user/advanced/
 * Module name: **requests**
 * Installing: `pip install --upgrade --no-cache-dir requests`
-
-
 
 ### Telegraph
 

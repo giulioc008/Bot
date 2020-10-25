@@ -74,3 +74,8 @@ Python Telegraph API wrapper
 * Module name: **telegraph**
 * Requirements: **requests**
 * Installing: `pip install --upgrade --no-cache-dir telegraph`
+
+## ToDo list
+- [ ] Rewrite the code
+- [ ] Refactoring the code
+- [ ] Implement new features

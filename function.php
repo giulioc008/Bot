@@ -108,7 +108,7 @@ function getInfo($bot, int $id) {
 		* 	[]
 		* 	array()
 		*/
-		if (empty($user) || ($user['_'] !== 'chat' && $user['_'] !== 'channel')) {
+		if (empty($user) || ($user['_'] !== 'chat' && $user['_'] !== 'channel') || ($user['_'] === 'channel' && empty($user['megagroup']))) {
 			$bot -> logger('The retrieval was unsuccessful (' . $id . ').');
 			return NULL;
 		}
@@ -348,13 +348,10 @@ function insertChatsData($bot, int $chat_id, int $user_id) {
 * Updates the database.
 *
 * @param mixed $bot The bot.
-* @param bool $print [Optional] The flag that tells if the function must print an output or not.
-* @param string $language [Optional] The language of the user that send the /update command.
-* @param int $sender [Optional] The id of the user that send the /update command.
 *
 * @return void
 */
-function update($bot, bool $print = FALSE, string $language = '', int $sender = 0) {
+function update($bot) {
 	// Checking if is a correct use of the function
 	if ($bot instanceof danog\MadelineProto\EventHandler === FALSE) {
 		return;
@@ -445,10 +442,10 @@ function update($bot, bool $print = FALSE, string $language = '', int $sender = 
 				$bot -> logger('The update ' . $sub_chat['id'] . ' of wasn&apos;t complete because the retrieve process of the default permissions of the chat failed.');
 			}
 
+			$bitmask = bitmask($permissions['default_banned_rights']);
+
 			// Closing the statement
 			$statement -> close();
-
-			$bitmask = bitmask($permissions['default_banned_rights']);
 
 			try {
 				yield $transaction -> execute('UPDATE `Chats` SET `id`=?, `type`=?, `title`=?, `username`=?, `invite_link`=?, `permissions`=? WHERE `id`=?;', [
@@ -515,9 +512,6 @@ function update($bot, bool $print = FALSE, string $language = '', int $sender = 
 		} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 			$bot -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 		}
-
-		$sub_chat['invite_link'] = $link;
-		$sub_chat['permissions'] = $bitmask;
 	}
 
 	// Closing the statement
@@ -747,55 +741,4 @@ function update($bot, bool $print = FALSE, string $language = '', int $sender = 
 
 	// Closing the transaction
 	yield $transaction -> close();
-
-	// Checking if the function must print an output
-	if ($print) {
-		$answer = 'Operation completed.';
-
-		/**
-		* Checking if the language of the user that send the /update command is setted
-		*
-		* empty() check if the argument is empty
-		* 	''
-		* 	""
-		* 	'0'
-		* 	"0"
-		* 	0
-		* 	0.0
-		* 	NULL
-		* 	FALSE
-		* 	[]
-		* 	array()
-		*/
-		if (empty($language) === FALSE) {
-			// Retrieving the confirm message
-			$answer = getOutputMessage($bot, $language, 'confirm_message', 'Operation completed.');
-		}
-
-
-		/**
-		* Checking if the id of the user that send the /update command is setted
-		*
-		* empty() check if the argument is empty
-		* 	''
-		* 	""
-		* 	'0'
-		* 	"0"
-		* 	0
-		* 	0.0
-		* 	NULL
-		* 	FALSE
-		* 	[]
-		* 	array()
-		*/
-		if (empty($sender) === FALSE) {
-			yield $bot -> messages -> sendMessage([
-				'no_webpage' => TRUE,
-				'peer' => $sender,
-				'message' => $answer,
-				'clear_draft' => TRUE,
-				'parse_mode' => 'HTML'
-			]);
-		}
-	}
 }

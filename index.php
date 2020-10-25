@@ -2126,42 +2126,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 										break;
 									default:
 										// Retrieving the mute message
-										try {
-											$answer = yield $this -> DB -> execute('SELECT `mute_message` FROM `Languages` WHERE `lang_code`=?;', [
-												$language
-											]);
-										} catch (Amp\Sql\QueryError $e) {
-											$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-											$answer = 'The syntax of the command is: <code>/mute [time]</code>.' . "\n" . 'The <code>time</code> option must be more then 30 seconds and less of 366 days.' . "\n" . 'If you want, you can use the short syntax for the unit time.';
-										} catch (Amp\Sql\FailureException $e) {
-											$answer = 'The syntax of the command is: <code>/mute [time]</code>.' . "\n" . 'The <code>time</code> option must be more then 30 seconds and less of 366 days.' . "\n" . 'If you want, you can use the short syntax for the unit time.';
-										}
-
-										// Checking if the query has product a result
-										if ($answer instanceof Amp\Mysql\ResultSet) {
-											yield $answer -> advance();
-											$answer = $answer -> getCurrent();
-											$answer = $answer['mute_message'];
-										}
-
-										/**
-										* Checking if the mute message is setted
-										*
-										* empty() check if the argument is empty
-										* 	''
-										* 	""
-										* 	'0'
-										* 	"0"
-										* 	0
-										* 	0.0
-										* 	NULL
-										* 	FALSE
-										* 	[]
-										* 	array()
-										*/
-										if (empty($answer)) {
-											$answer = 'The syntax of the command is: <code>/mute [time]</code>.' . "\n" . 'The <code>time</code> option must be more then 30 seconds and less of 366 days.' . "\n" . 'If you want, you can use the short syntax for the unit time.';
-										}
+										$answer = getOutputMessage($this, $language, 'mute_message', 'The syntax of the command is: <code>/mute [time]</code>.' . "\n" . 'The <code>time</code> option must be more then 30 seconds and less of 366 days.' . "\n" . 'If you want, you can use the short syntax for the unit time.');
 
 										yield $this -> messages -> sendMessage([
 											'no_webpage' => TRUE,
@@ -2177,26 +2142,12 @@ class Bot extends danog\MadelineProto\EventHandler {
 						}
 
 						// Retrieving the message this message replies to
-						$reply_message = yield $this -> messages -> getMessages([
-							'id' => [
-								$message['reply_to_msg_id']
-							]
+						$reply_message = getMessages($this, [
+							$message['reply_to_msg_id']
 						]);
 
-						// Checking if the result is valid
-						if ($reply_message['_'] === 'messages.messagesNotModified' || $reply_message['messages'][0]['_'] !== 'message') {
-							$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message that replies to another message (/' . $command . ' section).');
-							return;
-						}
-
-						$reply_message = $reply_message['messages'][0];
-
-						// Retrieving the data of the user
-						$user = yield $this -> getInfo($reply_message['from_id']);
-						$user = $user['User'] ?? NULL;
-
 						/**
-						* Checking if the user is a normal user
+						* Checking if the message is empty
 						*
 						* empty() check if the argument is empty
 						* 	''
@@ -2210,10 +2161,60 @@ class Bot extends danog\MadelineProto\EventHandler {
 						* 	[]
 						* 	array()
 						*/
-						if (empty($user) || $user['_'] !== 'user') {
+						if (empty($reply_message)) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message that replies to another message (/' . $command . ' section).');
+							return;
+						}
+
+						$reply_message = $reply_message[0];
+
+						// Retrieving the data of the user
+						$user = getInfo($this, $reply_message['from_id']);
+
+						/**
+						* Checking if the user is empty
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($user)) {
 							$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the user of the reply_message isn&apos;t a normal user (/' . $command . ' section).');
 							return;
 						}
+
+						// Retrieving the default permissions of the chat
+						$permissions = getInfo($this, $chat['id']);
+
+						/**
+						* Checking if the chat is empty
+						*
+						* empty() check if the argument is empty
+						* 	''
+						* 	""
+						* 	'0'
+						* 	"0"
+						* 	0
+						* 	0.0
+						* 	NULL
+						* 	FALSE
+						* 	[]
+						* 	array()
+						*/
+						if (empty($permissions)) {
+							$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the retrieve process of the default permissions of the chat failed (/' . $command . ' section).');
+							return;
+						}
+
+						$permissions = $permissions['default_banned_rights'];
 
 						// Checking if the command is one of: /ban, /kick or /mute
 						if ($command === 'ban' || $command === 'kick' || $command === 'mute') {
@@ -2222,58 +2223,33 @@ class Bot extends danog\MadelineProto\EventHandler {
 								'user_id' => $reply_message['from_id'],
 								'banned_rights' => [
 									'_' => 'chatBannedRights',
-									'view_messages' => $command === 'mute' ? FALSE : TRUE,
+									'view_messages' => $command === 'mute' ? $permissions['view_messages'] : TRUE,
 									'send_messages' => TRUE,
 									'send_media' => TRUE,
 									'send_stickers' => TRUE,
 									'send_gifs' => TRUE,
 									'send_games' => TRUE,
 									'send_inline' => TRUE,
-									'embed_links' => TRUE,
+									'embed_links' => $command === 'mute' ? $permissions['embed_links'] : TRUE,
 									'send_polls' => TRUE,
-									'change_info' => TRUE,
-									'invite_users' => $command === 'mute' ? FALSE : TRUE,
-									'pin_messages' => TRUE,
+									'change_info' => $command === 'mute' ? $permissions['change_info'] : TRUE,
+									'invite_users' => $command === 'mute' ? $permissions['invite_users'] : TRUE,
+									'pin_messages' => $command === 'mute' ? $permissions['pin_messages'] : TRUE,
 									'until_date' => $limit
 								]
 							]);
 
 							// Checking if the command is one of: /ban or /mute
 							if ($command !== 'kick') {
-								try {
-									$penalty_id = yield $this -> DB -> execute('SELECT `id` FROM `Penalty` WHERE `chat_id`=? AND `user_id`=? AND `type`=\"mute\";', [
-										$chat['id'],
-										$reply_message['from_id']
-									]);
-								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-									return;
-								}
-
-								// Checking if the query has product a result
-								if ($penalty_id instanceof Amp\Mysql\ResultSet === FALSE) {
-									return;
-								}
-
-								$penalties = [];
-
-								// Cycle on the result
-								while (yield $penalty_id -> advance()) {
-									$penalties []= $penalty_id -> getCurrent()['id'];
-								}
-
-								$penalty_id = max($penalties) + 1;
-
 								// Opening a transaction
 								$transaction = yield $this -> DB -> beginTransaction();
 
 								// Insert the penalty
 								try {
-									yield $transaction -> execute('INSERT INTO `Penalty` (`chat_id`, `user_id`, `type`, `id`, `execute_by`) VALUES (?, ?, ?, ?, ?);', [
+									yield $transaction -> execute('INSERT INTO `Penalty` (`chat_id`, `user_id`, `type`, `id`, `execute_by`) VALUES (?, ?, ?, \"1\", ?);', [
 										$chat['id'],
 										$reply_message['from_id'],
 										$command,
-										$command === 'mute' ? $penalty_id : 1,
 										$sender['id']
 									]);
 								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
@@ -2291,32 +2267,6 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 						// Checking if the command is one of: /kick, /unban or /unmute
 						if ($command === 'kick' || $command === 'unban' || $command === 'unmute') {
-							// Retrieving the default permissions of the chat
-							$permissions = yield $this -> getInfo($chat['id']);
-							$permissions = $permissions['Chat'] ?? NULL;
-
-							/**
-							* Checking if the chat is a normal chat
-							*
-							* empty() check if the argument is empty
-							* 	''
-							* 	""
-							* 	'0'
-							* 	"0"
-							* 	0
-							* 	0.0
-							* 	NULL
-							* 	FALSE
-							* 	[]
-							* 	array()
-							*/
-							if (empty($permissions) || ($permissions['_'] !== 'chat' && $permissions['_'] !== 'channel')) {
-								$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the retrieve process of the default permissions of the chat failed (/' . $command . ' section).');
-								return;
-							}
-
-							$permissions = $permissions['default_banned_rights'];
-
 							yield $this -> channels -> editBanned([
 								'channel' => $chat['id'],
 								'user_id' => $reply_message['from_id'],
@@ -2325,40 +2275,15 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 							// Checking if the command is one of: /unban or /unmute
 							if ($command !== 'kick') {
-								try {
-									$penalty_id = yield $this -> DB -> execute('SELECT `id` FROM `Penalty` WHERE `chat_id`=? AND `user_id`=? AND `type`=\"mute\";', [
-										$chat['id'],
-										$reply_message['from_id']
-									]);
-								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
-									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-									return;
-								}
-
-								// Checking if the query has product a result
-								if ($penalty_id instanceof Amp\Mysql\ResultSet === FALSE) {
-									return;
-								}
-
-								$penalties = [];
-
-								// Cycle on the result
-								while (yield $penalty_id -> advance()) {
-									$penalties []= $penalty_id -> getCurrent()['id'];
-								}
-
-								$penalty_id = max($penalties);
-
 								// Opening a transaction
 								$transaction = yield $this -> DB -> beginTransaction();
 
 								// Removing the penalty
 								try {
-									yield $transaction -> execute('DELETE FROM `Penalty` WHERE `chat_id`=? AND `user_id`=? AND `type`=? AND `id`=?;', [
+									yield $transaction -> execute('DELETE FROM `Penalty` WHERE `chat_id`=? AND `user_id`=? AND `type`=? AND `id`=\"1\";', [
 										$chat['id'],
 										$reply_message['from_id'],
-										$command,
-										$command === 'mute' $penalty_id : 1
+										$command
 									]);
 								} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 									$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
@@ -2379,22 +2304,45 @@ class Bot extends danog\MadelineProto\EventHandler {
 						* preg_match() perform a RegEx match
 						*/
 						if (preg_match('/^(un)?silence/miu', $command)) {
+							// Retrieving the default permissions of the chat
+							try {
+								$permissions = $this -> DB -> execute('SELECT `permissions` FROM `Chats` WHERE `id`=?;', [
+									$chat['id']
+								]);
+							} catch (Amp\Sql\QueryError $e) {
+								$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+								return;
+							} catch (Amp\Sql\FailureException $e) {
+								$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because there was a problem into the retrieve process of the permissions of the chat ' . $chat['id'] . ' (/' . $command . ' section).');
+								return;
+							}
+
+							// Checking if the query has product a result
+							if ($permissions instanceof Amp\Mysql\ResultSet) {
+								$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because there was a problem into the retrieve process of the permissions of the chat ' . $chat['id'] . ' (/' . $command . ' section).');
+								return;
+							}
+
+							yield $permissions -> advance();
+							$permissions = $permissions -> getCurrent();
+							$permissions = $permissions['permissions'];
+
 							yield $this -> messages -> editChatDefaultBannedRights([
 								'peer' => $chat['id'],
 								'banned_rights' => [
 									'_' => 'chatBannedRights',
 									'view_messages' => FALSE,
-									'send_messages' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_media' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_stickers' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_gifs' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_games' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_inline' => $command === 'unsilence' ? FALSE : TRUE,
-									'embed_links' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_polls' => $command === 'unsilence' ? FALSE : TRUE,
-									'change_info' => TRUE,
-									'invite_users' => FALSE,
-									'pin_messages' => TRUE,
+									'send_messages' => $command === 'unsilence' ? $permissions & 1 << 10 : TRUE,
+									'send_media' => $command === 'unsilence' ? $permissions & 1 << 9 : TRUE,
+									'send_stickers' => $command === 'unsilence' ? $permissions & 1 << 8 : TRUE,
+									'send_gifs' => $command === 'unsilence' ? $permissions & 1 << 7 : TRUE,
+									'send_games' => $command === 'unsilence' ? $permissions & 1 << 6 : TRUE,
+									'send_inline' => $command === 'unsilence' ? $permissions & 1 << 5 : TRUE,
+									'embed_links' => $command === 'unsilence' ? $permissions & 1 << 4 : TRUE,
+									'send_polls' => $command === 'unsilence' ? $permissions & 1 << 3 : TRUE,
+									'change_info' => $command === 'unsilence' ? $permissions & 1 << 2 : TRUE,
+									'invite_users' => $command === 'unsilence' ? $permissions & 1 << 4 : TRUE,
+									'pin_messages' => $command === 'unsilence' ? $permissions & 1 << 0 : TRUE,
 									'until_date' => 0
 								]
 							]);
@@ -2403,42 +2351,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 						// Checking if is a permanent /mute command
 						if ($command === 'mute' && ($limit < 30 || $limit > 60 * 60 * 24 * 30 * 12)) {
 							// Retrieving the mute_advert message
-							try {
-								$answer = yield $this -> DB -> execute('SELECT `mute_advert_message` FROM `Languages` WHERE `lang_code`=?;', [
-									$language
-								]);
-							} catch (Amp\Sql\QueryError $e) {
-								$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-								$answer = 'You have muted <a href=\"mention:${user_id}\" >${user_first_name}</a> forever.';
-							} catch (Amp\Sql\FailureException $e) {
-								$answer = 'You have muted <a href=\"mention:${user_id}\" >${user_first_name}</a> forever.';
-							}
-
-							// Checking if the query has product a result
-							if ($answer instanceof Amp\Mysql\ResultSet) {
-								yield $answer -> advance();
-								$answer = $answer -> getCurrent();
-								$answer = $answer['mute_advert_message'];
-							}
-
-							/**
-							* Checking if the mute_advert message isn't setted
-							*
-							* empty() check if the argument is empty
-							* 	''
-							* 	""
-							* 	'0'
-							* 	"0"
-							* 	0
-							* 	0.0
-							* 	NULL
-							* 	FALSE
-							* 	[]
-							* 	array()
-							*/
-							if (empty($answer)) {
-								$answer = 'You have muted <a href=\"mention:${user_id}\" >${user_first_name}</a> forever.';
-							}
+							$answer = getOutputMessage($this, $language, 'mute_advert_message', 'You have muted <a href=\"mention:${user_id}\" >${user_first_name}</a> forever.');
 
 							/**
 							* Personalizing the message
@@ -2481,7 +2394,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 						return;
 					}
 
-					// Checking if is a serious use of the /(un)ban command (command runned by a bot's admin)
+					// Checking if is a serious use of the commands (command runned by a bot's admin)
 					try {
 						yield $this -> DB -> execute('SELECT NULL FROM `Admins` WHERE `id`=?;', [
 							$sender['id']
@@ -2501,11 +2414,10 @@ class Bot extends danog\MadelineProto\EventHandler {
 						$sub_chat = $result -> getCurrent();
 
 						// Retrieving the data of the chat
-						$sub_chat = yield $this -> getInfo($sub_chat['id']);
-						$sub_chat = $sub_chat['Chat'] ?? NULL;
+						$sub_chat = getInfo($this, $sub_chat['id']);
 
 						/**
-						* Checking if the chat isn't setted
+						* Checking if the chat is empty
 						*
 						* empty() check if the argument is empty
 						* 	''
@@ -2519,7 +2431,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 						* 	[]s
 						* 	array()
 						*/
-						if (empty($sub_chat) || ($sub_chat['_'] !== 'chat' && $sub_chat['_'] !== 'channel') || ($sub_chat['_'] === 'channel' && $sub_chat['broadcast'] === TRUE)) {
+						if (empty($sub_chat)) {
 							continue;
 						}
 
@@ -2527,7 +2439,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					}
 
 					/**
-					* Checking if is a serious use of the /(un)ban command (command runned by a bot's admin)
+					* Checking if the command is a /(un)ban command
 					*
 					* preg_match() perform a RegEx match
 					*/
@@ -2549,42 +2461,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 						*/
 						if (empty($args)) {
 							// Retrieving the invalid_syntax message
-							try {
-								$answer = yield $this -> DB -> execute('SELECT `invalid_syntax_message` FROM `Languages` WHERE `lang_code`=?;', [
-									$language
-								]);
-							} catch (Amp\Sql\QueryError $e) {
-								$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-								$answer = 'The syntax of the command is: <code>${syntax}</code>.';
-							} catch (Amp\Sql\FailureException $e) {
-								$answer = 'The syntax of the command is: <code>${syntax}</code>.';
-							}
-
-							// Checking if the query has product a result
-							if ($answer instanceof Amp\Mysql\ResultSet) {
-								yield $answer -> advance();
-								$answer = $answer -> getCurrent();
-								$answer = $answer['invalid_syntax_message'];
-							}
-
-							/**
-							* Checking if the invalid_syntax message isn't setted
-							*
-							* empty() check if the argument is empty
-							* 	''
-							* 	""
-							* 	'0'
-							* 	"0"
-							* 	0
-							* 	0.0
-							* 	NULL
-							* 	FALSE
-							* 	[]
-							* 	array()
-							*/
-							if (empty($answer)) {
-								$answer = 'The syntax of the command is: <code>${syntax}</code>.';
-							}
+							$answer = getOutputMessage($this, $language, 'invalid_syntax_message', 'The syntax of the command is: <code>${syntax}</code>.');
 
 							/**
 							* Personalizing the message
@@ -2607,11 +2484,10 @@ class Bot extends danog\MadelineProto\EventHandler {
 						}
 
 						// Retrieving the data of the user
-						$user = yield $this -> getInfo($args);
-						$user = $user['User'] ?? NULL;
+						$user = getInfo($this, $args);
 
 						/**
-						* Checking if the user isn't a normal user
+						* Checking if the user is empty
 						*
 						* empty() check if the argument is empty
 						* 	''
@@ -2625,44 +2501,9 @@ class Bot extends danog\MadelineProto\EventHandler {
 						* 	[]
 						* 	array()
 						*/
-						if (empty($user) || $user['_'] !== 'user') {
+						if (empty($user)) {
 							// Retrieving the invalid_parameter message
-							try {
-								$answer = yield $this -> DB -> execute('SELECT `invalid_parameter_message` FROM `Languages` WHERE `lang_code`=?;', [
-									$language
-								]);
-							} catch (Amp\Sql\QueryError $e) {
-								$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-								$answer = 'The ${parameter} is invalid.';
-							} catch (Amp\Sql\FailureException $e) {
-								$answer = 'The ${parameter} is invalid.';
-							}
-
-							// Checking if the query has product a result
-							if ($answer instanceof Amp\Mysql\ResultSet) {
-								yield $answer -> advance();
-								$answer = $answer -> getCurrent();
-								$answer = $answer['invalid_parameter_message'];
-							}
-
-							/**
-							* Checking if the invalid_parameter message isn't setted
-							*
-							* empty() check if the argument is empty
-							* 	''
-							* 	""
-							* 	'0'
-							* 	"0"
-							* 	0
-							* 	0.0
-							* 	NULL
-							* 	FALSE
-							* 	[]
-							* 	array()
-							*/
-							if (empty($answer)) {
-								$answer = 'The ${parameter} is invalid.';
-							}
+							$answer = getOutputMessage($this, $language, 'invalid_parameter_message', 'The ${parameter} is invalid.');
 
 							/**
 							* Personalizing the message
@@ -2711,31 +2552,53 @@ class Bot extends danog\MadelineProto\EventHandler {
 						// Sending the report to the channel
 						$this -> logger('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . 'ned <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a> from all chats.');
 						$this -> report('<a href=\"mention:' . $sender['id'] . '\" >' . $sender['first_name'] . '</a> ' . $command . 'ned <a href=\"mention:' . $user['id'] . '\" >' . $user['first_name'] . '</a> from all chats.');
-
 					/**
-					* Checking if is a serious use of the /(un)silence command (command runned by a bot's admin)
+					* Checking if the command is a /(un)silence command
 					*
 					* preg_match() perform a RegEx match
 					*/
 					} else if (preg_match('/^(un)?silence/miu', $command)) {
 						// Cycle on the chats that have this staff group
 						foreach ($chats as $sub_chat) {
+							// Retrieving the default permissions of the chat
+							try {
+								$permissions = $this -> DB -> execute('SELECT `permissions` FROM `Chats` WHERE `id`=?;', [
+									$sub_chat['id']
+								]);
+							} catch (Amp\Sql\QueryError $e) {
+								$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
+								continue;
+							} catch (Amp\Sql\FailureException $e) {
+								$this -> logger('The /' . $command . ' command wasn&apos;t completed because there was a problem into the retrieve process of the permissions of the chat ' . $sub_chat['id'] . '.');
+								continue;
+							}
+
+							// Checking if the query has product a result
+							if ($permissions instanceof Amp\Mysql\ResultSet) {
+								$this -> logger('The /' . $command . ' command wasn&apos;t completed because there was a problem into the retrieve process of the permissions of the chat ' . $sub_chat['id'] . '.');
+								continue;
+							}
+
+							yield $permissions -> advance();
+							$permissions = $permissions -> getCurrent();
+							$permissions = $permissions['permissions'];
+
 							yield $this -> messages -> editChatDefaultBannedRights([
 								'peer' => $sub_chat['id'],
 								'banned_rights' => [
 									'_' => 'chatBannedRights',
 									'view_messages' => FALSE,
-									'send_messages' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_media' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_stickers' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_gifs' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_games' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_inline' => $command === 'unsilence' ? FALSE : TRUE,
-									'embed_links' => $command === 'unsilence' ? FALSE : TRUE,
-									'send_polls' => $command === 'unsilence' ? FALSE : TRUE,
-									'change_info' => TRUE,
-									'invite_users' => FALSE,
-									'pin_messages' => TRUE,
+									'send_messages' => $command === 'unsilence' ? $permissions & 1 << 10 : TRUE,
+									'send_media' => $command === 'unsilence' ? $permissions & 1 << 9 : TRUE,
+									'send_stickers' => $command === 'unsilence' ? $permissions & 1 << 8 : TRUE,
+									'send_gifs' => $command === 'unsilence' ? $permissions & 1 << 7 : TRUE,
+									'send_games' => $command === 'unsilence' ? $permissions & 1 << 6 : TRUE,
+									'send_inline' => $command === 'unsilence' ? $permissions & 1 << 5 : TRUE,
+									'embed_links' => $command === 'unsilence' ? $permissions & 1 << 4 : TRUE,
+									'send_polls' => $command === 'unsilence' ? $permissions & 1 << 3 : TRUE,
+									'change_info' => $command === 'unsilence' ? $permissions & 1 << 2 : TRUE,
+									'invite_users' => $command === 'unsilence' ? $permissions & 1 << 4 : TRUE,
+									'pin_messages' => $command === 'unsilence' ? $permissions & 1 << 0 : TRUE,
 									'until_date' => 0
 								]
 							]);
@@ -2788,26 +2651,12 @@ class Bot extends danog\MadelineProto\EventHandler {
 					}
 
 					// Retrieving the message this message replies to
-					$reply_message = yield $this -> messages -> getMessages([
-						'id' => [
-							$message['reply_to_msg_id']
-						]
+					$reply_message = getMessages($this, [
+						$message['reply_to_msg_id']
 					]);
 
-					// Checking if the result is valid
-					if ($reply_message['_'] === 'messages.messagesNotModified' || $reply_message['messages'][0]['_'] !== 'message') {
-						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message that replies to another message (/' . $command . ' section).');
-						return;
-					}
-
-					$reply_message = $reply_message['messages'][0];
-
-					// Retrieving the data of the user
-					$user = yield $this -> getInfo($reply_message['from_id']);
-					$user = $user['User'] ?? NULL;
-
 					/**
-					* Checking if the user is a normal user
+					* Checking if the message is empty
 					*
 					* empty() check if the argument is empty
 					* 	''
@@ -2821,19 +2670,48 @@ class Bot extends danog\MadelineProto\EventHandler {
 					* 	[]
 					* 	array()
 					*/
-					if (empty($user) || $user['_'] !== 'user') {
+					if (empty($reply_message)) {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message that replies to another message (/' . $command . ' section).');
+						return;
+					}
+
+					$reply_message = $reply_message[0];
+
+					// Retrieving the data of the user
+					$user = getInfo($this, $reply_message['from_id']);
+
+					/**
+					* Checking if the user is empty
+					*
+					* empty() check if the argument is empty
+					* 	''
+					* 	""
+					* 	'0'
+					* 	"0"
+					* 	0
+					* 	0.0
+					* 	NULL
+					* 	FALSE
+					* 	[]
+					* 	array()
+					*/
+					if (empty($user)) {
 						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because the user of the reply_message isn&apos;t a normal user (/' . $command . ' section).');
 						return;
 					}
+
+					$sql_query = $command === 'blacklist' ? 'INSERT INTO `Blacklist` (`id`, `banned_by`) VALUES (?, ?);' : 'DELETE FROM `Blacklist` WHERE `id`=?;';
 
 					// Opening a transaction
 					$transaction = yield $this -> DB -> beginTransaction();
 
 					// Insert the user into the blacklist
 					try {
-						yield $transaction -> execute('INSERT INTO `Blacklist` (`id`, `banned_by`) VALUES (?, ?);', [
+						yield $transaction -> execute($sql_query, $command === 'blacklist' ? [
 							$user['id'],
 							$sender['id']
+						] : [
+							$user['id']
 						]);
 					} catch (Amp\Sql\QueryError | Amp\Sql\FailureException $e) {
 						// Closing the transaction
@@ -2842,42 +2720,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 
 						// Retrieving the reject message
-						try {
-							$answer = yield $this -> DB -> execute('SELECT `reject_message` FROM `Languages` WHERE `lang_code`=?;', [
-								$language
-							]);
-						} catch (Amp\Sql\QueryError $e) {
-							$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-							$answer = 'Operation deleted.';
-						} catch (Amp\Sql\FailureException $e) {
-							$answer = 'Operation deleted.';
-						}
-
-						// Checking if the query has product a result
-						if ($answer instanceof Amp\Mysql\ResultSet) {
-							yield $answer -> advance();
-							$answer = $answer -> getCurrent();
-							$answer = $answer['reject_message'];
-						}
-
-						/**
-						* Checking if the reject message isn't setted
-						*
-						* empty() check if the argument is empty
-						* 	''
-						* 	""
-						* 	'0'
-						* 	"0"
-						* 	0
-						* 	0.0
-						* 	NULL
-						* 	FALSE
-						* 	[]
-						* 	array()
-						*/
-						if (empty($answer)) {
-							$answer = 'Operation deleted.';
-						}
+						$answer = getOutputMessage($this, $language, 'reject_message', 'Operation deleted.');
 
 						yield $this -> messages -> sendMessage([
 							'no_webpage' => TRUE,
@@ -2897,42 +2740,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					yield $transaction -> close();
 
 					// Retrieving the confirm message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = 'Operation completed.';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = 'Operation completed.';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['confirm_message'];
-					}
-
-					/**
-					* Checking if the confirm message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = 'Operation completed.';
-					}
+					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
 
 					yield $this -> messages -> sendMessage([
 						'no_webpage' => TRUE,
@@ -2949,48 +2757,13 @@ class Bot extends danog\MadelineProto\EventHandler {
 					break;
 				case 'help':
 					// Checking if the chat isn't a private chat
-					if ($message['to_id']['_'] !== 'peerUser') {
+					if ($chat['type'] !== 'user') {
 						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat (/' . $command . ' section).');
 						return;
 					}
 
 					// Retrieving the help message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `help_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description)';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description)';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['help_message'];
-					}
-
-					/**
-					* Checking if the help message is setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description)';
-					}
+					$answer = getOutputMessage($this, $language, 'help_message', '<b>FREQUENTLY ASKED QUESTION<\b>\n(FAQ list)\n\n<a href=\"(link to the manual, without brackets)\" >TELEGRAM GUIDE</a>\n\n<b>INLINE COMMANDS<\b>\n(Inline mode description).');
 
 					yield $this -> messages -> sendMessage([
 						'no_webpage' => TRUE,
@@ -3008,42 +2781,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					}
 
 					// Retrieving the link message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `link_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['link_message'];
-					}
-
-					/**
-					* Checking if the link message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.';
-					}
+					$answer = getOutputMessage($this, $language, 'link_message', '<a href=\"${invite_link}\" >This</a> is the invite link to this chat.');
 
 					/**
 					* Personalizing the message
@@ -3063,7 +2801,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					break;
 				case 'report':
 					// Checking if the chat isn't a private chat
-					if ($message['to_id']['_'] !== 'peerUser') {
+					if ($chat['type'] !== 'user') {
 						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat (/' . $command . ' section).');
 						return;
 					}
@@ -3177,42 +2915,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					]);
 
 					// Retrieving the confirm message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `confirm_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = 'Operation completed.';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = 'Operation completed.';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['confirm_message'];
-					}
-
-					/**
-					* Checking if the confirm message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = 'Operation completed.';
-					}
+					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
 
 					yield $this -> messages -> sendMessage([
 						'no_webpage' => TRUE,
@@ -3245,7 +2948,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 
 					// Retrieving the chats' list
 					try {
-						yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
+						$result = yield $this -> DB -> query('SELECT `id`, `title` FROM `Chats`;');
 					} catch (Amp\Sql\FailureException $e) {
 						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
 						return;
@@ -3369,42 +3072,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					];
 
 					// Retrieving the staff_group message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `staff_group_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = 'For what chats do you want set this staff group ?';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = 'For what chats do you want set this staff group ?';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['staff_group_message'];
-					}
-
-					/**
-					* Checking if the staff_group message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = 'For what chats do you want set this staff group ?';
-					}
+					$answer = getOutputMessage($this, $language, 'staff_group_message', 'For what chats do you want set this staff group ?');
 
 					yield $this -> messages -> sendMessage([
 						'no_webpage' => TRUE,
@@ -3418,48 +3086,13 @@ class Bot extends danog\MadelineProto\EventHandler {
 					break;
 				case 'start':
 					// Checking if the chat isn't a private chat
-					if ($message['to_id']['_'] !== 'peerUser') {
+					if ($chat['type'] !== 'user') {
 						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat (/' . $command . ' section).');
 						return;
 					}
 
 					// Retrieving the start message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `start_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['start_message'];
-					}
-
-					/**
-					* Checking if the start message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)';
-					}
+					$answer = getOutputMessage($this, $language, 'start_message', 'Hello <a href=\"mention:${sender_id}\" >${sender_first_name}</a>, welcome !\n\n(Rest of the message to be sent upon receipt of the start command)');
 
 					/**
 					* Personalizing the message
@@ -3479,7 +3112,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 					break;
 				case 'update':
 					// Checking if the chat isn't a private chat
-					if ($message['to_id']['_'] !== 'peerUser') {
+					if ($chat['type'] !== 'user') {
 						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat (/' . $command . ' section).');
 						return;
 					}
@@ -3497,52 +3130,28 @@ class Bot extends danog\MadelineProto\EventHandler {
 						return;
 					}
 
-					update($this, TRUE, $language, $sender['id']);
+					update($this);
+
+					// Retrieving the confirm message
+					$answer = getOutputMessage($this, $language, 'confirm_message', 'Operation completed.');
+
+					yield $this -> messages -> sendMessage([
+						'no_webpage' => TRUE,
+						'peer' => $sender['id'],
+						'message' => $answer,
+						'clear_draft' => TRUE,
+						'parse_mode' => 'HTML'
+					]);
 					break;
 				default:
 					// Checking if the chat isn't a private chat
-					if ($message['to_id']['_'] !== 'peerUser') {
-						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat (/' . $command . ' section).');
+					if ($chat['type'] !== 'user') {
+						$this -> logger('The Message ' . $update['id'] . ' wasn&apos;t managed because wasn&apos;t a message from a private chat.');
 						return;
 					}
 
 					// Retrieving the unknown message
-					try {
-						$answer = yield $this -> DB -> execute('SELECT `unknown_message` FROM `Languages` WHERE `lang_code`=?;', [
-							$language
-						]);
-					} catch (Amp\Sql\QueryError $e) {
-						$this -> logger('Failed to make the query, because ' . $e -> getMessage() . '.', \danog\MadelineProto\Logger::ERROR);
-						$answer = 'This command isn&apos;t supported.';
-					} catch (Amp\Sql\FailureException $e) {
-						$answer = 'This command isn&apos;t supported.';
-					}
-
-					// Checking if the query has product a result
-					if ($answer instanceof Amp\Mysql\ResultSet) {
-						yield $answer -> advance();
-						$answer = $answer -> getCurrent();
-						$answer = $answer['unknown_message'];
-					}
-
-					/**
-					* Checking if the unknown message isn't setted
-					*
-					* empty() check if the argument is empty
-					* 	''
-					* 	""
-					* 	'0'
-					* 	"0"
-					* 	0
-					* 	0.0
-					* 	NULL
-					* 	FALSE
-					* 	[]
-					* 	array()
-					*/
-					if (empty($answer)) {
-						$answer = 'This command isn&apos;t supported.';
-					}
+					$answer = getOutputMessage($this, $language, 'unknown_message', 'This command isn&apos;t supported.');
 
 					yield $this -> messages -> sendMessage([
 						'no_webpage' => TRUE,
@@ -3555,7 +3164,7 @@ class Bot extends danog\MadelineProto\EventHandler {
 			}
 
 			// Checking if the chat isn't a private chat
-			if ($message['to_id']['_'] !== 'peerUser') {
+			if ($chat['type'] !== 'user') {
 				yield $this -> channels -> deleteMessages([
 					'revoke' => TRUE,
 					'id' => [

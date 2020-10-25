@@ -10,9 +10,9 @@ name: Codacy Security Scan
 
 on:
   push:
-    branches: [ "master", "php_no_libraries", "python" ]
+    branches: [ "master", "php", "php_no_libraries", "python" ]
   pull_request:
-    branches: [ "master", "php_no_libraries", "python" ]
+    branches: [ "master", "php", "php_no_libraries", "python" ]
 
 jobs:
   codacy-security-scan:

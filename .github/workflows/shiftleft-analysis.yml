@@ -8,11 +8,13 @@ on:
   push:
     branches:
       - master
+      - php
       - php_no_libraries
       - python
   pull_request:
     branches:
       - master
+      - php
       - php_no_libraries
       - python
 

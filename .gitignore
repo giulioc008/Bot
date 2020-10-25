@@ -53,14 +53,3 @@ tags
 *_BASE_*.txt
 *_LOCAL_*.txt
 *_REMOTE_*.txt
-
-## Personal ##
-*.session
-*.session-journal
-
-### Log files ###
-log/
-
-### Libraries ###
-vendor/
-composer.lock

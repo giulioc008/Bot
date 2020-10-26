@@ -7,7 +7,7 @@
 *
 * @author		Giulio Coa
 
-* @copyright	2020- Giulio Coa <giuliocoa@gmail.com>
+* @copyright	2020- Giulio Coa <34110430+giulioc008@users.noreply.github.com>
 
 * @license		https://choosealicense.com/licenses/lgpl-3.0/
 */

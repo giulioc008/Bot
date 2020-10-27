@@ -13,7 +13,7 @@
 */
 
 // Adding the libraries
-include 'function.php';
+include 'functions.php';
 
 // Creating the bot
 class Bot extends danog\MadelineProto\EventHandler {

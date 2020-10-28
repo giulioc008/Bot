@@ -286,6 +286,56 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/Message.html#property_reply_markup"
         },                {
+            "fqsen": "\\User",
+            "name": "User",
+            "summary": "",
+            "url": "classes/User.html"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/User.html#property_id"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024is_bot",
+            "name": "is_bot",
+            "summary": "",
+            "url": "classes/User.html#property_is_bot"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024first_name",
+            "name": "first_name",
+            "summary": "",
+            "url": "classes/User.html#property_first_name"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024last_name",
+            "name": "last_name",
+            "summary": "",
+            "url": "classes/User.html#property_last_name"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024username",
+            "name": "username",
+            "summary": "",
+            "url": "classes/User.html#property_username"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024language_code",
+            "name": "language_code",
+            "summary": "",
+            "url": "classes/User.html#property_language_code"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024can_join_groups",
+            "name": "can_join_groups",
+            "summary": "",
+            "url": "classes/User.html#property_can_join_groups"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024can_read_all_group_messages",
+            "name": "can_read_all_group_messages",
+            "summary": "",
+            "url": "classes/User.html#property_can_read_all_group_messages"
+        },                {
+            "fqsen": "\\User\u003A\u003A\u0024supports_inline_queries",
+            "name": "supports_inline_queries",
+            "summary": "",
+            "url": "classes/User.html#property_supports_inline_queries"
+        },                {
             "fqsen": "\\Update",
             "name": "Update",
             "summary": "",

@@ -18,10 +18,10 @@
  * copy() copies a file
  */
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-	include 'vendor/autoload.php';
+	require_once('vendor/autoload.php');
 } else {
 	copy('https://phar.madelineproto.xyz/madeline.php', 'madeline.php');
-	include 'madeline.php';
+	require_once('madeline.php');
 }
 
 /**

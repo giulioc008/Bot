@@ -34,9 +34,34 @@ class BotCommand {
 	 * @param string $command		The name of the command.
 	 * @param string $description	The description of the command.
 	 *
+	 * @throws InvalidArgumentException If the name of the command is more length of 32 characters.
+	 * @throws InvalidArgumentException If the description of the command is less length of 3 characters or more length of 256 characters.
+	 *
 	 * @return void
 	 */
 	public function __construct(string $command, string $description) {
+		/**
+		 * Checking if the name of the command respect the constraints
+		 *
+		 * strlen() return the length of the string
+		 */
+		if (strlen($command) < 1) {
+			throw new InvalidArgumentException('The name of the command is empty.');
+		} else if (strlen($command) > 32) {
+			throw new InvalidArgumentException('The name of the command is more length of 32 characters.');
+		}
+
+		/**
+		 * Checking if the description of the command respect the constraints
+		 *
+		 * strlen() return the length of the string
+		 */
+		if (strlen($description) < 3) {
+			throw new InvalidArgumentException('The description of the command is less length of 3 characters.');
+		} else if (strlen($description) > 256) {
+			throw new InvalidArgumentException('The description of the command is more length of 256 characters.');
+		}
+
 		$this -> command = $command;
 		$this -> description = $description;
 	}
@@ -48,8 +73,8 @@ class BotCommand {
 	 */
 	public function __debugInfo() : array {
 		return [
-			'command' => $this -> command = $command,
-			'description' => $this -> description = $description
+			'command' => $this -> command,
+			'description' => $this -> description
 		];
 	}
 
@@ -77,6 +102,9 @@ class BotCommand {
 	 * @param string $command		The name of the command.
 	 * @param string $description	The description of the command.
 	 *
+	 * @throws InvalidArgumentException If the name of the command is more length of 32 characters.
+	 * @throws InvalidArgumentException If the description of the command is less length of 3 characters or more length of 256 characters.
+	 *
 	 * @return mixed
 	 */
 	public function __invoke(string $command, string $description) {
@@ -103,14 +131,14 @@ class BotCommand {
 		 * 	0.0
 		 * 	NULL
 		 * 	FALSE
-		 * 	[]s
+		 * 	[]
 		 * 	array()
 		 */
 		switch ($name) {
 			case 'command':
-				return empty($this -> command) === FALSE;
+				return empty($this -> command) === FALSE || $this -> command === '0';
 			case 'description':
-				return empty($this -> description) === FALSE;
+				return empty($this -> description) === FALSE || $this -> description === '0';
 		}
 	}
 
@@ -120,13 +148,37 @@ class BotCommand {
 	 * @param string	$name 	The name of the property.
 	 * @param mixed 	$value	The value of the property.
 	 *
+	 * @throws InvalidArgumentException If the property don't respect its constraints.
+	 *
 	 * @return void
 	 */
 	public function __set(string $name, $value) {
 		switch ($name) {
 			case 'command':
+				/**
+				* Checking if the name of the command respect the constraints
+				*
+				* strlen() return the length of the string
+				*/
+				if (strlen($command) < 1) {
+					throw new InvalidArgumentException('The name of the command is empty.');
+				} else if (strlen($command) > 32) {
+					throw new InvalidArgumentException('The name of the command is more length of 32 characters.');
+				}
+
 				$this -> command = $value;
 			case 'description':
+				/**
+				* Checking if the description of the command respect the constraints
+				*
+				* strlen() return the length of the string
+				*/
+				if (strlen($description) < 3) {
+					throw new InvalidArgumentException('The description of the command is less length of 3 characters.');
+				} else if (strlen($description) > 256) {
+					throw new InvalidArgumentException('The description of the command is more length of 256 characters.');
+				}
+
 				$this -> description = $value;
 		}
 	}
@@ -142,9 +194,6 @@ class BotCommand {
 		 *
 		 * json_encode() convert the PHP object to a JSON string
 		 */
-		return json_encode([
-			'command' => $this -> command = $command,
-			'description' => $this -> description = $description
-		], JSON_UNESCAPED_SLASHES);
+		return json_encode($this -> __debugInfo(), JSON_UNESCAPED_SLASHES);
 	}
 }

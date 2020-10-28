@@ -186,7 +186,7 @@ class BotCommand {
 	/**
 	 * @internal Return a string version of the object.
 	 *
-	 * @uses BotCommand::__debugInfo to create the class.
+	 * @uses BotCommand::__debugInfo to retrieve an array version of the class.
 	 *
 	 * @return string
 	 */

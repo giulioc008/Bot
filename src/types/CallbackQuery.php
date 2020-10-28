@@ -208,6 +208,8 @@ class CallbackQuery {
 	/**
 	 * @internal Return a string version of the object.
 	 *
+	 * @uses CallbackQuery::__debugInfo to retrieve an array version of the class.
+	 *
 	 * @return string
 	 */
 	public function __toString() : string {

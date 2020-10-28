@@ -604,7 +604,7 @@ class Message {
 	/**
 	 * @internal Return a string version of the object.
 	 *
-	 * @uses Message::__debugInfo to create the class.
+	 * @uses Message::__debugInfo to retrieve an array version of the class.
 	 *
 	 * @return string
 	 */

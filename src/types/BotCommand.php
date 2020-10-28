@@ -186,6 +186,8 @@ class BotCommand {
 	/**
 	 * @internal Return a string version of the object.
 	 *
+	 * @uses BotCommand::__debugInfo to create the class.
+	 *
 	 * @return string
 	 */
 	public function __toString() : string {

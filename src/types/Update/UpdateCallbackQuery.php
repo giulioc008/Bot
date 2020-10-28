@@ -13,7 +13,7 @@
 declare(encoding='UTF-8');
 declare(strict_types=1);
 
-// Adding the necessary class
+// Adding the necessary classes
 require_once('../CallbackQuery.php');
 require_once('Update.php');
 

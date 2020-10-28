@@ -13,7 +13,7 @@
 declare(encoding='UTF-8');
 declare(strict_types=1);
 
-// Adding the necessary class
+// Adding the necessary classes
 require_once('Chat/Chat.php');
 require_once('Media/Animation.php');
 require_once('Media/Audio.php');

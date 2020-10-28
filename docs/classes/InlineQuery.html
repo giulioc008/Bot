@@ -79,23 +79,20 @@
                     <ul class="phpdocumentor-breadcrumbs">
             <li class="phpdocumentor-breadcrumb"><a href="packages/src.html">src</a></li>
             <li class="phpdocumentor-breadcrumb"><a href="packages/src-types.html">types</a></li>
-            <li class="phpdocumentor-breadcrumb"><a href="packages/src-types-Update.html">Update</a></li>
+            <li class="phpdocumentor-breadcrumb"><a href="packages/src-types-InlineMode.html">InlineMode</a></li>
     </ul>
 
     <article class="phpdocumentor-element -class">
         <h2 class="phpdocumentor-content__title">
-    UpdateInlineQuery
+    InlineQuery
 
-        <span class="phpdocumentor-element__extends">
-        extends <a href="classes/Update.html"><abbr title="\Update">Update</abbr></a>
-    </span>
     
             <div class="phpdocumentor-element__package">
             in package
             <ul class="phpdocumentor-breadcrumbs">
                                     <li class="phpdocumentor-breadcrumb"><a href="packages/src.html">src</a></li>
                                     <li class="phpdocumentor-breadcrumb"><a href="packages/src-types.html">types</a></li>
-                                    <li class="phpdocumentor-breadcrumb"><a href="packages/src-types-Update.html">Update</a></li>
+                                    <li class="phpdocumentor-breadcrumb"><a href="packages/src-types-InlineMode.html">InlineMode</a></li>
                             </ul>
         </div>
     
@@ -103,9 +100,9 @@
     </h2>
 
         <aside class="phpdocumentor-element-found-in">
-    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/Update/UpdateInlineQuery.php"><a href="files/bot-src-types-update-updateinlinequery.html"><abbr title="Bot/src/types/Update/UpdateInlineQuery.php">UpdateInlineQuery.php</abbr></a></abbr>
+    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/InlineMode/InlineQuery.php"><a href="files/bot-src-types-inlinemode-inlinequery.html"><abbr title="Bot/src/types/InlineMode/InlineQuery.php">InlineQuery.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">25</span>
+    <span class="phpdocumentor-element-found-in__line">24</span>
 </aside>
 
         
@@ -121,7 +118,7 @@
                     <span class="phpdocumentor-tag__name">link</span>
                 </dt>
                 <dd class="phpdocumentor-tag-list__definition">
-                                                                                                        <a class="phpdocumentor-tag-link" href="https://core.telegram.org/bots/api#update"> <p>The Update object relative to the InlineQuery.</p>
+                                                                                                        <a class="phpdocumentor-tag-link" href="https://core.telegram.org/bots/api#inlinequery"> <p>The InlineQuery object.</p>
  </a>
                     
                                     </dd>
@@ -139,16 +136,30 @@
 
 <dl class="phpdocumentor-table-of-contents">
                 <dt class="phpdocumentor-table-of-contents__entry -property -private">
-    <a href="classes/UpdateInlineQuery.html#property_id">$id</a>
+    <a href="classes/InlineQuery.html#property_from">$from</a>
     <span>
-                &nbsp;: int            </span>
+                &nbsp;: <a href="classes/User.html"><abbr title="\User">User</abbr></a>            </span>
 </dt>
 <dd></dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -property -private">
-    <a href="classes/UpdateInlineQuery.html#property_inline_query">$inline_query</a>
+    <a href="classes/InlineQuery.html#property_id">$id</a>
     <span>
-                &nbsp;: <a href="classes/InlineQuery.html"><abbr title="\InlineQuery">InlineQuery</abbr></a>            </span>
+                &nbsp;: string            </span>
+</dt>
+<dd></dd>
+
+            <dt class="phpdocumentor-table-of-contents__entry -property -private">
+    <a href="classes/InlineQuery.html#property_offset">$offset</a>
+    <span>
+                &nbsp;: string            </span>
+</dt>
+<dd></dd>
+
+            <dt class="phpdocumentor-table-of-contents__entry -property -private">
+    <a href="classes/InlineQuery.html#property_query">$query</a>
+    <span>
+                &nbsp;: string            </span>
 </dt>
 <dd></dd>
 
@@ -162,8 +173,39 @@
     <section class="phpdocumentor-properties">
         <h3 class="phpdocumentor-elements__header" id="properties">
             Properties
-            <a href="classes/UpdateInlineQuery.html#properties" class="headerlink"><i class="fas fa-link"></i></a>
+            <a href="classes/InlineQuery.html#properties" class="headerlink"><i class="fas fa-link"></i></a>
         </h3>
+                    <article
+        class="
+            phpdocumentor-element
+            -property
+            -private
+                                                        "
+>
+    <h4 class="phpdocumentor-element__name" id="property_from">
+        $from
+        <a href="classes/InlineQuery.html#property_from" class="headerlink"><i class="fas fa-link"></i></a>
+        <span class="phpdocumentor-element__modifiers">
+                                </span>
+    </h4>
+    <aside class="phpdocumentor-element-found-in">
+    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/InlineMode/InlineQuery.php"><a href="files/bot-src-types-inlinemode-inlinequery.html"><abbr title="Bot/src/types/InlineMode/InlineQuery.php">InlineQuery.php</abbr></a></abbr>
+    :
+    <span class="phpdocumentor-element-found-in__line">32</span>
+</aside>
+
+    
+    <code class="phpdocumentor-code phpdocumentor-signature ">
+    <span class="phpdocumentor-signature__visibility">private</span>
+        <span class="phpdocumentor-signature__type"><a href="classes/User.html"><abbr title="\User">User</abbr></a></span>
+    <span class="phpdocumentor-signature__name">$from</span>
+    </code>
+
+        <section class="phpdocumentor-description"></section>
+
+    
+
+</article>
                     <article
         class="
             phpdocumentor-element
@@ -173,20 +215,20 @@
 >
     <h4 class="phpdocumentor-element__name" id="property_id">
         $id
-        <a href="classes/UpdateInlineQuery.html#property_id" class="headerlink"><i class="fas fa-link"></i></a>
+        <a href="classes/InlineQuery.html#property_id" class="headerlink"><i class="fas fa-link"></i></a>
         <span class="phpdocumentor-element__modifiers">
                                 </span>
     </h4>
     <aside class="phpdocumentor-element-found-in">
-    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/Update/UpdateInlineQuery.php"><a href="files/bot-src-types-update-updateinlinequery.html"><abbr title="Bot/src/types/Update/UpdateInlineQuery.php">UpdateInlineQuery.php</abbr></a></abbr>
+    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/InlineMode/InlineQuery.php"><a href="files/bot-src-types-inlinemode-inlinequery.html"><abbr title="Bot/src/types/InlineMode/InlineQuery.php">InlineQuery.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">29</span>
+    <span class="phpdocumentor-element-found-in__line">28</span>
 </aside>
 
     
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">private</span>
-        <span class="phpdocumentor-signature__type">int</span>
+        <span class="phpdocumentor-signature__type">string</span>
     <span class="phpdocumentor-signature__name">$id</span>
     </code>
 
@@ -202,23 +244,54 @@
             -private
                                                         "
 >
-    <h4 class="phpdocumentor-element__name" id="property_inline_query">
-        $inline_query
-        <a href="classes/UpdateInlineQuery.html#property_inline_query" class="headerlink"><i class="fas fa-link"></i></a>
+    <h4 class="phpdocumentor-element__name" id="property_offset">
+        $offset
+        <a href="classes/InlineQuery.html#property_offset" class="headerlink"><i class="fas fa-link"></i></a>
         <span class="phpdocumentor-element__modifiers">
                                 </span>
     </h4>
     <aside class="phpdocumentor-element-found-in">
-    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/Update/UpdateInlineQuery.php"><a href="files/bot-src-types-update-updateinlinequery.html"><abbr title="Bot/src/types/Update/UpdateInlineQuery.php">UpdateInlineQuery.php</abbr></a></abbr>
+    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/InlineMode/InlineQuery.php"><a href="files/bot-src-types-inlinemode-inlinequery.html"><abbr title="Bot/src/types/InlineMode/InlineQuery.php">InlineQuery.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">33</span>
+    <span class="phpdocumentor-element-found-in__line">40</span>
 </aside>
 
     
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">private</span>
-        <span class="phpdocumentor-signature__type"><a href="classes/InlineQuery.html"><abbr title="\InlineQuery">InlineQuery</abbr></a></span>
-    <span class="phpdocumentor-signature__name">$inline_query</span>
+        <span class="phpdocumentor-signature__type">string</span>
+    <span class="phpdocumentor-signature__name">$offset</span>
+    </code>
+
+        <section class="phpdocumentor-description"></section>
+
+    
+
+</article>
+                    <article
+        class="
+            phpdocumentor-element
+            -property
+            -private
+                                                        "
+>
+    <h4 class="phpdocumentor-element__name" id="property_query">
+        $query
+        <a href="classes/InlineQuery.html#property_query" class="headerlink"><i class="fas fa-link"></i></a>
+        <span class="phpdocumentor-element__modifiers">
+                                </span>
+    </h4>
+    <aside class="phpdocumentor-element-found-in">
+    <abbr class="phpdocumentor-element-found-in__file" title="Bot/src/types/InlineMode/InlineQuery.php"><a href="files/bot-src-types-inlinemode-inlinequery.html"><abbr title="Bot/src/types/InlineMode/InlineQuery.php">InlineQuery.php</abbr></a></abbr>
+    :
+    <span class="phpdocumentor-element-found-in__line">36</span>
+</aside>
+
+    
+    <code class="phpdocumentor-code phpdocumentor-signature ">
+    <span class="phpdocumentor-signature__visibility">private</span>
+        <span class="phpdocumentor-signature__type">string</span>
+    <span class="phpdocumentor-signature__name">$query</span>
     </code>
 
         <section class="phpdocumentor-description"></section>
@@ -243,7 +316,7 @@
 </section>
             </div>
         </div>
-        <a href="classes/UpdateInlineQuery.html#top" class="phpdocumentor-back-to-top"><i class="fas fa-chevron-circle-up"></i></a>
+        <a href="classes/InlineQuery.html#top" class="phpdocumentor-back-to-top"><i class="fas fa-chevron-circle-up"></i></a>
 
     </main>
 

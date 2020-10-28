@@ -116,6 +116,31 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/CallbackQuery.html#property_game_short_name"
         },                {
+            "fqsen": "\\InlineQuery",
+            "name": "InlineQuery",
+            "summary": "",
+            "url": "classes/InlineQuery.html"
+        },                {
+            "fqsen": "\\InlineQuery\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/InlineQuery.html#property_id"
+        },                {
+            "fqsen": "\\InlineQuery\u003A\u003A\u0024from",
+            "name": "from",
+            "summary": "",
+            "url": "classes/InlineQuery.html#property_from"
+        },                {
+            "fqsen": "\\InlineQuery\u003A\u003A\u0024query",
+            "name": "query",
+            "summary": "",
+            "url": "classes/InlineQuery.html#property_query"
+        },                {
+            "fqsen": "\\InlineQuery\u003A\u003A\u0024offset",
+            "name": "offset",
+            "summary": "",
+            "url": "classes/InlineQuery.html#property_offset"
+        },                {
             "fqsen": "\\Message",
             "name": "Message",
             "summary": "",

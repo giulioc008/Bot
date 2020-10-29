@@ -6,459 +6,469 @@ Search.appendIndex(
             "summary": "Execute\u0020an\u0020HTTP\u0028S\u0029\u0020request.",
             "url": "namespaces/default.html#function_request"
         },                {
-            "fqsen": "\\Logger",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger",
             "name": "Logger",
             "summary": "",
-            "url": "classes/Logger.html"
+            "url": "classes/giulioc008-BotAPI-Logger.html"
         },                {
-            "fqsen": "\\Logger\u003A\u003Alogger\u0028\u0029",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003Alogger\u0028\u0029",
             "name": "logger",
             "summary": "Log\u0020a\u0020message.",
-            "url": "classes/Logger.html#method_logger"
+            "url": "classes/giulioc008-BotAPI-Logger.html#method_logger"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_FATAL_ERROR",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_FATAL_ERROR",
             "name": "LEVEL_FATAL_ERROR",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_FATAL_ERROR"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_FATAL_ERROR"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_ERROR",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_ERROR",
             "name": "LEVEL_ERROR",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_ERROR"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_ERROR"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_WARNING",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_WARNING",
             "name": "LEVEL_WARNING",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_WARNING"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_WARNING"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_NOTICE",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_NOTICE",
             "name": "LEVEL_NOTICE",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_NOTICE"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_NOTICE"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_VERBOSE",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_VERBOSE",
             "name": "LEVEL_VERBOSE",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_VERBOSE"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_VERBOSE"
         },                {
-            "fqsen": "\\Logger\u003A\u003ALEVEL_ULTRA_VERBOSE",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003ALEVEL_ULTRA_VERBOSE",
             "name": "LEVEL_ULTRA_VERBOSE",
             "summary": "",
-            "url": "classes/Logger.html#constant_LEVEL_ULTRA_VERBOSE"
+            "url": "classes/giulioc008-BotAPI-Logger.html#constant_LEVEL_ULTRA_VERBOSE"
         },                {
-            "fqsen": "\\Logger\u003A\u003A\u0024level",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003A\u0024level",
             "name": "level",
             "summary": "",
-            "url": "classes/Logger.html#property_level"
+            "url": "classes/giulioc008-BotAPI-Logger.html#property_level"
         },                {
-            "fqsen": "\\Logger\u003A\u003A\u0024path",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003A\u0024path",
             "name": "path",
             "summary": "",
-            "url": "classes/Logger.html#property_path"
+            "url": "classes/giulioc008-BotAPI-Logger.html#property_path"
         },                {
-            "fqsen": "\\Logger\u003A\u003A\u0024output",
+            "fqsen": "\\giulioc008\\BotAPI\\Logger\u003A\u003A\u0024output",
             "name": "output",
             "summary": "",
-            "url": "classes/Logger.html#property_output"
+            "url": "classes/giulioc008-BotAPI-Logger.html#property_output"
         },                {
-            "fqsen": "\\BotCommand",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\BotCommand",
             "name": "BotCommand",
             "summary": "",
-            "url": "classes/BotCommand.html"
+            "url": "classes/giulioc008-BotAPI-types-BotCommand.html"
         },                {
-            "fqsen": "\\BotCommand\u003A\u003A\u0024command",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\BotCommand\u003A\u003A\u0024command",
             "name": "command",
             "summary": "",
-            "url": "classes/BotCommand.html#property_command"
+            "url": "classes/giulioc008-BotAPI-types-BotCommand.html#property_command"
         },                {
-            "fqsen": "\\BotCommand\u003A\u003A\u0024description",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\BotCommand\u003A\u003A\u0024description",
             "name": "description",
             "summary": "",
-            "url": "classes/BotCommand.html#property_description"
+            "url": "classes/giulioc008-BotAPI-types-BotCommand.html#property_description"
         },                {
-            "fqsen": "\\CallbackQuery",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery",
             "name": "CallbackQuery",
             "summary": "",
-            "url": "classes/CallbackQuery.html"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_id"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024from",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024from",
             "name": "from",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_from"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_from"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024chat_instance",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024chat_instance",
             "name": "chat_instance",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_chat_instance"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_chat_instance"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024message",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024message",
             "name": "message",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_message"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_message"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024inline_message_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024inline_message_id",
             "name": "inline_message_id",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_inline_message_id"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_inline_message_id"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024data",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024data",
             "name": "data",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_data"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_data"
         },                {
-            "fqsen": "\\CallbackQuery\u003A\u003A\u0024game_short_name",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\CallbackQuery\u003A\u003A\u0024game_short_name",
             "name": "game_short_name",
             "summary": "",
-            "url": "classes/CallbackQuery.html#property_game_short_name"
+            "url": "classes/giulioc008-BotAPI-types-CallbackQuery.html#property_game_short_name"
         },                {
-            "fqsen": "\\InlineQuery",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQuery",
             "name": "InlineQuery",
             "summary": "",
-            "url": "classes/InlineQuery.html"
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html"
         },                {
-            "fqsen": "\\InlineQuery\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQuery\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/InlineQuery.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html#property_id"
         },                {
-            "fqsen": "\\InlineQuery\u003A\u003A\u0024from",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQuery\u003A\u003A\u0024from",
             "name": "from",
             "summary": "",
-            "url": "classes/InlineQuery.html#property_from"
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html#property_from"
         },                {
-            "fqsen": "\\InlineQuery\u003A\u003A\u0024query",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQuery\u003A\u003A\u0024query",
             "name": "query",
             "summary": "",
-            "url": "classes/InlineQuery.html#property_query"
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html#property_query"
         },                {
-            "fqsen": "\\InlineQuery\u003A\u003A\u0024offset",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQuery\u003A\u003A\u0024offset",
             "name": "offset",
             "summary": "",
-            "url": "classes/InlineQuery.html#property_offset"
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html#property_offset"
         },                {
-            "fqsen": "\\Message",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message",
             "name": "Message",
             "summary": "",
-            "url": "classes/Message.html"
+            "url": "classes/giulioc008-BotAPI-types-Message.html"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024message_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024message_id",
             "name": "message_id",
             "summary": "",
-            "url": "classes/Message.html#property_message_id"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_message_id"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024date",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024date",
             "name": "date",
             "summary": "",
-            "url": "classes/Message.html#property_date"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_date"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024chat",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024chat",
             "name": "chat",
             "summary": "",
-            "url": "classes/Message.html#property_chat"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_chat"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024from",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024from",
             "name": "from",
             "summary": "",
-            "url": "classes/Message.html#property_from"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_from"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_from",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_from",
             "name": "forward_from",
             "summary": "",
-            "url": "classes/Message.html#property_forward_from"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_from"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_from_chat",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_from_chat",
             "name": "forward_from_chat",
             "summary": "",
-            "url": "classes/Message.html#property_forward_from_chat"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_from_chat"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_from_message_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_from_message_id",
             "name": "forward_from_message_id",
             "summary": "",
-            "url": "classes/Message.html#property_forward_from_message_id"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_from_message_id"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_signature",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_signature",
             "name": "forward_signature",
             "summary": "",
-            "url": "classes/Message.html#property_forward_signature"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_signature"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_sender_name",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_sender_name",
             "name": "forward_sender_name",
             "summary": "",
-            "url": "classes/Message.html#property_forward_sender_name"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_sender_name"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024forward_date",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024forward_date",
             "name": "forward_date",
             "summary": "",
-            "url": "classes/Message.html#property_forward_date"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_forward_date"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024reply_to_message",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024reply_to_message",
             "name": "reply_to_message",
             "summary": "",
-            "url": "classes/Message.html#property_reply_to_message"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_reply_to_message"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024via_bot",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024via_bot",
             "name": "via_bot",
             "summary": "",
-            "url": "classes/Message.html#property_via_bot"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_via_bot"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024edit_date",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024edit_date",
             "name": "edit_date",
             "summary": "",
-            "url": "classes/Message.html#property_edit_date"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_edit_date"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024media_group_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024media_group_id",
             "name": "media_group_id",
             "summary": "",
-            "url": "classes/Message.html#property_media_group_id"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_media_group_id"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024author_signature",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024author_signature",
             "name": "author_signature",
             "summary": "",
-            "url": "classes/Message.html#property_author_signature"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_author_signature"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024text",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024text",
             "name": "text",
             "summary": "",
-            "url": "classes/Message.html#property_text"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_text"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024animation",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024animation",
             "name": "animation",
             "summary": "",
-            "url": "classes/Message.html#property_animation"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_animation"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024audio",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024audio",
             "name": "audio",
             "summary": "",
-            "url": "classes/Message.html#property_audio"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_audio"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024document",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024document",
             "name": "document",
             "summary": "",
-            "url": "classes/Message.html#property_document"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_document"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024photo",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024photo",
             "name": "photo",
             "summary": "",
-            "url": "classes/Message.html#property_photo"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_photo"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024video",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024video",
             "name": "video",
             "summary": "",
-            "url": "classes/Message.html#property_video"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_video"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024voice",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024voice",
             "name": "voice",
             "summary": "",
-            "url": "classes/Message.html#property_voice"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_voice"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024caption",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024caption",
             "name": "caption",
             "summary": "",
-            "url": "classes/Message.html#property_caption"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_caption"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024new_chat_members",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024new_chat_members",
             "name": "new_chat_members",
             "summary": "",
-            "url": "classes/Message.html#property_new_chat_members"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_new_chat_members"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024left_chat_member",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024left_chat_member",
             "name": "left_chat_member",
             "summary": "",
-            "url": "classes/Message.html#property_left_chat_member"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_left_chat_member"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024new_chat_title",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024new_chat_title",
             "name": "new_chat_title",
             "summary": "",
-            "url": "classes/Message.html#property_new_chat_title"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_new_chat_title"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024new_chat_photo",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024new_chat_photo",
             "name": "new_chat_photo",
             "summary": "",
-            "url": "classes/Message.html#property_new_chat_photo"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_new_chat_photo"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024delete_chat_photo",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024delete_chat_photo",
             "name": "delete_chat_photo",
             "summary": "",
-            "url": "classes/Message.html#property_delete_chat_photo"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_delete_chat_photo"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024group_chat_created",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024group_chat_created",
             "name": "group_chat_created",
             "summary": "",
-            "url": "classes/Message.html#property_group_chat_created"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_group_chat_created"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024migrate_to_chat_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024migrate_to_chat_id",
             "name": "migrate_to_chat_id",
             "summary": "",
-            "url": "classes/Message.html#property_migrate_to_chat_id"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_migrate_to_chat_id"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024migrate_from_chat_id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024migrate_from_chat_id",
             "name": "migrate_from_chat_id",
             "summary": "",
-            "url": "classes/Message.html#property_migrate_from_chat_id"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_migrate_from_chat_id"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024pinned_message",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024pinned_message",
             "name": "pinned_message",
             "summary": "",
-            "url": "classes/Message.html#property_pinned_message"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_pinned_message"
         },                {
-            "fqsen": "\\Message\u003A\u003A\u0024reply_markup",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Message\u003A\u003A\u0024reply_markup",
             "name": "reply_markup",
             "summary": "",
-            "url": "classes/Message.html#property_reply_markup"
+            "url": "classes/giulioc008-BotAPI-types-Message.html#property_reply_markup"
         },                {
-            "fqsen": "\\User",
-            "name": "User",
-            "summary": "",
-            "url": "classes/User.html"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024id",
-            "name": "id",
-            "summary": "",
-            "url": "classes/User.html#property_id"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024is_bot",
-            "name": "is_bot",
-            "summary": "",
-            "url": "classes/User.html#property_is_bot"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024first_name",
-            "name": "first_name",
-            "summary": "",
-            "url": "classes/User.html#property_first_name"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024last_name",
-            "name": "last_name",
-            "summary": "",
-            "url": "classes/User.html#property_last_name"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024username",
-            "name": "username",
-            "summary": "",
-            "url": "classes/User.html#property_username"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024language_code",
-            "name": "language_code",
-            "summary": "",
-            "url": "classes/User.html#property_language_code"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024can_join_groups",
-            "name": "can_join_groups",
-            "summary": "",
-            "url": "classes/User.html#property_can_join_groups"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024can_read_all_group_messages",
-            "name": "can_read_all_group_messages",
-            "summary": "",
-            "url": "classes/User.html#property_can_read_all_group_messages"
-        },                {
-            "fqsen": "\\User\u003A\u003A\u0024supports_inline_queries",
-            "name": "supports_inline_queries",
-            "summary": "",
-            "url": "classes/User.html#property_supports_inline_queries"
-        },                {
-            "fqsen": "\\Update",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\Update",
             "name": "Update",
             "summary": "",
-            "url": "classes/Update.html"
+            "url": "classes/giulioc008-BotAPI-types-Update-Update.html"
         },                {
-            "fqsen": "\\UpdateNewMessage",
-            "name": "UpdateNewMessage",
-            "summary": "",
-            "url": "classes/UpdateNewMessage.html"
-        },                {
-            "fqsen": "\\UpdateNewMessage\u003A\u003A\u0024id",
-            "name": "id",
-            "summary": "",
-            "url": "classes/UpdateNewMessage.html#property_id"
-        },                {
-            "fqsen": "\\UpdateNewMessage\u003A\u003A\u0024message",
-            "name": "message",
-            "summary": "",
-            "url": "classes/UpdateNewMessage.html#property_message"
-        },                {
-            "fqsen": "\\UpdateCallbackQuery",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateCallbackQuery",
             "name": "UpdateCallbackQuery",
             "summary": "",
-            "url": "classes/UpdateCallbackQuery.html"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateCallbackQuery.html"
         },                {
-            "fqsen": "\\UpdateCallbackQuery\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateCallbackQuery\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/UpdateCallbackQuery.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateCallbackQuery.html#property_id"
         },                {
-            "fqsen": "\\UpdateCallbackQuery\u003A\u003A\u0024callback_query",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateCallbackQuery\u003A\u003A\u0024callback_query",
             "name": "callback_query",
             "summary": "",
-            "url": "classes/UpdateCallbackQuery.html#property_callback_query"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateCallbackQuery.html#property_callback_query"
         },                {
-            "fqsen": "\\UpdateEditChannelMessage",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditChannelMessage",
             "name": "UpdateEditChannelMessage",
             "summary": "",
-            "url": "classes/UpdateEditChannelMessage.html"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditChannelMessage.html"
         },                {
-            "fqsen": "\\UpdateEditChannelMessage\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditChannelMessage\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/UpdateEditChannelMessage.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditChannelMessage.html#property_id"
         },                {
-            "fqsen": "\\UpdateEditChannelMessage\u003A\u003A\u0024edited_channel_post",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditChannelMessage\u003A\u003A\u0024edited_channel_post",
             "name": "edited_channel_post",
             "summary": "",
-            "url": "classes/UpdateEditChannelMessage.html#property_edited_channel_post"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditChannelMessage.html#property_edited_channel_post"
         },                {
-            "fqsen": "\\UpdateEditMessage",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditMessage",
             "name": "UpdateEditMessage",
             "summary": "",
-            "url": "classes/UpdateEditMessage.html"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditMessage.html"
         },                {
-            "fqsen": "\\UpdateEditMessage\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditMessage\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/UpdateEditMessage.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditMessage.html#property_id"
         },                {
-            "fqsen": "\\UpdateEditMessage\u003A\u003A\u0024edited_message",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateEditMessage\u003A\u003A\u0024edited_message",
             "name": "edited_message",
             "summary": "",
-            "url": "classes/UpdateEditMessage.html#property_edited_message"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditMessage.html#property_edited_message"
         },                {
-            "fqsen": "\\UpdateInlineQuery",
-            "name": "UpdateInlineQuery",
-            "summary": "",
-            "url": "classes/UpdateInlineQuery.html"
-        },                {
-            "fqsen": "\\UpdateInlineQuery\u003A\u003A\u0024id",
-            "name": "id",
-            "summary": "",
-            "url": "classes/UpdateInlineQuery.html#property_id"
-        },                {
-            "fqsen": "\\UpdateInlineQuery\u003A\u003A\u0024inline_query",
-            "name": "inline_query",
-            "summary": "",
-            "url": "classes/UpdateInlineQuery.html#property_inline_query"
-        },                {
-            "fqsen": "\\UpdateNewChannelMessage",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewChannelMessage",
             "name": "UpdateNewChannelMessage",
             "summary": "",
-            "url": "classes/UpdateNewChannelMessage.html"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewChannelMessage.html"
         },                {
-            "fqsen": "\\UpdateNewChannelMessage\u003A\u003A\u0024id",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewChannelMessage\u003A\u003A\u0024id",
             "name": "id",
             "summary": "",
-            "url": "classes/UpdateNewChannelMessage.html#property_id"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewChannelMessage.html#property_id"
         },                {
-            "fqsen": "\\UpdateNewChannelMessage\u003A\u003A\u0024channel_post",
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewChannelMessage\u003A\u003A\u0024channel_post",
             "name": "channel_post",
             "summary": "",
-            "url": "classes/UpdateNewChannelMessage.html#property_channel_post"
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewChannelMessage.html#property_channel_post"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewMessage",
+            "name": "UpdateNewMessage",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewMessage.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewMessage\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewMessage.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewMessage\u003A\u003A\u0024message",
+            "name": "message",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateNewMessage.html#property_message"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User",
+            "name": "User",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024is_bot",
+            "name": "is_bot",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_is_bot"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024first_name",
+            "name": "first_name",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_first_name"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024last_name",
+            "name": "last_name",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_last_name"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024username",
+            "name": "username",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_username"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024language_code",
+            "name": "language_code",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_language_code"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024can_join_groups",
+            "name": "can_join_groups",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_can_join_groups"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024can_read_all_group_messages",
+            "name": "can_read_all_group_messages",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_can_read_all_group_messages"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\User\u003A\u003A\u0024supports_inline_queries",
+            "name": "supports_inline_queries",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-User.html#property_supports_inline_queries"
         },                {
             "fqsen": "\\",
             "name": "\\",
             "summary": "",
             "url": "namespaces/default.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI",
+            "name": "BotAPI",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi.html"
+        },                {
+            "fqsen": "\\giulioc008",
+            "name": "giulioc008",
+            "summary": "",
+            "url": "namespaces/giulioc008.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types",
+            "name": "types",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi-types.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode",
+            "name": "InlineMode",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi-types-inlinemode.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update",
+            "name": "Update",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi-types-update.html"
         }            ]
 );

@@ -17,7 +17,7 @@ namespace giulioc008\BotAPI\types\Update;
 
 // Adding the necessary classes
 use giulioc008\BotAPI\types\Update\Update;
-use giulioc008\BotAPI\types\InlineMode/InlineQuery;
+use giulioc008\BotAPI\types\InlineMode\InlineQuery;
 
 /**
  * @link https://core.telegram.org/bots/api#update The Update object relative to the InlineQuery.
@@ -26,7 +26,7 @@ use giulioc008\BotAPI\types\InlineMode/InlineQuery;
  */
 class UpdateInlineQuery extends Update {
 	/**
-	* @var int $id The update's unique identifier.
+	* @var int $id The id of the update.
 	*/
 	private int $id;
 	/**
@@ -37,7 +37,7 @@ class UpdateInlineQuery extends Update {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $inline_query			InlineQuery	New incoming inline query.
 	 *
 	 * @return void
@@ -79,7 +79,7 @@ class UpdateInlineQuery extends Update {
 	 *
 	 * @uses UpdateInlineQuery::__construct to create the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $inline_query			InlineQuery	New incoming inline query.
 	 *
 	 * @return mixed

@@ -141,6 +141,181 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQuery.html#property_offset"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle",
+            "name": "InlineQueryResultArticle",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_input_message_content"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024url",
+            "name": "url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024hide_url",
+            "name": "hide_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_hide_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024description",
+            "name": "description",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_description"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024thumb_width",
+            "name": "thumb_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_thumb_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultArticle\u003A\u003A\u0024thumb_height",
+            "name": "thumb_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultArticle.html#property_thumb_height"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio",
+            "name": "InlineQueryResultAudio",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024audio_url",
+            "name": "audio_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_audio_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_input_message_content"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024performer",
+            "name": "performer",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_performer"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024audio_duration",
+            "name": "audio_duration",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_audio_duration"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument",
+            "name": "InlineQueryResultDocument",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif",
+            "name": "InlineQueryResultGif",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif",
+            "name": "InlineQueryResultMpeg4Gif",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice",
+            "name": "InlineQueryResultVoice",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_type"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Message",
             "name": "Message",
             "summary": "",
@@ -361,6 +536,21 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-Update-UpdateEditMessage.html#property_edited_message"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateInlineQuery",
+            "name": "UpdateInlineQuery",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateInlineQuery.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateInlineQuery\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateInlineQuery.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateInlineQuery\u003A\u003A\u0024inline_query",
+            "name": "inline_query",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-Update-UpdateInlineQuery.html#property_inline_query"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Update\\UpdateNewChannelMessage",
             "name": "UpdateNewChannelMessage",
             "summary": "",
@@ -441,6 +631,41 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-User.html#property_supports_inline_queries"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResult",
+            "name": "InlineQueryResult",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResult.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto",
+            "name": "InlineQueryResultPhoto",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo",
+            "name": "InlineQueryResultVideo",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024id",
+            "name": "id",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_id"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024type",
+            "name": "type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_type"
+        },                {
             "fqsen": "\\",
             "name": "\\",
             "summary": "",
@@ -465,6 +690,11 @@ Search.appendIndex(
             "name": "InlineMode",
             "summary": "",
             "url": "namespaces/giulioc008-botapi-types-inlinemode.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult",
+            "name": "InlineQueryResult",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi-types-inlinemode-inlinequeryresult.html"
         },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Update",
             "name": "Update",

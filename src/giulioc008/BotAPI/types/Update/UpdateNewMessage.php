@@ -26,7 +26,7 @@ use giulioc008\BotAPI\types\Message;
  */
 class UpdateNewMessage extends Update {
 	/**
-	* @var int $id The update's unique identifier.
+	* @var int $id The id of the update.
 	*/
 	private int $id;
 	/**
@@ -37,7 +37,7 @@ class UpdateNewMessage extends Update {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $message				Message		New incoming message of any kind.
 	 *
 	 * @return void
@@ -80,7 +80,7 @@ class UpdateNewMessage extends Update {
 	 *
 	 * @uses UpdateNewMessage::__construct to create the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $message				Message		New incoming message of any kind.
 	 *
 	 * @return mixed

@@ -26,7 +26,7 @@ use giulioc008\BotAPI\types\Message;
  */
 class UpdateEditChannelMessage extends Update {
 	/**
-	* @var int $id The update's unique identifier.
+	* @var int $id The id of the update.
 	*/
 	private int $id;
 	/**
@@ -37,7 +37,7 @@ class UpdateEditChannelMessage extends Update {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $edited_channel_post	Message		New version of a channel post that is known to the bot and was edited.
 	 *
 	 * @return void
@@ -80,7 +80,7 @@ class UpdateEditChannelMessage extends Update {
 	 *
 	 * @uses UpdateEditChannelMessage::__construct to create the class.
 	 *
-	 * @param $id					int			The update's unique identifier.
+	 * @param $id					int			The id of the update.
 	 * @param $edited_channel_post	Message		New version of a channel post that is known to the bot and was edited.
 	 *
 	 * @return mixed

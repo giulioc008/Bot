@@ -26,7 +26,7 @@ use giulioc008\BotAPI\types\CallbackQuery;
  */
 class UpdateCallbackQuery extends Update {
 	/**
-	* @var int $id The update's unique identifier.
+	* @var int $id The id of the update.
 	*/
 	private int $id;
 	/**
@@ -37,7 +37,7 @@ class UpdateCallbackQuery extends Update {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id					int				The update's unique identifier.
+	 * @param $id					int				The id of the update.
 	 * @param $callback_query		CallbackQuery	New incoming callback query.
 	 *
 	 * @return void
@@ -80,7 +80,7 @@ class UpdateCallbackQuery extends Update {
 	 *
 	 * @uses UpdateCallbackQuery::__construct to create the class.
 	 *
-	 * @param $id					int				The update's unique identifier.
+	 * @param $id					int				The id of the update.
 	 * @param $callback_query		CallbackQuery	New incoming callback query.
 	 *
 	 * @return mixed

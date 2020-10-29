@@ -17,6 +17,7 @@ namespace giulioc008\BotAPI\types;
 
 // Adding the necessary classes
 use giulioc008\BotAPI\types\Chat\Chat;
+use giulioc008\BotAPI\types\Keyboard\InlineKeyboardMarkup;
 use giulioc008\BotAPI\types\Media\Animation;
 use giulioc008\BotAPI\types\Media\Audio;
 use giulioc008\BotAPI\types\Media\Document;

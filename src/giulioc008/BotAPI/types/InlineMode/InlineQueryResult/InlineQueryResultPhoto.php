@@ -1,6 +1,6 @@
 <?php
 /**
- * This file contains the source code of the InlineQueryResultDocument object.
+ * This file contains the source code of the InlineQueryResultPhoto object.
  * No libraries are used in this project.
  *
  * @author		Giulio Coa
@@ -21,11 +21,11 @@ use giulioc008\BotAPI\types\InlineMode\InputMessageContent\InputMessageContent;
 use giulioc008\BotAPI\types\Keyboard\InlineKeyboardMarkup;
 
 /**
- * @link https://core.telegram.org/bots/api#inlinequeryresultdocument The InlineQueryResultDocument object.
+ * @link https://core.telegram.org/bots/api#inlinequeryresultphoto The InlineQueryResultPhoto object.
  *
  * @package giulioc008\BotAPI\types\InlineMode\InlineQueryResult
  */
-class InlineQueryResultDocument extends InlineQueryResult {
+class InlineQueryResultPhoto extends InlineQueryResult {
 	/**
 	* @var int $id The id of the result.
 	*/
@@ -41,13 +41,13 @@ class InlineQueryResultDocument extends InlineQueryResult {
 	 * @param $id	int		The result's unique identifier.
 	 * @param $type string	The type of the result.
 	 *
-	 * @throws InvalidArgumentException If the type of the result isn't 'document'.
+	 * @throws InvalidArgumentException If the type of the result isn't 'photo'.
 	 *
 	 * @return void
 	 */
 	public function __construct(int $id, string $type) {
 		// Checking if the type of the result respect the constraints
-		if ($type !== 'document') {
+		if ($type !== 'photo') {
 			throw new InvalidArgumentException('The result isn&apos;t of the correct type.');
 		}
 
@@ -86,12 +86,12 @@ class InlineQueryResultDocument extends InlineQueryResult {
 	/**
 	 * @internal The constructor of the class when is used like a function.
 	 *
-	 * @uses InlineQueryResultDocument::__construct to create the class.
+	 * @uses InlineQueryResultPhoto::__construct to create the class.
 	 *
 	 * @param $id	int		The result's unique identifier.
 	 * @param $type string	The type of the result.
 	 *
-	 * @throws InvalidArgumentException If the type of the result isn't 'document'.
+	 * @throws InvalidArgumentException If the type of the result isn't 'photo'.
 	 *
 	 * @return mixed
 	 */
@@ -146,7 +146,7 @@ class InlineQueryResultDocument extends InlineQueryResult {
 				$this -> id = $value;
 			case 'type':
 				// Checking if the type of the result respect the constraints
-				if ($value !== 'document') {
+				if ($value !== 'photo') {
 					throw new InvalidArgumentException('The result isn&apos;t of the correct type.');
 				}
 

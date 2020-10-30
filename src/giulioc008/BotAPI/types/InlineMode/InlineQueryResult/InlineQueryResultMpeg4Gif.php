@@ -38,8 +38,8 @@ class InlineQueryResultMpeg4Gif extends InlineQueryResult {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'mpeg4_gif'.
 	 *
@@ -88,8 +88,8 @@ class InlineQueryResultMpeg4Gif extends InlineQueryResult {
 	 *
 	 * @uses InlineQueryResultMpeg4Gif::__construct to create the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'mpeg4_gif'.
 	 *

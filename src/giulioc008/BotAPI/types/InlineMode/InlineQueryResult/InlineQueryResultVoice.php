@@ -38,8 +38,8 @@ class InlineQueryResultVoice extends InlineQueryResult {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'voice'.
 	 *
@@ -88,8 +88,8 @@ class InlineQueryResultVoice extends InlineQueryResult {
 	 *
 	 * @uses InlineQueryResultVoice::__construct to create the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'voice'.
 	 *

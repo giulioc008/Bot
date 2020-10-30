@@ -34,12 +34,17 @@ class InlineQueryResultDocument extends InlineQueryResult {
 	* @var string $type The type of the result.
 	*/
 	private string $type;
+	/**
+	 * @var string $title The title of the result.
+	 */
+	private string $title;
 
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The result's unique identifier.
+	 * @param $type						string					The type of the result.
+	 * @param $title					string					The title of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'document'.
 	 *
@@ -88,8 +93,9 @@ class InlineQueryResultDocument extends InlineQueryResult {
 	 *
 	 * @uses InlineQueryResultDocument::__construct to create the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The result's unique identifier.
+	 * @param $type						string					The type of the result.
+	 * @param $title					string					The title of the result.
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'document'.
 	 *

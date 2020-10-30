@@ -70,7 +70,7 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id						int						The result's unique identifier.
+	 * @param $id						int						The id of the result.
 	 * @param $type						string					The type of the result.
 	 * @param $title					string					The title of the result.
 	 * @param $audio_url				string					The URL of the audio file.
@@ -170,7 +170,7 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	 *
 	 * @uses InlineQueryResultAudio::__construct to create the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
+	 * @param $id	int		The id of the result.
 	 * @param $type string	The type of the result.
 	 * @param $title					string					The title of the result.
 	 * @param $audio_url				string					The URL of the audio file.

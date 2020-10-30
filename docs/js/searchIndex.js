@@ -271,6 +271,11 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_type"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_title"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif",
             "name": "InlineQueryResultGif",
             "summary": "",

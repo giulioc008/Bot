@@ -74,7 +74,7 @@ class InlineQueryResultArticle extends InlineQueryResult {
 	/**
 	 * @internal The constructor of the class.
 	 *
-	 * @param $id						int						The result's unique identifier.
+	 * @param $id						int						The id of the result.
 	 * @param $type 					string					The type of the result.
 	 * @param $title					string					The title of the result.
 	 * @param $input_message_content	InputMessageContent		The content of the message to be sent.
@@ -169,7 +169,7 @@ class InlineQueryResultArticle extends InlineQueryResult {
 	 *
 	 * @uses InlineQueryResultArticle::__construct to create the class.
 	 *
-	 * @param $id	int		The result's unique identifier.
+	 * @param $id	int		The id of the result.
 	 * @param $type string	The type of the result.
 	 * @param $title					string					The title of the result.
 	 * @param $input_message_content	InputMessageContent		The content of the message to be sent.

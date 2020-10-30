@@ -51,14 +51,12 @@ class BotCommand {
 			throw new InvalidArgumentException('The name of the command is empty.');
 		} else if (strlen($command) > 32) {
 			throw new InvalidArgumentException('The name of the command is more length of 32 characters.');
-		}
-
 		/**
 		 * Checking if the description of the command respect the constraints
 		 *
 		 * strlen() return the length of the string
 		 */
-		if (strlen($description) < 3) {
+		} else if (strlen($description) < 3) {
 			throw new InvalidArgumentException('The description of the command is less length of 3 characters.');
 		} else if (strlen($description) > 256) {
 			throw new InvalidArgumentException('The description of the command is more length of 256 characters.');
@@ -158,10 +156,10 @@ class BotCommand {
 		switch ($name) {
 			case 'command':
 				/**
-				* Checking if the name of the command respect the constraints
-				*
-				* strlen() return the length of the string
-				*/
+				 * Checking if the name of the command respect the constraints
+				 *
+				 * strlen() return the length of the string
+				 */
 				if (strlen($command) < 1) {
 					throw new InvalidArgumentException('The name of the command is empty.');
 				} else if (strlen($command) > 32) {
@@ -171,10 +169,10 @@ class BotCommand {
 				$this -> command = $value;
 			case 'description':
 				/**
-				* Checking if the description of the command respect the constraints
-				*
-				* strlen() return the length of the string
-				*/
+				 * Checking if the description of the command respect the constraints
+				 *
+				 * strlen() return the length of the string
+				 */
 				if (strlen($description) < 3) {
 					throw new InvalidArgumentException('The description of the command is less length of 3 characters.');
 				} else if (strlen($description) > 256) {

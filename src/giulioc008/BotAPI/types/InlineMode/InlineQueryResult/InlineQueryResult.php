@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace giulioc008\BotAPI\types\InlineMode\InlineQueryResult;
 
+// Adding the necessary classes
+use giulioc008\BotAPI\types\Keyboard\InlineKeyboardMarkup;
+
 /**
  * @link https://core.telegram.org/bots/api#inlinequeryresult The InlineQueryResult object.
  *
@@ -24,14 +27,15 @@ abstract class InlineQueryResult {
 	/**
 	 * @internal The constructor of the abstract class.
 	 *
-	 * @param $id	int		The id of the result.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
+	 * @param $reply_markup				?InlineKeyboardMarkup	The InlineKeyboard attached to the message.
 	 *
 	 * @throws InvalidArgumentException If the type of the result don't respect its constraints.
 	 *
 	 * @return void
 	 */
-	abstract public function __construct(int $id, string $type);
+	abstract public function __construct(int $id, string $type, ?InlineKeyboardMarkup $reply_markup);
 
 	/**
 	 * @internal Return an array version of the object.
@@ -52,14 +56,15 @@ abstract class InlineQueryResult {
 	/**
 	 * @internal The constructor of the class when is used like a function.
 	 *
-	 * @param $id	int		The id of the result.
-	 * @param $type string	The type of the result.
+	 * @param $id						int						The id of the result.
+	 * @param $type						string					The type of the result.
+	 * @param $reply_markup				?InlineKeyboardMarkup	The InlineKeyboard attached to the message.
 	 *
 	 * @throws InvalidArgumentException If the type of the result don't respect its constraints.
 	 *
 	 * @return mixed
 	 */
-	abstract public function __invoke(int $id, string $type);
+	abstract public function __invoke(int $id, string $type, ?InlineKeyboardMarkup $reply_markup);
 
 	/**
 	 * @internal Determine if the object is empty or not.

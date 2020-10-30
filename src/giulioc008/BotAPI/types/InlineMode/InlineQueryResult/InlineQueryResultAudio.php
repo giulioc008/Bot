@@ -43,6 +43,10 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	 */
 	private string $audio_url;
 	/**
+	 * @var string $parse_mode The parse mode of the message.
+	 */
+	private string $parse_mode;
+	/**
 	 * @var ?InputMessageContent $input_message_content The content of the message to be sent instead of the audio.
 	 */
 	private ?InputMessageContent $input_message_content;
@@ -54,10 +58,6 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	 * @var ?string $caption The caption of the result.
 	 */
 	private ?string $caption;
-	/**
-	 * @var ?string $parse_mode The parse mode of the message.
-	 */
-	private ?string $parse_mode;
 	/**
 	 * @var ?string $performer The performer of the audio file.
 	 */
@@ -83,6 +83,7 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'audio'.
 	 * @throws InvalidArgumentException If the caption of the result is more length of 1024 characters.
+	 * @throws InvalidArgumentException If the parse mode of the message isn't a supported parse mode.
 	 *
 	 * @return void
 	 */
@@ -90,25 +91,50 @@ class InlineQueryResultAudio extends InlineQueryResult {
 		// Checking if the type of the result respect the constraints
 		if ($type !== 'audio') {
 			throw new InvalidArgumentException('The result isn&apos;t of the correct type.');
-		}
-
 		/**
 		 * Checking if the caption of the result respect the constraints
 		 *
 		 * strlen() return the length of the string
 		 */
-		if (strlen($caption) > 1024) {
+		} else if (strlen($caption) > 1024) {
 			throw new InvalidArgumentException('The caption of the result is more length of 1024 characters.');
+		/**
+		 * Check if the parse mode of the message isn't setted
+		 *
+		 * empty() check if the argument is empty
+		 * 	''
+		 * 	""
+		 * 	'0'
+		 * 	"0"
+		 * 	0
+		 * 	0.0
+		 * 	NULL
+		 * 	FALSE
+		 * 	[]
+		 * 	array()
+		 */
+		} else if (empty($parse_mode)) {
+			$parse_mode = 'HTML';
+		/**
+		 * Check if the parse mode of the message isn't a supported parse mode
+		 *
+		 * in_array() Checks if a value exists in an array
+		 */
+		} else if (in_array($parse_mode, [
+			'HTML',
+			'MarkdownV2'
+		]) === FALSE) {
+			throw new InvalidArgumentException('The parse mode of the message isn&apos;t a supported parse mode.');
 		}
 
 		$this -> id = $id;
 		$this -> type = $type;
 		$this -> title = $title;
 		$this -> audio_url = $audio_url;
+		$this -> parse_mode = $parse_mode;
 		$this -> input_message_content = $input_message_content;
 		$this -> reply_markup = $reply_markup;
 		$this -> caption = $caption;
-		$this -> parse_mode = $parse_mode;
 		$this -> performer = $performer;
 		$this -> audio_duration = $audio_duration;
 	}
@@ -124,10 +150,10 @@ class InlineQueryResultAudio extends InlineQueryResult {
 			'type' => $this -> type,
 			'title' => $this -> title,
 			'audio_url' => $this -> audio_url,
+			'parse_mode' => $this -> parse_mode,
 			'input_message_content' => $this -> input_message_content,
 			'reply_markup' => $this -> reply_markup,
 			'caption' => $this -> caption,
-			'parse_mode' => $this -> parse_mode,
 			'performer' => $this -> performer,
 			'audio_duration' => $this -> audio_duration
 		];
@@ -150,14 +176,14 @@ class InlineQueryResultAudio extends InlineQueryResult {
 				return $this -> title;
 			case 'audio_url':
 				return $this -> audio_url;
+			case 'parse_mode':
+				return $this -> parse_mode;
 			case 'input_message_content':
 				return $this -> input_message_content;
 			case 'reply_markup':
 				return $this -> reply_markup;
 			case 'caption':
 				return $this -> caption;
-			case 'parse_mode':
-				return $this -> parse_mode;
 			case 'performer':
 				return $this -> performer;
 			case 'audio_duration':
@@ -183,6 +209,7 @@ class InlineQueryResultAudio extends InlineQueryResult {
 	 *
 	 * @throws InvalidArgumentException If the type of the result isn't 'audio'.
 	 * @throws InvalidArgumentException If the caption of the result is more length of 1024 characters.
+	 * @throws InvalidArgumentException If the parse mode of the message isn't a supported parse mode.
 	 *
 	 * @return mixed
 	 */
@@ -222,14 +249,14 @@ class InlineQueryResultAudio extends InlineQueryResult {
 				return empty($this -> title) === FALSE || $this -> title === '0';
 			case 'audio_url':
 				return empty($this -> audio_url) === FALSE || $this -> audio_url === '0';
+			case 'parse_mode':
+				return empty($this -> parse_mode) === FALSE;
 			case 'input_message_content':
 				return empty($this -> input_message_content) === FALSE;
 			case 'reply_markup':
 				return empty($this -> reply_markup) === FALSE;
 			case 'caption':
 				return empty($this -> caption) === FALSE || $this -> caption === '0';
-			case 'parse_mode':
-				return empty($this -> parse_mode) === FALSE || $this -> parse_mode === '0';
 			case 'performer':
 				return empty($this -> performer) === FALSE || $this -> performer === '0';
 			case 'audio_duration':
@@ -262,6 +289,37 @@ class InlineQueryResultAudio extends InlineQueryResult {
 				$this -> title = $value;
 			case 'audio_url':
 				$this -> audio_url = $value;
+			case 'parse_mode':
+				/**
+				 * Check if the parse mode of the message isn't setted
+				 *
+				 * empty() check if the argument is empty
+				 * 	''
+				 * 	""
+				 * 	'0'
+				 * 	"0"
+				 * 	0
+				 * 	0.0
+				 * 	NULL
+				 * 	FALSE
+				 * 	[]
+				 * 	array()
+				 */
+				if (empty($value)) {
+					$value = 'HTML';
+				/**
+				 * Check if the parse mode of the message isn't a supported mime type
+				 *
+				 * in_array() Checks if a value exists in an array
+				 */
+				} else if (in_array($value, [
+					'HTML',
+					'MarkdownV2'
+				]) === FALSE) {
+					throw new InvalidArgumentException('The parse mode of the message isn&apos;t a supported parse mode.');
+				}
+
+				$this -> parse_mode = $value;
 			case 'input_message_content':
 				$this -> input_message_content = $value;
 			case 'reply_markup':
@@ -277,8 +335,6 @@ class InlineQueryResultAudio extends InlineQueryResult {
 				}
 
 				$this -> caption = $value;
-			case 'parse_mode':
-				$this -> parse_mode = $value;
 			case 'performer':
 				$this -> performer = $value;
 			case 'audio_duration':

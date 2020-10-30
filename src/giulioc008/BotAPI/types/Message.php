@@ -215,14 +215,12 @@ class Message {
 		 */
 		if (strlen($text) > 4096) {
 			throw new InvalidArgumentException('The $text parameter is more length of 4096 characters.');
-		}
-
 		/**
 		 * Checking if the $caption parameter respect the constraints
 		 *
 		 * strlen() return the length of the string
 		 */
-		if (strlen($caption) > 1024) {
+		} else if (strlen($caption) > 1024) {
 			throw new InvalidArgumentException('The $caption parameter is more length of 1024 characters.');
 		}
 
@@ -566,6 +564,15 @@ class Message {
 			case 'author_signature':
 				$this -> author_signature = $value;
 			case 'text':
+				/**
+				 * Checking if the text of the message respect the constraints
+				 *
+				 * strlen() return the length of the string
+				 */
+				if (strlen($value) > 4096) {
+					throw new InvalidArgumentException('The text of the message is more length of 4096 characters.');
+				}
+
 				$this -> text = $value;
 			case 'animation':
 				$this -> animation = $value;
@@ -580,6 +587,15 @@ class Message {
 			case 'voice':
 				$this -> voice = $value;
 			case 'caption':
+				/**
+				 * Checking if the caption of the message respect the constraints
+				 *
+				 * strlen() return the length of the string
+				 */
+				if (strlen($value) > 1024) {
+					throw new InvalidArgumentException('The caption of the message is more length of 1024 characters.');
+				}
+
 				$this -> caption = $value;
 			case 'new_chat_members':
 				$this -> new_chat_members = $value;

@@ -226,6 +226,11 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_audio_url"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_parse_mode"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024input_message_content",
             "name": "input_message_content",
             "summary": "",
@@ -240,11 +245,6 @@ Search.appendIndex(
             "name": "caption",
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_caption"
-        },                {
-            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024parse_mode",
-            "name": "parse_mode",
-            "summary": "",
-            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultAudio.html#property_parse_mode"
         },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultAudio\u003A\u003A\u0024performer",
             "name": "performer",
@@ -276,6 +276,56 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_title"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024document_url",
+            "name": "document_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_document_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024mime_type",
+            "name": "mime_type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_mime_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024description",
+            "name": "description",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_description"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_input_message_content"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024thumb_width",
+            "name": "thumb_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_thumb_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultDocument\u003A\u003A\u0024thumb_height",
+            "name": "thumb_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultDocument.html#property_thumb_height"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif",
             "name": "InlineQueryResultGif",
             "summary": "",
@@ -290,6 +340,61 @@ Search.appendIndex(
             "name": "type",
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024gif_url",
+            "name": "gif_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_gif_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024gif_width",
+            "name": "gif_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_gif_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024gif_height",
+            "name": "gif_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_gif_height"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024gif_duration",
+            "name": "gif_duration",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_gif_duration"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024thumb_mime_type",
+            "name": "thumb_mime_type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_thumb_mime_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultGif\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultGif.html#property_input_message_content"
         },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif",
             "name": "InlineQueryResultMpeg4Gif",
@@ -306,6 +411,61 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_type"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024mpeg4_url",
+            "name": "mpeg4_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_mpeg4_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024mpeg4_width",
+            "name": "mpeg4_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_mpeg4_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024mpeg4_height",
+            "name": "mpeg4_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_mpeg4_height"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024mpeg4_duration",
+            "name": "mpeg4_duration",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_mpeg4_duration"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024thumb_mime_type",
+            "name": "thumb_mime_type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_thumb_mime_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultMpeg4Gif\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultMpeg4Gif.html#property_input_message_content"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice",
             "name": "InlineQueryResultVoice",
             "summary": "",
@@ -320,6 +480,41 @@ Search.appendIndex(
             "name": "type",
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024voice_url",
+            "name": "voice_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_voice_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_input_message_content"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVoice\u003A\u003A\u0024voice_duration",
+            "name": "voice_duration",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_voice_duration"
         },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Message",
             "name": "Message",
@@ -656,6 +851,56 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_type"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024photo_url",
+            "name": "photo_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_photo_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024photo_width",
+            "name": "photo_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_photo_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024photo_height",
+            "name": "photo_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_photo_height"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024description",
+            "name": "description",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_description"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultPhoto\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultPhoto.html#property_input_message_content"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo",
             "name": "InlineQueryResultVideo",
             "summary": "",
@@ -670,6 +915,66 @@ Search.appendIndex(
             "name": "type",
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024title",
+            "name": "title",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_title"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024video_url",
+            "name": "video_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_video_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024mime_type",
+            "name": "mime_type",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_mime_type"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024thumb_url",
+            "name": "thumb_url",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_thumb_url"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024caption",
+            "name": "caption",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_caption"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024video_width",
+            "name": "video_width",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_video_width"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024video_height",
+            "name": "video_height",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_video_height"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024video_duration",
+            "name": "video_duration",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_video_duration"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024description",
+            "name": "description",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_description"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024reply_markup",
+            "name": "reply_markup",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_reply_markup"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InlineQueryResult\\InlineQueryResultVideo\u003A\u003A\u0024input_message_content",
+            "name": "input_message_content",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_input_message_content"
         },                {
             "fqsen": "\\",
             "name": "\\",

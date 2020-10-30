@@ -176,10 +176,10 @@ class InlineQuery {
 				$this -> from = $value;
 			case 'query':
 				/**
-				* Checking if the text of the query respect the constraints
-				*
-				* strlen() return the length of the string
-				*/
+				 * Checking if the text of the query respect the constraints
+				 *
+				 * strlen() return the length of the string
+				 */
 				if (strlen($value) < 1) {
 					throw new InvalidArgumentException('The text of the query is empty.');
 				} else if (strlen($value) > 256) {

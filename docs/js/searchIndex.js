@@ -1,11 +1,6 @@
 Search.appendIndex(
     [
                 {
-            "fqsen": "\\request\u0028\u0029",
-            "name": "request",
-            "summary": "Execute\u0020an\u0020HTTP\u0028S\u0029\u0020request.",
-            "url": "namespaces/default.html#function_request"
-        },                {
             "fqsen": "\\giulioc008\\BotAPI\\Logger",
             "name": "Logger",
             "summary": "",
@@ -516,6 +511,26 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVoice.html#property_voice_duration"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent\\InputTextMessageContent",
+            "name": "InputTextMessageContent",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InputMessageContent-InputTextMessageContent.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent\\InputTextMessageContent\u003A\u003A\u0024message_text",
+            "name": "message_text",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InputMessageContent-InputTextMessageContent.html#property_message_text"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent\\InputTextMessageContent\u003A\u003A\u0024parse_mode",
+            "name": "parse_mode",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InputMessageContent-InputTextMessageContent.html#property_parse_mode"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent\\InputTextMessageContent\u003A\u003A\u0024disable_web_page_preview",
+            "name": "disable_web_page_preview",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InputMessageContent-InputTextMessageContent.html#property_disable_web_page_preview"
+        },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Message",
             "name": "Message",
             "summary": "",
@@ -976,6 +991,16 @@ Search.appendIndex(
             "summary": "",
             "url": "classes/giulioc008-BotAPI-types-InlineMode-InlineQueryResult-InlineQueryResultVideo.html#property_input_message_content"
         },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent\\InputMessageContent",
+            "name": "InputMessageContent",
+            "summary": "",
+            "url": "classes/giulioc008-BotAPI-types-InlineMode-InputMessageContent-InputMessageContent.html"
+        },                {
+            "fqsen": "\\request\u0028\u0029",
+            "name": "request",
+            "summary": "Execute\u0020an\u0020HTTP\u0028S\u0029\u0020request.",
+            "url": "namespaces/default.html#function_request"
+        },                {
             "fqsen": "\\",
             "name": "\\",
             "summary": "",
@@ -1005,6 +1030,11 @@ Search.appendIndex(
             "name": "InlineQueryResult",
             "summary": "",
             "url": "namespaces/giulioc008-botapi-types-inlinemode-inlinequeryresult.html"
+        },                {
+            "fqsen": "\\giulioc008\\BotAPI\\types\\InlineMode\\InputMessageContent",
+            "name": "InputMessageContent",
+            "summary": "",
+            "url": "namespaces/giulioc008-botapi-types-inlinemode-inputmessagecontent.html"
         },                {
             "fqsen": "\\giulioc008\\BotAPI\\types\\Update",
             "name": "Update",
